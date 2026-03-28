@@ -129,13 +129,21 @@
         const canvas = document.getElementById('star-map');
         const ctx = canvas.getContext('2d');
 
-        function randomizeMarket() {
-            for (let item in commodities) {
-                // Creates a random volatility modifier between 85% and 115%
-                const volatility = 0.85 + (Math.random() * 0.30);
-                currentMarketPrices[item] = Math.max(1, Math.floor(commodities[item].basePrice * volatility));
-            }
-        }
+       function randomizeMarket() {
+    for (let item in commodities) {
+        const comm = commodities[item];
+        // Creates a random volatility modifier between 85% and 115%
+        const volatility = 0.85 + (Math.random() * 0.30);
+        
+        let volatilePrice = Math.floor(comm.basePrice * volatility);
+        
+        // Clamp the price strictly within the min and max bounds
+        if (comm.min !== undefined && volatilePrice < comm.min) volatilePrice = comm.min;
+        if (comm.max !== undefined && volatilePrice > comm.max) volatilePrice = comm.max;
+        
+        currentMarketPrices[item] = volatilePrice;
+    }
+}
 
         function getPoiDescription(poi) {
             const descs = {
