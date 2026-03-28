@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Trader - Map Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Courier New', Courier, monospace; background: #f0f0f0; margin: 0; overflow: hidden; }
+        #canvas-container { cursor: grab; background: #ffffff; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 40px 40px; }
+        #canvas-container:active { cursor: grabbing; }
+        .panel { background: #ffffff; border: 2px solid #000; display: flex; flex-direction: column; }
+        .btn { border: 2px solid #000; padding: 12px 8px; background: #fff; font-weight: bold; cursor: pointer; text-transform: uppercase; text-align: center; transition: all 0.1s; }
+        .btn:hover:not(:disabled) { background: #e5e7eb; }
+        .btn:active:not(:disabled) { background: #000; color: #fff; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
+        input, textarea, select { border: 1px solid #000; padding: 4px; width: 100%; font-family: inherit; }
+    </style>
+</head>
+<body class="flex h-screen w-screen">
+
+    <div class="panel w-80 m-2 p-4 shrink-0 flex flex-col gap-4 z-10">
+        <h2 class="font-bold text-xl uppercase border-b-2 border-black pb-2">File Connection</h2>
+        
+        <div id="connection-status" class="p-3 bg-red-100 border border-red-500 text-sm font-bold text-center">
+            NOT CONNECTED
+        </div>
+
+        <button class="btn bg-blue-100" onclick="connectFile()">1. Connect to data.js</button>
+        <button class="btn bg-green-100" id="btn-save" onclick="saveToFile()" disabled>2. Save Changes to File</button>
+        
+        <div class="border-t-2 border-black mt-2 pt-4">
+            <button class="btn bg-yellow-100 w-full" id="btn-add-sys" onclick="addNewSystem()" disabled>+ Add New System</button>
+        </div>
+
+        <p class="text-xs text-gray-500 mt-auto italic">Note: File access requires a modern browser (Chrome/Edge/Opera). You must re-connect the file if you refresh the page.</p>
+    </div>
+
+    <div id="canvas-container" class="flex-grow relative border-y-2 border-black my-2 overflow-hidden">
+        <canvas id="map-canvas" class="absolute inset-0"></canvas>
+    </div>
+
+    <div class="panel w-96 m-2 p-4 shrink-0 flex flex-col gap-4 z-10 overflow-y-auto" id="inspector-panel">
+        <div class="text-gray-500 italic text-center mt-10">Connect a file and select a system on the map to edit it.</div>
+    </div>
+
+    <script>
+        let galaxy = [];
+        let selectedSystem = null;
+        let fileHandle = null; // Holds the direct connection to data.js
+        
+        let camera = { x: -100, y: -100, zoom: 0.8 };
+        let isDraggingMap = false;
+        let isDraggingNode = false;
+        let lastMouse = { x: 0, y: 0 };
+
+        const canvas = document.getElementById('map-canvas');
+        const ctx = canvas.getContext('2d');
+        const inspector = document.getElementById('inspector-panel');
+
+        const goodsList = ['iron', 'copper', 'steel', 'wire', 'grain', 'synth', 'circuits', 'tools', 'meds', 'cell'];
+        const typesList = ['Agricultural', 'Industrial', 'Mining', 'Tech', 'Medical', 'Energy'];
+
+        function resize() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            render();
+        }
+        window.addEventListener('resize', resize);
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.save();
+            ctx.translate(-camera.x, -camera.y);
+            ctx.scale(camera.zoom, camera.zoom);
+
+            galaxy.forEach(sys => {
+                const isSelected = selectedSystem && selectedSystem.id === sys.id;
+                
+                ctx.beginPath();
+                ctx.arc(sys.x, sys.y, isSelected ? 12 : 8, 0, Math.PI * 2);
+                ctx.fillStyle = isSelected ? '#ef4444' : '#000000';
+                ctx.fill();
+                
+                if (isSelected) {
+                    ctx.strokeStyle = '#000';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    
+                    ctx.beginPath();
+                    ctx.arc(sys.x, sys.y, 20, 0, Math.PI * 2);
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.setLineDash([4, 4]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+
+                ctx.fillStyle = '#000000';
+                ctx.font = isSelected ? "bold 16px Courier New" : "14px Courier New";
+                ctx.fillText(sys.name, sys.x + 15, sys.y + 5);
+            });
+            ctx.restore();
+        }
+
+        function getWorldCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: ((e.clientX - rect.left) + camera.x) / camera.zoom,
+                y: ((e.clientY - rect.top) + camera.y) / camera.zoom
+            };
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (!fileHandle) return; // Prevent interaction if no file is loaded
+
+            const w = getWorldCoords(e);
+            let clickedNode = null;
+
+            for (let i = galaxy.length - 1; i >= 0; i--) {
+                const sys = galaxy[i];
+                const dist = Math.sqrt((w.x - sys.x)**2 + (w.y - sys.y)**2);
+                if (dist < 15 / camera.zoom) {
+                    clickedNode = sys;
+                    break;
+                }
+            }
+
+            if (clickedNode) {
+                selectedSystem = clickedNode;
+                isDraggingNode = true;
+                buildInspector();
+            } else {
+                selectedSystem = null;
+                isDraggingMap = true;
+                buildInspector();
+            }
+            
+            lastMouse = { x: e.clientX, y: e.clientY };
+            render();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (isDraggingNode && selectedSystem) {
+                const w = getWorldCoords(e);
+                selectedSystem.x = Math.round(w.x);
+                selectedSystem.y = Math.round(w.y);
+                updateInspectorCoords();
+                render();
+            } else if (isDraggingMap) {
+                camera.x -= (e.clientX - lastMouse.x);
+                camera.y -= (e.clientY - lastMouse.y);
+                document.getElementById('canvas-container').style.backgroundPosition = `${-camera.x}px ${-camera.y}px`;
+                render();
+            }
+            lastMouse = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('mouseup', () => {
+            isDraggingNode = false;
+            isDraggingMap = false;
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
+            camera.zoom *= zoomAmount;
+            if(camera.zoom < 0.2) camera.zoom = 0.2;
+            if(camera.zoom > 3) camera.zoom = 3;
+            render();
+        });
+
+        function buildInspector() {
+            if (!selectedSystem) {
+                inspector.innerHTML = `<div class="text-gray-500 italic text-center mt-10">Select a system on the map to edit it.</div>`;
+                return;
+            }
+
+            let html = `
+                <div class="flex justify-between items-center border-b-2 border-black pb-2">
+                    <h2 class="font-bold text-xl uppercase">Edit System</h2>
+                    <button class="text-red-600 font-bold hover:underline" onclick="deleteSystem()">DELETE</button>
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="block text-xs font-bold uppercase">Name</label>
+                    <input type="text" value="${selectedSystem.name}" oninput="updateSystemData('name', this.value)">
+                </div>
+
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold uppercase">X</label>
+                        <input type="number" id="insp-x" value="${selectedSystem.x}" oninput="updateSystemData('x', this.value)">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-bold uppercase">Y</label>
+                        <input type="number" id="insp-y" value="${selectedSystem.y}" oninput="updateSystemData('y', this.value)">
+                    </div>
+                </div>
+
+                <div class="mt-4 border-t-2 border-black pt-4">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-lg uppercase">Points of Interest</h3>
+                        <button class="btn text-xs !p-1 bg-green-100" onclick="addPoi()">+ Add POI</button>
+                    </div>
+                    <div class="space-y-4" id="poi-list">
+            `;
+
+            (selectedSystem.pois || []).forEach((poi, index) => {
+                html += `
+                    <div class="border border-gray-400 p-2 bg-gray-50 relative">
+                        <button class="absolute top-1 right-2 text-red-500 font-bold text-xs" onclick="deletePoi(${index})">X</button>
+                        
+                        <label class="block text-[10px] font-bold uppercase mt-1">Name</label>
+                        <input type="text" class="text-sm" value="${poi.name || ''}" oninput="updatePoiData(${index}, 'name', this.value)">
+                        
+                        <div class="flex gap-2 mt-1">
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-bold uppercase">Type</label>
+                                <select class="text-xs" oninput="updatePoiData(${index}, 'type', this.value)">
+                                    ${typesList.map(t => `<option value="${t}" ${poi.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-bold uppercase">Specialty</label>
+                                <select class="text-xs" oninput="updatePoiData(${index}, 'specialty', this.value)">
+                                    ${goodsList.map(g => `<option value="${g}" ${poi.specialty === g ? 'selected' : ''}>${g}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label>
+                        <textarea class="text-xs h-16 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+            inspector.innerHTML = html;
+        }
+
+        function updateInspectorCoords() {
+            const xInp = document.getElementById('insp-x');
+            const yInp = document.getElementById('insp-y');
+            if(xInp && yInp) {
+                xInp.value = selectedSystem.x;
+                yInp.value = selectedSystem.y;
+            }
+        }
+
+        function updateSystemData(key, value) {
+            if(key === 'x' || key === 'y') value = parseInt(value) || 0;
+            selectedSystem[key] = value;
+            render();
+        }
+
+        function updatePoiData(index, key, value) {
+            selectedSystem.pois[index][key] = value;
+        }
+
+        function addNewSystem() {
+            let maxId = galaxy.reduce((max, sys) => Math.max(max, sys.id), -1);
+            const newSys = {
+                id: maxId + 1,
+                name: "New System",
+                x: Math.round(camera.x + (canvas.width/2)/camera.zoom),
+                y: Math.round(camera.y + (canvas.height/2)/camera.zoom),
+                pois: []
+            };
+            galaxy.push(newSys);
+            selectedSystem = newSys;
+            buildInspector();
+            render();
+        }
+
+        function deleteSystem() {
+            if(!confirm("Delete this system?")) return;
+            galaxy = galaxy.filter(s => s.id !== selectedSystem.id);
+            selectedSystem = null;
+            buildInspector();
+            render();
+        }
+
+        function addPoi() {
+            if(!selectedSystem.pois) selectedSystem.pois = [];
+            selectedSystem.pois.push({ name: "New POI", type: "Industrial", specialty: "iron", description: "" });
+            buildInspector();
+        }
+
+        function deletePoi(index) {
+            selectedSystem.pois.splice(index, 1);
+            buildInspector();
+        }
+
+        // --- FILE SYSTEM ACCESS API LOGIC ---
+
+        async function connectFile() {
+            try {
+                // Show file picker dialogue
+                [fileHandle] = await window.showOpenFilePicker({
+                    types: [{
+                        description: 'JavaScript Files',
+                        accept: { 'text/javascript': ['.js'] }
+                    }],
+                    multiple: false
+                });
+
+                const file = await fileHandle.getFile();
+                let text = await file.text();
+
+                // Clean the text to parse the raw array
+                text = text.trim().replace(/^(const|let|var)\s+\w+\s*=\s*/, '');
+                if (text.endsWith(';')) text = text.slice(0, -1);
+                
+                const parsed = new Function('return ' + text)(); 
+                if (Array.isArray(parsed)) {
+                    galaxy = parsed;
+                    selectedSystem = null;
+                    buildInspector();
+                    
+                    if(galaxy.length > 0) {
+                        camera.x = galaxy[0].x - (canvas.width / 2);
+                        camera.y = galaxy[0].y - (canvas.height / 2);
+                    }
+                    render();
+                    
+                    // Update UI state
+                    const status = document.getElementById('connection-status');
+                    status.innerText = `CONNECTED: ${file.name}`;
+                    status.classList.replace('bg-red-100', 'bg-green-100');
+                    status.classList.replace('border-red-500', 'border-green-500');
+                    
+                    document.getElementById('btn-save').disabled = false;
+                    document.getElementById('btn-add-sys').disabled = false;
+
+                } else {
+                    alert("The file was loaded, but no valid array was found.");
+                }
+            } catch (err) {
+                // User cancelled the picker or browser doesn't support it
+                console.error(err);
+                if (err.name !== 'AbortError') {
+                    alert("Could not connect to file. Make sure you are using Chrome/Edge.");
+                }
+            }
+        }
+
+        async function saveToFile() {
+            if (!fileHandle) return;
+
+            const btn = document.getElementById("btn-save");
+            const originalText = btn.innerText;
+            btn.innerText = "SAVING...";
+
+            try {
+                // Format the array back into standard JS structure
+                let out = "const galaxy = [\n";
+                galaxy.forEach((sys, i) => {
+                    let poisStr = (sys.pois || []).map(p => {
+                        let pStr = `{ name: "${p.name}", specialty: "${p.specialty}", type: "${p.type}"`;
+                        if (p.description && p.description.trim() !== "") {
+                            pStr += `, description: "${p.description.replace(/"/g, '\\"')}"`;
+                        }
+                        pStr += ` }`;
+                        return pStr;
+                    }).join(", ");
+                    
+                    out += `    { id: ${sys.id}, name: "${sys.name}", x: ${sys.x}, y: ${sys.y}, pois: [${poisStr}] }`;
+                    if (i < galaxy.length - 1) out += ",";
+                    out += "\n";
+                });
+                out += "];\n";
+
+                // Request write access and overwrite the file
+                const writable = await fileHandle.createWritable();
+                await writable.write(out);
+                await writable.close();
+
+                btn.innerText = "SAVED SUCCESSFULLY!";
+                btn.classList.add("bg-black", "text-white");
+                
+            } catch (err) {
+                console.error(err);
+                btn.innerText = "SAVE FAILED!";
+                btn.classList.add("bg-red-500", "text-white");
+            }
+
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.classList.remove("bg-black", "text-white", "bg-red-500");
+            }, 2000);
+        }
+
+        setTimeout(resize, 100);
+
+    </script>
+</body>
+</html>
