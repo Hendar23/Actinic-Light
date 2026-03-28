@@ -348,8 +348,8 @@ function getStationMarket(type) {
                 if (localView === 'menu') {
                     html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
                     html += `<div class="space-y-4 max-w-md mx-auto">
-                        <button class="btn" onclick="setLocalView('buy')">MARKET (BUY)</button>
-                        <button class="btn" onclick="setLocalView('sell')">MARKET (SELL)</button>
+                        <button class="btn" onclick="setLocalView('buy')">BUY COMMODITIES</button>
+                        <button class="btn" onclick="setLocalView('sell')">SELL COMMODITIES</button>
                         <button class="btn !mt-12 bg-gray-200" onclick="triggerLocalTravel(-1)">UNDOCK</button>
                     </div>`;
                 } else {
