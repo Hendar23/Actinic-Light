@@ -266,21 +266,34 @@
             ctx.restore();
         }
 
-function getMarketContext(price, avg, view) {
-            const diff = (price - avg) / avg;
+function getMarketContext(itemName, price, view) {
+            const comm = commodities[itemName];
+            const base = comm.basePrice;
+            
+            // Fallbacks included just in case a commodity is missing min/max data
+            const min = comm.min || (base * 0.6); 
+            const max = comm.max || (base * 1.5);
+
             let arrow = "■", color = "text-gray-400";
             
-            // Positive price differences (higher than average)
-            if (diff >= 0.15) { arrow = "▲▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
-            else if (diff >= 0.10) { arrow = "▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
-            else if (diff >= 0.05) { arrow = "▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
-            
-            // Negative price differences (lower than average)
-            else if (diff <= -0.15) { arrow = "▼▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
-            else if (diff <= -0.10) { arrow = "▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
-            else if (diff <= -0.05) { arrow = "▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
-            
-            return `<div class="flex items-center justify-center gap-1"><span class="text-sm opacity-50">${avg}</span><span class="${color} font-bold text-xl">${arrow}</span></div>`;
+            if (price > base) {
+                // Calculate how far the price has climbed toward the maximum
+                const ratio = (price - base) / (max - base);
+                
+                if (ratio >= 0.66) { arrow = "▲▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
+                else if (ratio >= 0.33) { arrow = "▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
+                else if (ratio > 0.05) { arrow = "▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
+                
+            } else if (price < base) {
+                // Calculate how far the price has dropped toward the minimum
+                const ratio = (base - price) / (base - min);
+                
+                if (ratio >= 0.66) { arrow = "▼▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
+                else if (ratio >= 0.33) { arrow = "▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
+                else if (ratio > 0.05) { arrow = "▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
+            }
+
+            return `<div class="flex items-center justify-center gap-1"><span class="text-sm opacity-50">${base}</span><span class="${color} font-bold text-xl">${arrow}</span></div>`;
         }
 
 function getStationMarket(type) {
@@ -384,7 +397,7 @@ function getStationMarket(type) {
                             html += `<div class="market-item">
                                 <span class="text-sm sm:text-lg overflow-hidden text-ellipsis whitespace-nowrap" title="${itemName}">${itemName}</span>
                                 <span class="text-center">${price}</span><span class="text-center">${qty}</span>
-                                ${getMarketContext(price, avg, localView)}
+                                ${getMarketContext(itemName, price, localView)}
                                 <button class="trade-btn" onclick="${localView}Good('${itemName}', ${price})" ${can ? '' : 'disabled'}>${localView.toUpperCase()}</button>
                             </div>`;
                         });
