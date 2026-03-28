@@ -56,6 +56,7 @@
 
     <script>
         let galaxy = [];
+        let filePrefix = ""; // Stores the commodities and stationTypes data so we don't overwrite it
         let selectedSystem = null;
         let fileHandle = null; 
         
@@ -63,16 +64,19 @@
         let isDraggingMap = false;
         let isDraggingNode = false;
         let lastMouse = { x: 0, y: 0 };
-        
-        // NEW GLOBAL STATE
         let jumpRange = 100;
 
         const canvas = document.getElementById('map-canvas');
         const ctx = canvas.getContext('2d');
         const inspector = document.getElementById('inspector-panel');
 
-        const goodsList = ['iron', 'copper', 'steel', 'wire', 'grain', 'synth', 'circuits', 'tools', 'meds', 'cell'];
-        const typesList = ['Agricultural', 'Industrial', 'Mining', 'Tech', 'Medical', 'Energy'];
+        // Updated with your specific station types
+        const typesList = [
+            'Trade Hub', 'Wheat Farm', 'Ice Mine', 'Wheat Processing Plant', 
+            'Livestock Farm', 'Meat Processing Plant', 'Copper Mine', 'Iron Mine', 
+            'Platinum Mine', 'Silicon Mine', 'Gold Mine', 'Metal Ore Refinery', 
+            'Silicon Refinery', 'Machine Parts Factory', 'Chip Fab'
+        ];
 
         function resize() {
             canvas.width = canvas.parentElement.clientWidth;
@@ -84,7 +88,7 @@
         function updateJumpRange(val) {
             jumpRange = parseInt(val);
             document.getElementById('jump-val').innerText = jumpRange;
-            render(); // Redraw map instantly
+            render();
         }
 
         function render() {
@@ -93,20 +97,17 @@
             ctx.translate(-camera.x, -camera.y);
             ctx.scale(camera.zoom, camera.zoom);
 
-            // DRAW JUMP RADIUS AND CONNECTIONS
             if (selectedSystem) {
-                // Draw Range Circle
                 ctx.beginPath();
                 ctx.arc(selectedSystem.x, selectedSystem.y, jumpRange, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.05)'; // Very faint blue fill
+                ctx.fillStyle = 'rgba(59, 130, 246, 0.05)'; 
                 ctx.fill();
-                ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'; // Blue border
+                ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'; 
                 ctx.setLineDash([8, 8]);
-                ctx.lineWidth = 2 / camera.zoom; // Keep line thickness consistent regardless of zoom
+                ctx.lineWidth = 2 / camera.zoom; 
                 ctx.stroke();
-                ctx.setLineDash([]); // Reset dash
+                ctx.setLineDash([]); 
 
-                // Draw Connecting Lines to reachable systems
                 ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
                 ctx.lineWidth = 2 / camera.zoom;
                 galaxy.forEach(sys => {
@@ -122,7 +123,6 @@
                 });
             }
 
-            // DRAW SYSTEMS
             galaxy.forEach(sys => {
                 const isSelected = selectedSystem && selectedSystem.id === sys.id;
                 
@@ -209,14 +209,32 @@
             isDraggingMap = false;
         });
 
-        canvas.addEventListener('wheel', (e) => {
+canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
+            
+            // 1. Get mouse position relative to canvas
+            const r = canvas.getBoundingClientRect();
+            const mx = e.clientX - r.left;
+            const my = e.clientY - r.top;
+            
+            // 2. Find the exact world coordinates under the mouse BEFORE zooming
+            const wx = (mx + camera.x) / camera.zoom;
+            const wy = (my + camera.y) / camera.zoom;
+            
+            // 3. Apply the zoom multiplier
             const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
             camera.zoom *= zoomAmount;
-            if(camera.zoom < 0.1) camera.zoom = 0.1;
-            if(camera.zoom > 4) camera.zoom = 4;
+            camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 4); // Clamp zoom levels
+            
+            // 4. Shift the camera so the mouse remains over the exact same world coordinates
+            camera.x = (wx * camera.zoom) - mx;
+            camera.y = (wy * camera.zoom) - my;
+            
+            // Keep the background grid panning synced with the camera
+            document.getElementById('canvas-container').style.backgroundPosition = `${-camera.x}px ${-camera.y}px`;
+            
             render();
-        });
+        }, { passive: false });
 
         function buildInspector() {
             if (!selectedSystem) {
@@ -256,29 +274,25 @@
 
             (selectedSystem.pois || []).forEach((poi, index) => {
                 html += `
-                    <div class="border border-gray-400 p-2 bg-gray-50 relative">
+                    <div class="border border-gray-400 p-2 bg-gray-50 relative flex flex-col gap-2">
                         <button class="absolute top-1 right-2 text-red-500 font-bold text-xs" onclick="deletePoi(${index})">X</button>
                         
-                        <label class="block text-[10px] font-bold uppercase mt-1">Name</label>
-                        <input type="text" class="text-sm" value="${poi.name || ''}" oninput="updatePoiData(${index}, 'name', this.value)">
-                        
-                        <div class="flex gap-2 mt-1">
-                            <div class="flex-1">
-                                <label class="block text-[10px] font-bold uppercase">Type</label>
-                                <select class="text-xs" oninput="updatePoiData(${index}, 'type', this.value)">
-                                    ${typesList.map(t => `<option value="${t}" ${poi.type === t ? 'selected' : ''}>${t}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-[10px] font-bold uppercase">Specialty</label>
-                                <select class="text-xs" oninput="updatePoiData(${index}, 'specialty', this.value)">
-                                    ${goodsList.map(g => `<option value="${g}" ${poi.specialty === g ? 'selected' : ''}>${g}</option>`).join('')}
-                                </select>
-                            </div>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase mt-1">Name</label>
+                            <input type="text" class="text-sm" value="${poi.name || ''}" oninput="updatePoiData(${index}, 'name', this.value)">
                         </div>
                         
-                        <label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label>
-                        <textarea class="text-xs h-16 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase">Station Type</label>
+                            <select class="text-xs" oninput="updatePoiData(${index}, 'type', this.value)">
+                                ${typesList.map(t => `<option value="${t}" ${poi.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase">Description (Optional)</label>
+                            <textarea class="text-xs h-16 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
+                        </div>
                     </div>
                 `;
             });
@@ -331,7 +345,7 @@
 
         function addPoi() {
             if(!selectedSystem.pois) selectedSystem.pois = [];
-            selectedSystem.pois.push({ name: "New POI", type: "Industrial", specialty: "iron", description: "" });
+            selectedSystem.pois.push({ name: "New POI", type: "Trade Hub", description: "" });
             buildInspector();
         }
 
@@ -355,10 +369,22 @@
                 const file = await fileHandle.getFile();
                 let text = await file.text();
 
-                text = text.trim().replace(/^(const|let|var)\s+\w+\s*=\s*/, '');
-                if (text.endsWith(';')) text = text.slice(0, -1);
+                // Split the file to preserve commodities and stationTypes
+                const galaxyIndex = text.indexOf('const galaxy =');
+                if (galaxyIndex === -1) { 
+                    alert("Could not find 'const galaxy' in file."); 
+                    return; 
+                }
+
+                filePrefix = text.substring(0, galaxyIndex);
+                let galaxyText = text.substring(galaxyIndex);
                 
-                const parsed = new Function('return ' + text)(); 
+                // Clean the galaxy string for parsing
+                galaxyText = galaxyText.replace(/const\s+galaxy\s*=\s*/, '').trim();
+                if (galaxyText.endsWith(';')) galaxyText = galaxyText.slice(0, -1);
+                
+                const parsed = new Function('return ' + galaxyText)(); 
+                
                 if (Array.isArray(parsed)) {
                     galaxy = parsed;
                     selectedSystem = null;
@@ -397,10 +423,11 @@
             btn.innerText = "SAVING...";
 
             try {
-                let out = "const galaxy = [\n";
+                // Recombine the preserved prefix with the updated galaxy array
+                let out = filePrefix + "const galaxy = [\n";
                 galaxy.forEach((sys, i) => {
                     let poisStr = (sys.pois || []).map(p => {
-                        let pStr = `{ name: "${p.name}", specialty: "${p.specialty}", type: "${p.type}"`;
+                        let pStr = `{ name: "${p.name}", type: "${p.type}"`;
                         if (p.description && p.description.trim() !== "") {
                             pStr += `, description: "${p.description.replace(/"/g, '\\"')}"`;
                         }

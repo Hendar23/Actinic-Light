@@ -38,9 +38,9 @@
         }
         .market-item {
             display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr 1fr; gap: 4px;
-            align-items: center; font-size: 22px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px;
+            align-items: center; font-size: 18px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px;
         }
-        .trade-btn { border: 2px solid black; padding: 10px 4px; font-weight: bold; font-size: 18px; text-align: center;}
+        .trade-btn { border: 2px solid black; padding: 10px 4px; font-weight: bold; font-size: 16px; text-align: center;}
         .trade-btn:active:not(:disabled) { background: black; color: white; }
         
         #travel-overlay {
@@ -111,14 +111,6 @@
     </div>
 
     <script>
-        const goods = [
-            { id: 'iron', name: 'Iron', avg: 50 }, { id: 'copper', name: 'Copper', avg: 70 },
-            { id: 'steel', name: 'Steel', avg: 150 }, { id: 'wire', name: 'Wire', avg: 180 },
-            { id: 'grain', name: 'Grain', avg: 30 }, { id: 'synth', name: 'Synth', avg: 90 },
-            { id: 'circuits', name: 'Chips', avg: 400 }, { id: 'tools', name: 'Tools', avg: 600 },
-            { id: 'meds', name: 'Meds', avg: 850 }, { id: 'cell', name: 'Cells', avg: 1200 }
-        ];
-
         const drawScale = 4;
         let camera = { x: 0, y: 0, zoom: 1 };
         let isDragging = false;
@@ -129,56 +121,40 @@
         let player = { credits: 1000, cargo: {}, cargoMax: 20 };
         let currentSystem = null;
         let currentPoi = null; 
-        let globalMarkets = {}; 
         let jumpRange = 100;
         let activeTab = 'map';
         let localView = 'menu'; 
+        let currentMarketPrices = {}; // Tracks volatile system prices
 
         const canvas = document.getElementById('star-map');
         const ctx = canvas.getContext('2d');
 
-        function getPoiDescription(poi) {
-            const descs = {
-                "Agricultural": `Vast hydroponic bays provide life for the sector.`,
-                "Industrial": `The deafening roar of smelting arrays echoes in the dark.`,
-                "Mining": `Coated in asteroid dust, miners bring their haul here.`,
-                "Tech": `Sterile corridors hum with precision server banks.`,
-                "Medical": `Pristine bulkheads and the scent of antiseptics greet you.`,
-                "Energy": `Massive plasma conduits thrum with raw power.`
-            };
-            return poi.description || descs[poi.type] || `A standard trade outpost.`;
-        }
-
-        function checkExistingSave() {
-            if (localStorage.getItem('spaceTraderSaveV3') && typeof galaxy !== 'undefined') {
-                document.getElementById('btn-load-game').disabled = false;
+        function randomizeMarket() {
+            for (let item in commodities) {
+                // Creates a random volatility modifier between 85% and 115%
+                const volatility = 0.85 + (Math.random() * 0.30);
+                currentMarketPrices[item] = Math.max(1, Math.floor(commodities[item].basePrice * volatility));
             }
         }
 
-        function initializeEconomy() {
-            globalMarkets = {};
-            galaxy.forEach(sys => {
-                sys.pois.forEach((poi, index) => {
-                    const marketKey = `${sys.id}_${index}`;
-                    globalMarkets[marketKey] = {};
-                    goods.forEach(g => {
-                        let baseMod = poi.specialty === g.id ? 0.75 : 1.15;
-                        let bPrice = Math.floor(g.avg * baseMod * (0.7 + Math.random() * 0.6));
-                        globalMarkets[marketKey][g.id] = { buy: bPrice, sell: Math.floor(bPrice * 0.85) };
-                    });
-                });
-            });
+        function getPoiDescription(poi) {
+            const descs = {
+                "Trade Hub": `A massive central trading hub. Everything is available.`,
+                "Wheat Farm": `Vast hydroponic bays provide grain for the sector.`,
+                "Ice Mine": `Coated in frost, miners bring their icy haul here.`,
+                "Wheat Processing Plant": `Sterile corridors hum with food packaging machinery.`,
+                "Livestock Farm": `Large biological containment bays. Smells terrible.`,
+                "Meat Processing Plant": `Industrial abattoir and packaging facility.`,
+                "Metal Ore Refinery": `The deafening roar of smelting arrays echoes in the dark.`,
+                "Machine Parts Factory": `Automated arms assemble components with precise rhythm.`,
+                "Chip Fab": `Dust-free cleanrooms manufacture high-tech circuitry.`
+            };
+            return poi.description || descs[poi.type] || `A standard industrial outpost.`;
         }
 
-        function simulateEconomyTick() {
-            for (const key in globalMarkets) {
-                goods.forEach(g => {
-                    let current = globalMarkets[key][g.id];
-                    let change = (Math.random() * 0.1) - 0.05; 
-                    let newBuy = Math.max(1, Math.floor(current.buy * (1 + change)));
-                    globalMarkets[key][g.id].buy = newBuy;
-                    globalMarkets[key][g.id].sell = Math.floor(newBuy * 0.85);
-                });
+        function checkExistingSave() {
+            if (localStorage.getItem('spaceTraderSaveV4') && typeof galaxy !== 'undefined') {
+                document.getElementById('btn-load-game').disabled = false;
             }
         }
 
@@ -186,7 +162,7 @@
             if (typeof galaxy === 'undefined') return alert("data.js missing!");
             player = { credits: 100, cargo: {}, cargoMax: 20 };
             currentSystem = galaxy[0];
-            initializeEconomy();
+            randomizeMarket(); // Initialize random prices
             document.getElementById('start-screen').style.display = 'none';
             switchTab('map'); 
             centerOnSystem(currentSystem);
@@ -199,8 +175,8 @@
         }
 
         function saveGame() {
-            localStorage.setItem('spaceTraderSaveV3', JSON.stringify({
-                player, systemId: currentSystem.id, poiName: currentPoi?.name, globalMarkets, jumpRange
+            localStorage.setItem('spaceTraderSaveV4', JSON.stringify({
+                player, systemId: currentSystem.id, poiName: currentPoi?.name, jumpRange, currentMarketPrices
             }));
             const btn = document.getElementById('btn-save');
             btn.innerText = "SAVED!";
@@ -208,13 +184,17 @@
         }
 
         function loadGame() {
-            const data = JSON.parse(localStorage.getItem('spaceTraderSaveV3'));
+            const data = JSON.parse(localStorage.getItem('spaceTraderSaveV4'));
             if (data && typeof galaxy !== 'undefined') {
                 player = data.player;
                 currentSystem = galaxy.find(s => s.id === data.systemId) || galaxy[0];
                 currentPoi = currentSystem.pois.find(p => p.name === data.poiName) || null;
-                globalMarkets = data.globalMarkets;
                 jumpRange = data.jumpRange || 100;
+                currentMarketPrices = data.currentMarketPrices || {};
+                
+                // Fallback in case loading an older save without market prices
+                if(Object.keys(currentMarketPrices).length === 0) randomizeMarket(); 
+
                 document.getElementById('start-screen').style.display = 'none';
                 switchTab('map');
                 centerOnSystem(currentSystem);
@@ -288,19 +268,56 @@
             return `<div class="flex items-center justify-center gap-1"><span class="text-sm opacity-50">${avg}</span><span class="${color} font-bold text-xl">${arrow}</span></div>`;
         }
 
-        function buyGood(id, price) {
+function getStationMarket(type) {
+    const config = stationTypes[type];
+    const market = { selling: [], buying: [] };
+
+    if (!config) return market;
+
+    // Items the station SELLS to the player (What it produces)
+    // Supply is abundant, so the price drops BELOW the baseline.
+    if (config.produces) {
+        config.produces.forEach(itemName => {
+            const base = currentMarketPrices[itemName] || commodities[itemName].basePrice;
+            // 20% discount because the station manufactures it
+            market.selling.push({ item: itemName, price: Math.floor(base * 0.8) });
+        });
+    }
+
+    // Items the station BUYS from the player (What it consumes)
+    // Supply is needed, so the price rises ABOVE the baseline based on demand.
+    if (config.consumes) {
+        Object.keys(config.consumes).forEach(itemName => {
+            const base = currentMarketPrices[itemName] || commodities[itemName].basePrice;
+            const demand = config.consumes[itemName];
+            
+            // Apply price multipliers based on how badly the station needs the item
+            let multiplier = 1.0; 
+            if (demand === "High") multiplier = 1.4;      // +40% markup for high demand
+            else if (demand === "Average") multiplier = 1.2; // +20% markup for average demand
+            else if (demand === "TradeHub") multiplier = 1.1; // +10% markup (Hubs buy everything, but at a modest premium)
+            else if (demand === "Low") multiplier = 1.05;  // +5% markup for low demand
+
+            market.buying.push({ item: itemName, price: Math.ceil(base * multiplier) });
+        });
+    }
+
+    return market;
+}
+
+        function buyGood(itemName, price) {
             const total = Object.values(player.cargo).reduce((a, b) => a + b, 0);
             if (player.credits >= price && total < player.cargoMax) {
                 player.credits -= price;
-                player.cargo[id] = (player.cargo[id] || 0) + 1;
+                player.cargo[itemName] = (player.cargo[itemName] || 0) + 1;
                 updateUI();
             }
         }
 
-        function sellGood(id, price) {
-            if (player.cargo[id] > 0) {
+        function sellGood(itemName, price) {
+            if (player.cargo[itemName] > 0) {
                 player.credits += price;
-                player.cargo[id] -= 1;
+                player.cargo[itemName] -= 1;
                 updateUI();
             }
         }
@@ -333,26 +350,38 @@
                         <h3 class="text-3xl font-bold uppercase">${localView}ING</h3>
                         <button class="btn !w-auto !mb-0 !py-2 !px-4 !text-xl" onclick="setLocalView('menu')">◀ BACK</button>
                     </div><div class="overflow-y-auto">`;
-                    const key = `${currentSystem.id}_${currentSystem.pois.indexOf(currentPoi)}`;
+                    
+                    const marketData = getStationMarket(currentPoi.type);
+                    const activeMarket = localView === 'buy' ? marketData.selling : marketData.buying;
+                    
                     html += `<div class="market-list-header"><span>Item</span><span class="text-center">Price</span><span class="text-center">Hold</span><span class="text-center">Avg</span><span class="text-center">Action</span></div>`;
-                    goods.forEach(g => {
-                        const price = localView === 'buy' ? globalMarkets[key][g.id].buy : globalMarkets[key][g.id].sell;
-                        const qty = player.cargo[g.id] || 0;
-                        const can = localView === 'buy' ? (player.credits >= price && total < player.cargoMax) : (qty > 0);
-                        html += `<div class="market-item">
-                            <span>${g.name}</span><span class="text-center">${price}</span><span class="text-center">${qty}</span>
-                            ${getMarketContext(price, g.avg, localView)}
-                            <button class="trade-btn" onclick="${localView}Good('${g.id}', ${price})" ${can ? '' : 'disabled'}>${localView.toUpperCase()}</button>
-                        </div>`;
-                    });
+                    
+                    if (activeMarket.length === 0) {
+                        html += `<p class="text-gray-500 italic mt-4">No goods available for ${localView}.</p>`;
+                    } else {
+                        activeMarket.forEach(m => {
+                            const itemName = m.item;
+                            const price = m.price;
+                            const avg = commodities[itemName].basePrice; // Static comparison value
+                            const qty = player.cargo[itemName] || 0;
+                            const can = localView === 'buy' ? (player.credits >= price && total < player.cargoMax) : (qty > 0);
+                            
+                            html += `<div class="market-item">
+                                <span class="text-sm sm:text-lg overflow-hidden text-ellipsis whitespace-nowrap" title="${itemName}">${itemName}</span>
+                                <span class="text-center">${price}</span><span class="text-center">${qty}</span>
+                                ${getMarketContext(price, avg, localView)}
+                                <button class="trade-btn" onclick="${localView}Good('${itemName}', ${price})" ${can ? '' : 'disabled'}>${localView.toUpperCase()}</button>
+                            </div>`;
+                        });
+                    }
                     html += `</div>`;
                 }
                 localTab.innerHTML = html;
             }
             
             let cl = '';
-            for (const [id, q] of Object.entries(player.cargo)) {
-                if (q > 0) cl += `<div class="flex justify-between border-b border-gray-300 py-1"><span>${goods.find(g=>g.id===id).name}</span><span>${q} SCU</span></div>`;
+            for (const [itemName, q] of Object.entries(player.cargo)) {
+                if (q > 0) cl += `<div class="flex justify-between border-b border-gray-300 py-1"><span>${itemName}</span><span>${q} SCU</span></div>`;
             }
             document.getElementById('cargo-list').innerHTML = cl || '<p class="text-gray-500 italic">Empty.</p>';
             document.getElementById('ship-cargo-current').innerText = total;
@@ -374,7 +403,7 @@
                 let pc = ((Date.now() - start) / dur) * 100;
                 bar.style.width = pc + "%";
                 if (pc >= 100) { 
-                    clearInterval(t); currentPoi = dest; simulateEconomyTick(); ov.style.display = 'none'; updateUI(); if (activeTab === 'map') renderMap();
+                    clearInterval(t); currentPoi = dest; ov.style.display = 'none'; updateUI(); if (activeTab === 'map') renderMap();
                 }
             }, 30);
         }
@@ -396,7 +425,10 @@
                     const d = Math.sqrt((wx - s.x * drawScale)**2 + (wy - s.y * drawScale)**2);
                     if (d < 20 / camera.zoom && s.id !== currentSystem.id) {
                         if (Math.sqrt((currentSystem.x - s.x)**2 + (currentSystem.y - s.y)**2) <= jumpRange) {
-                            currentSystem = s; centerOnSystem(s); triggerTravel(null, `WARPING TO ${s.name}`, 2500);
+                            currentSystem = s; 
+                            centerOnSystem(s); 
+                            randomizeMarket(); // Market fluctuates when jumping to a new star
+                            triggerTravel(null, `WARPING TO ${s.name}`, 2500);
                         }
                     }
                 });
