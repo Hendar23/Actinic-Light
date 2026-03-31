@@ -211,9 +211,16 @@
             }
         }
 
-        function switchTab(tabId) {
+	function switchTab(tabId) {
             activeTab = tabId;
-            localView = 'menu';
+            
+            // --- NEW: Don't break the UI if checking ship cargo during an encounter ---
+            if (currentPoi && currentPoi.type === 'Encounter') {
+                localView = 'encounter';
+            } else {
+                localView = 'menu';
+            }
+
             ['map', 'local', 'ship', 'player'].forEach(id => {
                 const el = document.getElementById(`tab-${id}`);
                 const btn = document.getElementById(`btn-${id}`);
@@ -361,13 +368,20 @@ function getStationMarket(type) {
             setLocalView('encounter');
         }
 
-        function selectDialogue(nextNode) {
+	function selectDialogue(nextNode) {
             if (nextNode === 'leave') {
                 currentEncounterName = null;
                 currentDialogueNode = null;
-                setLocalView('menu'); // Return to the POI menu
+                
+                // --- NEW: Leave logic ---
+                if (currentPoi && currentPoi.type === 'Encounter') {
+                    triggerLocalTravel(-1); // Standalone: Undock back to deep space
+                } else {
+                    setLocalView('menu'); // Nested: Return to the POI trade menu
+                }
+                
             } else {
-                currentDialogueNode = nextNode; // Move to the next text block
+                currentDialogueNode = nextNode; 
                 updateUI();
             }
         }
@@ -433,12 +447,12 @@ function getStationMarket(type) {
                         <button class="btn" onclick="setLocalView('sell')">SELL COMMODITIES</button>
                     </div>`;
 
-                    // --- NEW ENCOUNTER BUTTONS LOGIC ---
+// --- NEW ENCOUNTER BUTTONS LOGIC ---
                     if (currentPoi.encounters && currentPoi.encounters.length > 0) {
-                        html += `<h3 class="text-2xl font-bold uppercase mt-12 mb-4 border-b-2 border-black">Local Amenities</h3>
-                                 <div class="space-y-4 max-w-md mx-auto">`;
+                        html += `<div class="space-y-4 max-w-md mx-auto mt-8">`;
                         currentPoi.encounters.forEach(encName => {
-                            html += `<button class="btn bg-gray-100" onclick="startEncounter('${encName}')">APPROACH ${encName.toUpperCase()}</button>`;
+                            // Removed "APPROACH " from the button text
+                            html += `<button class="btn bg-gray-100" onclick="startEncounter('${encName}')">${encName.toUpperCase()}</button>`;
                         });
                         html += `</div>`;
                     }
@@ -520,7 +534,7 @@ function getStationMarket(type) {
             triggerTravel(dest, dest ? `APPROACHING ${dest.name}` : "DEPARTING STATION", 1000);
         }
 
-        function triggerTravel(dest, msg, dur) {
+	function triggerTravel(dest, msg, dur) {
             const ov = document.getElementById('travel-overlay');
             const bar = document.getElementById('progress-bar');
             document.getElementById('travel-text').innerText = msg;
@@ -530,7 +544,18 @@ function getStationMarket(type) {
                 let pc = ((Date.now() - start) / dur) * 100;
                 bar.style.width = pc + "%";
                 if (pc >= 100) { 
-                    clearInterval(t); currentPoi = dest; ov.style.display = 'none'; updateUI(); if (activeTab === 'map') renderMap();
+                    clearInterval(t); 
+                    currentPoi = dest; 
+                    ov.style.display = 'none'; 
+                    
+                    // --- NEW: Check if we arrived at a standalone encounter ---
+                    if (currentPoi && currentPoi.type === 'Encounter') {
+                        startEncounter(currentPoi.name);
+                    } else {
+                        setLocalView('menu'); // Normal station
+                    }
+                    
+                    if (activeTab === 'map') renderMap();
                 }
             }, 30);
         }
