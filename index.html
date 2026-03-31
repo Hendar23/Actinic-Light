@@ -373,7 +373,7 @@ function getStationMarket(type) {
                 currentEncounterName = null;
                 currentDialogueNode = null;
                 
-                // --- NEW: Leave logic ---
+                // --- Leave logic ---
                 if (currentPoi && currentPoi.type === 'Encounter') {
                     triggerLocalTravel(-1); // Standalone: Undock back to space
                 } else {
@@ -413,7 +413,7 @@ function getStationMarket(type) {
                             </div>
                             <div>
                                 <div class="text-2xl leading-none mb-1">${p.name.toUpperCase()}</div>
-                                <div class="text-lg text-gray-600">(${p.type})</div>
+                                ${p.type === 'Encounter' ? '' : `<div class="text-lg text-gray-600">${p.type}</div>`}
                             </div>
                         </div>
                     </button>`;
@@ -433,9 +433,9 @@ function getStationMarket(type) {
                         <div class="w-24 h-24 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
                             <img src="${imagePath}" alt="${currentPoi.type}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
                         </div>
-                        <div>
+<div>
                             <h2 class="text-4xl font-bold uppercase">${currentPoi.name}</h2>
-                            <p class="text-xl font-bold uppercase text-gray-600">Facility: ${currentPoi.type}</p>
+                            ${currentPoi.type === 'Encounter' ? '' : `<p class="text-xl font-bold uppercase text-gray-600">Facility: ${currentPoi.type}</p>`}
                         </div>
                     </div>
                 `;                if (localView === 'menu') {
@@ -447,7 +447,7 @@ function getStationMarket(type) {
                         <button class="btn" onclick="setLocalView('sell')">SELL COMMODITIES</button>
                     </div>`;
 
-// --- NEW ENCOUNTER BUTTONS LOGIC ---
+// --- ENCOUNTER BUTTONS LOGIC ---
                     if (currentPoi.encounters && currentPoi.encounters.length > 0) {
                         html += `<div class="space-y-4 max-w-md mx-auto mt-8">`;
                         currentPoi.encounters.forEach(encName => {
@@ -460,8 +460,14 @@ function getStationMarket(type) {
                     // Undock Button
                     html += `<div class="space-y-4 max-w-md mx-auto mt-12"><button class="btn bg-gray-200" onclick="triggerLocalTravel(-1)">UNDOCK</button></div>`;
 
-                } else if (localView === 'encounter') {
-                    // --- NEW DIALOGUE RENDERING LOGIC ---
+			} else if (localView === 'encounter') {
+                    
+                    // --- Render description for standalone encounters ---
+                    if (currentPoi && currentPoi.type === 'Encounter') {
+                        html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">			${getPoiDescription(currentPoi)}</p>`;
+                    }
+
+                    // --- DIALOGUE RENDERING LOGIC ---
                     const encData = interactions[currentEncounterName];
                     const node = encData.dialogue[currentDialogueNode];
                     const encImagePath = `assets/${encData.image || 'default.png'}`;
@@ -508,7 +514,7 @@ function getStationMarket(type) {
                             const can = localView === 'buy' ? (player.credits >= price && total < player.cargoMax) : (qty > 0);
                             
                             html += `<div class="market-item">
-                                <span class="text-sm sm:text-lg overflow-hidden text-ellipsis whitespace-nowrap" title="${itemName}">${itemName}</span>
+                                <span class="text-sm sm:text-lg leading-tight pr-1" title="${itemName}">${itemName}</span>
                                 <span class="text-center">${price}</span><span class="text-center">${qty}</span>
                                 ${getMarketContext(itemName, price, localView)}
                                 <button class="trade-btn" onclick="${localView}Good('${itemName}', ${price})" ${can ? '' : 'disabled'}>${localView.toUpperCase()}</button>
