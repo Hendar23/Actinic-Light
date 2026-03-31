@@ -375,7 +375,7 @@ function getStationMarket(type) {
                 
                 // --- NEW: Leave logic ---
                 if (currentPoi && currentPoi.type === 'Encounter') {
-                    triggerLocalTravel(-1); // Standalone: Undock back to deep space
+                    triggerLocalTravel(-1); // Standalone: Undock back to space
                 } else {
                     setLocalView('menu'); // Nested: Return to the POI trade menu
                 }
@@ -397,7 +397,7 @@ function getStationMarket(type) {
             if (!currentSystem) return;
 
             if (!currentPoi) {
-                let html = `<h2 class="text-4xl font-bold uppercase">${currentSystem.name}</h2><p class="text-2xl font-bold uppercase text-gray-600 mb-6 border-b-2 border-black">Deep Space</p>`;
+                let html = `<h2 class="text-4xl font-bold uppercase">${currentSystem.name}</h2></p>`;
                 
                 currentSystem.pois.forEach((p, i) => {
                     // Re-use the image resolution logic for the menu buttons
@@ -567,26 +567,39 @@ function getStationMarket(type) {
             if (Math.abs(dx) > 5 || Math.abs(dy) > 5) dragThreshold = true;
             camera.x -= dx; camera.y -= dy; lastMouse = { x, y }; renderMap();
         }
-        function handleUp(x, y) {
+
+function handleUp(x, y) {
             if (!isDragging || activeTab !== 'map') return;
             isDragging = false;
+            
             if (!dragThreshold) {
                 const r = canvas.getBoundingClientRect();
-                const wx = ((x - r.left) + camera.x) / camera.zoom, wy = ((y - r.top) + camera.y) / camera.zoom;
+                const wx = ((x - r.left) + camera.x) / camera.zoom;
+                const wy = ((y - r.top) + camera.y) / camera.zoom;
+                
                 galaxy.forEach(s => {
                     const d = Math.sqrt((wx - s.x * drawScale)**2 + (wy - s.y * drawScale)**2);
-                    if (d < 20 / camera.zoom && s.id !== currentSystem.id) {
-                        if (Math.sqrt((currentSystem.x - s.x)**2 + (currentSystem.y - s.y)**2) <= jumpRange) {
-                            currentSystem = s; 
-                            centerOnSystem(s); 
-                            randomizeMarket(); // Market fluctuates when jumping to a new star
-                            triggerTravel(null, `WARPING TO ${s.name}`, 2500);
+                    
+                    // If we clicked on a star node
+                    if (d < 20 / camera.zoom) {
+                        if (s.id === currentSystem.id) {
+                            // --- NEW: If it's the current system, just open the local menu ---
+                            switchTab('local');
+                        } else {
+                            // Existing logic: If it's a different system, try to warp there
+                            if (Math.sqrt((currentSystem.x - s.x)**2 + (currentSystem.y - s.y)**2) <= jumpRange) {
+                                currentSystem = s; 
+                                centerOnSystem(s); 
+                                randomizeMarket(); // Market fluctuates when jumping to a new star
+                                triggerTravel(null, `WARPING TO ${s.name}`, 2500);
+                            }
                         }
                     }
                 });
             }
         }
-        canvas.addEventListener('wheel', e => {
+
+     canvas.addEventListener('wheel', e => {
             if (activeTab !== 'map') return; e.preventDefault();
             const r = canvas.getBoundingClientRect();
             const mx = e.clientX - r.left, my = e.clientY - r.top;
