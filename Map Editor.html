@@ -14,7 +14,7 @@
         .btn:hover:not(:disabled) { background: #e5e7eb; }
         .btn:active:not(:disabled) { background: #000; color: #fff; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
-        input[type="text"], input[type="number"], textarea, select { border: 1px solid #000; padding: 4px; width: 100%; font-family: inherit; }
+        input[type="text"], input[type="number"], textarea, select { border: 1px solid #000; padding: 4px; width: 100%; font-family: inherit; box-sizing: border-box; }
         input[type="range"] { accent-color: #000; }
     </style>
 </head>
@@ -56,7 +56,8 @@
 
     <script>
         let galaxy = [];
-        let filePrefix = ""; // Stores the commodities and stationTypes data so we don't overwrite it
+        let filePrefix = ""; // Stores data above the galaxy array (e.g., commodities)
+        let fileSuffix = ""; // Stores data below the galaxy array (e.g., interactions)
         let selectedSystem = null;
         let fileHandle = null; 
         
@@ -70,7 +71,6 @@
         const ctx = canvas.getContext('2d');
         const inspector = document.getElementById('inspector-panel');
 
-        // Updated with your specific station types
         const typesList = [
             'Trade Hub', 'Wheat Farm', 'Ice Mine', 'Wheat Processing Plant', 
             'Livestock Farm', 'Meat Processing Plant', 'Copper Mine', 'Iron Mine', 
@@ -209,30 +209,23 @@
             isDraggingMap = false;
         });
 
-canvas.addEventListener('wheel', (e) => {
+        canvas.addEventListener('wheel', (e) => {
             e.preventDefault();
-            
-            // 1. Get mouse position relative to canvas
             const r = canvas.getBoundingClientRect();
             const mx = e.clientX - r.left;
             const my = e.clientY - r.top;
             
-            // 2. Find the exact world coordinates under the mouse BEFORE zooming
             const wx = (mx + camera.x) / camera.zoom;
             const wy = (my + camera.y) / camera.zoom;
             
-            // 3. Apply the zoom multiplier
             const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
             camera.zoom *= zoomAmount;
-            camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 4); // Clamp zoom levels
+            camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 4);
             
-            // 4. Shift the camera so the mouse remains over the exact same world coordinates
             camera.x = (wx * camera.zoom) - mx;
             camera.y = (wy * camera.zoom) - my;
             
-            // Keep the background grid panning synced with the camera
             document.getElementById('canvas-container').style.backgroundPosition = `${-camera.x}px ${-camera.y}px`;
-            
             render();
         }, { passive: false });
 
@@ -249,17 +242,17 @@ canvas.addEventListener('wheel', (e) => {
                 </div>
                 
                 <div class="space-y-2">
-                    <label class="block text-xs font-bold uppercase">Name</label>
+                    <label class="block text-xs font-bold uppercase mt-2">System Name</label>
                     <input type="text" value="${selectedSystem.name}" oninput="updateSystemData('name', this.value)">
                 </div>
 
                 <div class="flex gap-2">
                     <div class="flex-1">
-                        <label class="block text-xs font-bold uppercase">X</label>
+                        <label class="block text-xs font-bold uppercase mt-2">X Coordinate</label>
                         <input type="number" id="insp-x" value="${selectedSystem.x}" oninput="updateSystemData('x', this.value)">
                     </div>
                     <div class="flex-1">
-                        <label class="block text-xs font-bold uppercase">Y</label>
+                        <label class="block text-xs font-bold uppercase mt-2">Y Coordinate</label>
                         <input type="number" id="insp-y" value="${selectedSystem.y}" oninput="updateSystemData('y', this.value)">
                     </div>
                 </div>
@@ -274,7 +267,7 @@ canvas.addEventListener('wheel', (e) => {
 
             (selectedSystem.pois || []).forEach((poi, index) => {
                 html += `
-                    <div class="border border-gray-400 p-2 bg-gray-50 relative flex flex-col gap-2">
+                    <div class="border border-gray-400 p-2 bg-gray-50 relative flex flex-col gap-1">
                         <button class="absolute top-1 right-2 text-red-500 font-bold text-xs" onclick="deletePoi(${index})">X</button>
                         
                         <div>
@@ -283,15 +276,27 @@ canvas.addEventListener('wheel', (e) => {
                         </div>
                         
                         <div>
-                            <label class="block text-[10px] font-bold uppercase">Station Type</label>
+                            <label class="block text-[10px] font-bold uppercase mt-1">Station Type</label>
                             <select class="text-xs" oninput="updatePoiData(${index}, 'type', this.value)">
                                 ${typesList.map(t => `<option value="${t}" ${poi.type === t ? 'selected' : ''}>${t}</option>`).join('')}
                             </select>
                         </div>
                         
+                        <div class="flex gap-2">
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-bold uppercase mt-1">Custom Image</label>
+                                <input type="text" class="text-xs" placeholder="default.png" value="${poi.image || ''}" oninput="updatePoiData(${index}, 'image', this.value)">
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-[10px] font-bold uppercase">Description (Optional)</label>
-                            <textarea class="text-xs h-16 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
+                            <label class="block text-[10px] font-bold uppercase mt-1">Encounters (Comma Separated)</label>
+                            <input type="text" class="text-xs" placeholder="Shady Bartender, Bouncer" value="${(poi.encounters || []).join(', ')}" oninput="updatePoiData(${index}, 'encounters', this.value)">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label>
+                            <textarea class="text-xs h-12 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
                         </div>
                     </div>
                 `;
@@ -317,7 +322,12 @@ canvas.addEventListener('wheel', (e) => {
         }
 
         function updatePoiData(index, key, value) {
-            selectedSystem.pois[index][key] = value;
+            if (key === 'encounters') {
+                // Convert the comma-separated string back into an array, filtering out empty strings
+                selectedSystem.pois[index][key] = value.split(',').map(s => s.trim()).filter(s => s !== '');
+            } else {
+                selectedSystem.pois[index][key] = value;
+            }
         }
 
         function addNewSystem() {
@@ -345,7 +355,7 @@ canvas.addEventListener('wheel', (e) => {
 
         function addPoi() {
             if(!selectedSystem.pois) selectedSystem.pois = [];
-            selectedSystem.pois.push({ name: "New POI", type: "Trade Hub", description: "" });
+            selectedSystem.pois.push({ name: "New POI", type: "Trade Hub", description: "", encounters: [] });
             buildInspector();
         }
 
@@ -353,8 +363,6 @@ canvas.addEventListener('wheel', (e) => {
             selectedSystem.pois.splice(index, 1);
             buildInspector();
         }
-
-        // --- FILE SYSTEM ACCESS API LOGIC ---
 
         async function connectFile() {
             try {
@@ -369,19 +377,29 @@ canvas.addEventListener('wheel', (e) => {
                 const file = await fileHandle.getFile();
                 let text = await file.text();
 
-                // Split the file to preserve commodities and stationTypes
                 const galaxyIndex = text.indexOf('const galaxy =');
                 if (galaxyIndex === -1) { 
                     alert("Could not find 'const galaxy' in file."); 
                     return; 
                 }
 
+                // Preserve everything before the galaxy array
                 filePrefix = text.substring(0, galaxyIndex);
-                let galaxyText = text.substring(galaxyIndex);
+                let restOfText = text.substring(galaxyIndex);
                 
-                // Clean the galaxy string for parsing
-                galaxyText = galaxyText.replace(/const\s+galaxy\s*=\s*/, '').trim();
-                if (galaxyText.endsWith(';')) galaxyText = galaxyText.slice(0, -1);
+                // Smart regex to extract just the array and capture any suffix (like the interactions object)
+                const match = restOfText.match(/const\s+galaxy\s*=\s*(\[[\s\S]*?\])\s*;/);
+                
+                let galaxyText = "";
+                if (match) {
+                    galaxyText = match[1];
+                    fileSuffix = restOfText.substring(match[0].length); // Save the interactions block
+                } else {
+                    // Fallback
+                    galaxyText = restOfText.replace(/const\s+galaxy\s*=\s*/, '').trim();
+                    if (galaxyText.endsWith(';')) galaxyText = galaxyText.slice(0, -1);
+                    fileSuffix = "";
+                }
                 
                 const parsed = new Function('return ' + galaxyText)(); 
                 
@@ -423,14 +441,25 @@ canvas.addEventListener('wheel', (e) => {
             btn.innerText = "SAVING...";
 
             try {
-                // Recombine the preserved prefix with the updated galaxy array
+                // Recombine prefix, updated galaxy array, and the suffix
                 let out = filePrefix + "const galaxy = [\n";
+                
                 galaxy.forEach((sys, i) => {
                     let poisStr = (sys.pois || []).map(p => {
                         let pStr = `{ name: "${p.name}", type: "${p.type}"`;
+                        
+                        if (p.image && p.image.trim() !== "") {
+                            pStr += `, image: "${p.image.trim()}"`;
+                        }
+                        
+                        if (p.encounters && p.encounters.length > 0) {
+                            pStr += `, encounters: [${p.encounters.map(e => `"${e}"`).join(", ")}]`;
+                        }
+
                         if (p.description && p.description.trim() !== "") {
                             pStr += `, description: "${p.description.replace(/"/g, '\\"')}"`;
                         }
+                        
                         pStr += ` }`;
                         return pStr;
                     }).join(", ");
@@ -439,7 +468,9 @@ canvas.addEventListener('wheel', (e) => {
                     if (i < galaxy.length - 1) out += ",";
                     out += "\n";
                 });
-                out += "];\n";
+                
+                // Add the suffix back safely
+                out += "];" + (fileSuffix.startsWith('\n') ? '' : '\n') + fileSuffix;
 
                 const writable = await fileHandle.createWritable();
                 await writable.write(out);
