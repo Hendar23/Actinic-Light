@@ -8,15 +8,15 @@ const interactions = {
             "start": {
                 text: "\"What're you drinking, spacer?\"",
                 options: [
-                    { text: "Just information today.", nextNode: "info" },
-                    { text: "Whatever is on tap.", nextNode: "drink" },
+                    { text: "Can you just, like, give me some money?", nextNode: "cash" },
+                    { text: "Whatever is on tap.", nextNode: "drink", credits: -1 },
                     { text: "[Leave]", nextNode: "leave" } // 'leave' is a special keyword
                 ]
             },
-            "info": {
-                text: "\"Information costs credits. Try the Trade Hub notice board if you're broke. I just pour drinks.\"",
+            "cash": {
+                text: "\"I guess this is DEVMODE. so why not?\"",
                 options: [
-                    { text: "I'll keep that in mind. [Leave]", nextNode: "leave" }
+                    { text: "Thanks! [Leave]", nextNode: "leave", credits: +1000 }
                 ]
             },
             "drink": {
@@ -134,7 +134,7 @@ const stationTypes = {
 // GALAXY MAP
 // ==========================================
 const galaxy = [
-    { id: 0, name: "Sol", x: 492, y: 535, pois: [{ name: "Earth Spacedock", type: "Trade Hub", image: "earth_tradehub.png", encounters: ["Shady Bartender"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." }, { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" }, { name: "Martian Wheat Farm", type: "Wheat Farm" }, { name: "Sol Taxis", type: "Encounter",image: "station001.png", description: "Cheap but not cheerful." }] },
+    { id: 0, name: "Sol", x: 492, y: 535, pois: [{ name: "Earth Spacedock", type: "Trade Hub", encounters: ["Shady Bartender"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." }, { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" }, { name: "Martian Wheat Farm", type: "Wheat Farm" }, { name: "Sol Taxis", type: "Encounter",image: "station001.png", description: "Cheap but not cheerful." }] },
     { id: 1, name: "Alpha Centauri", x: 520, y: 480, pois: [{ name: "Centauri Pastures", type: "Livestock Farm" }, { name: "Alpha Meats", type: "Meat Processing Plant" }] },
     { id: 2, name: "Sirius", x: 580, y: 550, pois: [{ name: "Sirius Iron Works", type: "Iron Mine" }, { name: "Dog Star Copper", type: "Copper Mine" }] },
     { id: 3, name: "Vega", x: 420, y: 410, pois: [{ name: "Vega Smelting", type: "Metal Ore Refinery" }, { name: "Lyra Machine Co.", type: "Machine Parts Factory" }] },
