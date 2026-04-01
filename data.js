@@ -14,7 +14,7 @@ const interactions = {
                 ]
             },
             "cash": {
-                text: "\"I guess this is DEVMODE. so why not?\"",
+                text: "\"I guess you are just testing the game, so why not? Here you go.\"",
                 options: [
                     { text: "Thanks! [Leave]", nextNode: "leave", credits: +1000 }
                 ]
@@ -67,6 +67,9 @@ const commodities = {
 // STATION TYPES & SUPPLY/DEMAND LOGIC
 // ==========================================
 const stationTypes = {
+    "Outpost": {
+        // An empty station shell for hosting encounters. 
+    },
     "Trade Hub": {
 	defaultImage: "tradehub.png",
         produces: ["Water", "Wheat", "Meat", "Packaged Food", "Copper Ore", "Iron Ore", "Silicon Ore", "Gold Ore", "Platinum Ore", "Copper Bars", "Iron Bars", "Silicon Wafers", "Gold Bars", "Platinum Bars", "Machine Parts", "Microchips"],
@@ -134,7 +137,7 @@ const stationTypes = {
 // GALAXY MAP
 // ==========================================
 const galaxy = [
-    { id: 0, name: "Sol", x: 492, y: 535, pois: [{ name: "Earth Spacedock", type: "Trade Hub", encounters: ["Shady Bartender"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." }, { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" }, { name: "Martian Wheat Farm", type: "Wheat Farm" }, { name: "Sol Taxis", type: "Encounter",image: "station001.png", description: "Cheap but not cheerful." }] },
+    { id: 0, name: "Sol", x: 492, y: 535, pois: [{ name: "Earth Spacedock", type: "Trade Hub", encounters: ["Shady Bartender"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." }, { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" }, { name: "The Church of Moo", type: "Outpost", description: "It's a bit creepy." },  { name: "Martian Wheat Farm", type: "Wheat Farm" }, { name: "Sol Taxis", type: "Encounter",image: "station001.png", description: "Cheap but not cheerful." }] },
     { id: 1, name: "Alpha Centauri", x: 520, y: 480, pois: [{ name: "Centauri Pastures", type: "Livestock Farm" }, { name: "Alpha Meats", type: "Meat Processing Plant" }] },
     { id: 2, name: "Sirius", x: 580, y: 550, pois: [{ name: "Sirius Iron Works", type: "Iron Mine" }, { name: "Dog Star Copper", type: "Copper Mine" }] },
     { id: 3, name: "Vega", x: 420, y: 410, pois: [{ name: "Vega Smelting", type: "Metal Ore Refinery" }, { name: "Lyra Machine Co.", type: "Machine Parts Factory" }] },

@@ -159,7 +159,7 @@
                 "Machine Parts Factory": `Automated arms assemble components with precise rhythm.`,
                 "Chip Fab": `Dust-free cleanrooms manufacture high-tech circuitry.`
             };
-            return poi.description || descs[poi.type] || `A standard industrial outpost.`;
+            return poi.description || descs[poi.type] || `DEFAULT`;
         }
 
         function checkExistingSave() {
@@ -440,7 +440,7 @@ function getStationMarket(type) {
                         </div>
                         <div>
                             <div class="text-2xl leading-none mb-1">${p.name.toUpperCase()}</div>
-                            ${p.type === 'Encounter' ? '' : `<div class="text-lg text-gray-600">${p.type}</div>`}
+                            ${p.type === 'Encounter' || p.type === 'Outpost' ? '' : `<div class="text-lg text-gray-600">${p.type}</div>`}
                         </div>
                     </div>
                 </button>`;
@@ -460,21 +460,30 @@ function getStationMarket(type) {
                     </div>
                     <div>
                         <h2 class="text-4xl font-bold uppercase">${currentPoi.name}</h2>
-                        ${currentPoi.type === 'Encounter' ? '' : `<p class="text-xl font-bold uppercase text-gray-600">Facility: ${currentPoi.type}</p>`}
+                        ${currentPoi.type === 'Encounter' || currentPoi.type === 'Outpost' ? '' : `<p class="text-xl font-bold uppercase text-gray-600"> ${currentPoi.type}</p>`}
                     </div>
                 </div>
             `;
         }
 
-        function renderStationMenu() {
-            let html = `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>
-                <div class="space-y-4 max-w-md mx-auto">
+function renderStationMenu() {
+            let html = `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
+
+            // --- NEW: Check if the station actually has a market ---
+            const config = stationTypes[currentPoi.type] || {};
+            const hasMarket = (config.produces && config.produces.length > 0) || (config.consumes && Object.keys(config.consumes).length > 0);
+
+            if (hasMarket) {
+                html += `<div class="space-y-4 max-w-md mx-auto">
                     <button class="btn" onclick="setLocalView('buy')">BUY COMMODITIES</button>
                     <button class="btn" onclick="setLocalView('sell')">SELL COMMODITIES</button>
                 </div>`;
+            }
 
+            // --- Encounters Rendering ---
             if (currentPoi.encounters && currentPoi.encounters.length > 0) {
-                html += `<div class="space-y-4 max-w-md mx-auto mt-8">`;
+                const mtClass = hasMarket ? "mt-8" : ""; // Only add top margin if buttons are above it
+                html += `<div class="space-y-4 max-w-md mx-auto ${mtClass}">`;
                 currentPoi.encounters.forEach(encName => {
                     html += `<button class="btn bg-gray-100" onclick="startEncounter('${encName}')">${encName.toUpperCase()}</button>`;
                 });
