@@ -6,17 +6,17 @@ const interactions = {
         image: "portrait001.png", // Will fallback to default.png if missing
         dialogue: {
             "start": {
-                text: "\"What're you drinking, spacer?\"",
+                text: "The bartender wipes down the sticky counter with a greasy rag.<br><br><i>\"What're you drinking, spacer?\"</i>",
                 options: [
                     { text: "Can you just, like, give me some money?", nextNode: "cash" },
- 		    { text: "Got any work?", nextNode: "work", hidesOnFlag: "knows_frank" },
-		    { text: "About that job...", nextNode: "work2", requiresFlag: "knows_frank" },
+                    { text: "Got any work?", nextNode: "work", hidesOnFlag: "knows_frank" },
+                    { text: "About that job...", nextNode: "work2", requiresFlag: "knows_frank" },
                     { text: "Whatever is on tap.", nextNode: "drink", credits: -1 },
                     { text: "[Leave]", nextNode: "leave" } // 'leave' is a special keyword
                 ]
             },
             "cash": {
-                text: "\"I guess you are just testing the game, so why not? Here you go.\"",
+                text: "He rolls his eyes and tosses a cred-chip onto the bar.<br><br><i>\"I guess you are just testing the game, so why not? Here you go.\"</i>",
                 options: [
                     { text: "Thanks! [Leave]", nextNode: "leave", credits: +1000 }
                 ]
@@ -28,13 +28,13 @@ const interactions = {
                 ]
             },
             "work": {
-                text: "\"Speak to Frank at Sol taxis, they are always looking for drivers.\"",
+                text: "He leans in close over the bar.<br><br><i>\"Speak to Frank at Sol taxis, they are always looking for drivers.\"</i>",
                 options: [
                     { text: "Thanks. [Leave]", nextNode: "leave", setFlag: "knows_frank" }
                 ]
             },
             "work2": {
-                text: "\"Like I said, speak to Frank at Sol taxis.\"",
+                text: "He sighs, looking annoyed that you asked again.<br><br><i>\"Like I said, speak to Frank at Sol taxis.\"</i>",
                 options: [
                     { text: "Thanks. [Leave]", nextNode: "leave"}
                 ]
@@ -43,10 +43,24 @@ const interactions = {
     },
 
 "Dispatcher Frank": {
+        requiresFlag: "knows_frank",
         image: "portrait002.png", 
         dialogue: {
             "start": {
-                text: "The dispatchers office is cluttered and dirty. Smoke hangs in the air. \"Yeah?\"",
+                text: "The dispatchers office is cluttered and dirty. Smoke hangs in the air.<br><br><i>\"Yeah?\"</i>",
+                options: [
+                    { text: "Nothing. [Leave]", nextNode: "leave" } 
+                ]
+            }
+        }
+    },
+
+"Brother Moo": {
+	requiresFlag: "knows_frank",
+        image: "brother_moo.png", 
+        dialogue: {
+            "start": {
+                text: "<i>\"Greetings.\"</i>",
                 options: [
                     { text: "Nothing. [Leave]", nextNode: "leave" } 
                 ]
@@ -151,7 +165,7 @@ const stationTypes = {
 // GALAXY MAP
 // ==========================================
 const galaxy = [
-    { id: 0, name: "Sol", x: 492, y: 535, pois: [{ name: "Earth Spacedock", type: "Trade Hub", encounters: ["Shady Bartender"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." }, { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" }, { name: "The Church of Moo", type: "Outpost", description: "It's a bit creepy." },  { name: "Martian Wheat Farm", type: "Wheat Farm" }, { name: "Sol Taxis", type: "Outpost",image: "station001.png", description: "Cheap but not cheerful.", encounters: ["Dispatcher Frank"], requiresFlag: "knows_frank" }] },
+    { id: 0, name: "Sol", x: 492, y: 535, pois: [{ name: "Earth Spacedock", type: "Trade Hub", encounters: ["Shady Bartender", "Brother Moo"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." }, { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" },  { name: "Martian Wheat Farm", type: "Wheat Farm" }, { name: "Sol Taxis", type: "Outpost",image: "station001.png", description: "Cheap but not cheerful.", encounters: ["Dispatcher Frank"], requiresFlag: "knows_frank" }] },
     { id: 1, name: "Alpha Centauri", x: 520, y: 480, pois: [{ name: "Centauri Pastures", type: "Livestock Farm" }, { name: "Alpha Meats", type: "Meat Processing Plant" }] },
     { id: 2, name: "Sirius", x: 580, y: 550, pois: [{ name: "Sirius Iron Works", type: "Iron Mine" }, { name: "Dog Star Copper", type: "Copper Mine" }] },
     { id: 3, name: "Vega", x: 420, y: 410, pois: [{ name: "Vega Smelting", type: "Metal Ore Refinery" }, { name: "Lyra Machine Co.", type: "Machine Parts Factory" }] },
