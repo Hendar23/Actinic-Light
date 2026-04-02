@@ -1,0 +1,116 @@
+# 🌌 Space Trader Engine: Data Guide & Templates
+
+This document outlines the data structures required to build out the universe, economy, and narrative of the Space Trader engine. 
+
+---
+
+## 1. Encounters & Dialogues (`interactions`)
+This is the narrative engine. Encounters are stored in the `interactions` object. Every encounter requires a `"start"` node to function.
+
+```javascript
+    "Template Character Name": {
+        // --- OPTIONAL ROOT SETTINGS ---
+        image: "portrait003.png",       // Portrait image in the assets folder
+        requiresFlag: "heard_rumor",    // Character WON'T appear unless player has this flag
+        hidesOnFlag: "mission_done",    // Character DISAPPEARS permanently once this flag is true
+        
+        // --- DIALOGUE TREE ---
+        dialogue: {
+            "start": {
+                // You can use <br> for line breaks and <i> for italics
+                text: "The room is dark.<br><br><i>\"Who goes there?\"</i>",
+                options: [
+                    // 1. A basic dialogue option leading to another node
+                    { text: "Just a traveler.", nextNode: "ask_questions" },
+                    
+                    // 2. An option that ONLY appears if the player has a specific flag
+                    { text: "Frank sent me.", nextNode: "secret_stash", requiresFlag: "knows_frank" },
+                    
+                    // 3. An option that HIDES once the player knows the information
+                    { text: "What is this place?", nextNode: "lore_dump", hidesOnFlag: "knows_lore" },
+                    
+                    // 4. A transaction option (Cost) - Engine disables button if player can't afford it
+                    { text: "Buy the map.", nextNode: "bought_map", credits: -50 },
+                    
+                    // 5. A transaction option (Reward)
+                    { text: "Here is your package.", nextNode: "reward", credits: +200 },
+                    
+                    // 6. An option that alters the game state (Giving/Taking Flags)
+                    { text: "I'll do the job.", nextNode: "leave", setFlag: "active_job", clearFlag: "looking_for_work" },
+
+                    // 7. The special LEAVE command (Closes the encounter UI)
+                    { text: "Goodbye. [Leave]", nextNode: "leave" }
+                ]
+            },
+            
+            // ... Next nodes go here, following the exact same structure as "start"
+            "ask_questions": {
+                text: "<i>\"Keep moving. We don't like strangers.\"</i>",
+                options: [
+                    { text: "[Leave]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
+
+
+##2. Galaxy Map & Stations (galaxy)
+This array defines the physical map. It contains System objects, which in turn contain POI (Point of Interest) objects.
+
+{ 
+        id: 99,                     // Must be unique
+        name: "Template System",    // Display name on the map
+        x: 500, y: 500,             // Coordinates for the map canvas
+        pois: [
+            { 
+                // --- STANDARD STATION ---
+                name: "Template Hub", 
+                type: "Trade Hub",    // Must match a type in stationTypes
+                description: "A bustling center of commerce.", 
+                image: "custom_station.png", // Optional: overrides default station image
+            },
+            { 
+                // --- OUTPOST / DERELICT (No Market) ---
+                name: "Abandoned Relay", 
+                type: "Outpost",      // Outposts have no BUY/SELL buttons
+                description: "It's completely dark.",
+                
+                // Adding characters to the station menu:
+                encounters: ["Template Character Name", "Shady Bartender"], 
+                
+                // Hiding the ENTIRE station from the local menu based on state:
+                requiresFlag: "has_coordinates", 
+                hidesOnFlag: "relay_destroyed"
+            }
+        ] 
+    },
+
+##3. Station Economies (stationTypes)
+This object dictates what markets buy and sell.
+
+produces: An Array [] of items the station SELLS to the player.
+
+consumes: An Object {} of items the station BUYS from the player, mapped to a demand multiplier.
+
+"Template Factory Type": {
+        defaultImage: "factory.png", // Used if the POI doesn't specify an image
+        
+        // Items it SELLS (Sold to player at a 20% discount from base price)
+        produces: ["Machine Parts", "Microchips"],
+        
+        // Items it BUYS (Demand multipliers: High = +40%, Average = +20%, Low = +5%, TradeHub = +5%)
+        consumes: { 
+            "Copper Bars": "High", 
+            "Iron Bars": "Average", 
+            "Packaged Food": "Low" 
+        }
+    },
+
+##4. Commodities (commodities)
+This object sets the baseline economic rules for the randomizer. Every item in the game must be listed here for the market engine to function.
+
+"Template Item": { 
+        basePrice: 100, // The baseline "average" value
+        min: 60,        // The absolute cheapest it can ever get during random fluctuations
+        max: 150        // The absolute most expensive it can ever get
+    },
