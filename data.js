@@ -17,9 +17,9 @@ const interactions = {
         image: "portrait001.png", // Will fallback to default.png if missing
         dialogue: {
             "start": {
-                text: "The bartender wipes down the sticky counter with a greasy rag.<br><br><i>\"What're you drinking, spacer?\"</i>",
+                text: "\"What're you drinking, spacer?\"</i>",
                 options: [
-                    { text: "Can you just give me some money?", nextNode: "cash" },
+                    //{ text: "Can you just give me some money?", nextNode: "cash" },
                     { text: "Got any work?", nextNode: "work", hidesOnFlag: "knows_frank" },
                     { text: "About that job...", nextNode: "work2", requiresFlag: "knows_frank" },
                     { text: "Whatever is on tap.", nextNode: "drink", credits: -1 },
@@ -39,7 +39,7 @@ const interactions = {
                 ]
             },
 	    "work": {
-                text: "\"Speak to Frank at Sol taxis, they are always looking for drivers.\"</i>",
+                text: "\"Speak to Frank at Sol taxis, they are always looking for pilots.\"</i>",
                 options: [
                     { text: "Thanks. [Leave]", nextNode: "leave", setFlag: "knows_frank", startTask: "meet_frank" }
                 ]
