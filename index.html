@@ -67,7 +67,7 @@
 
     <div class="bg-black text-white p-3 text-xl font-bold uppercase flex justify-between items-center shrink-0">
         <div>Cr: <span id="status-credits">1000</span></div>
-        <div>Cgo: <span id="status-cargo">0</span>/<span id="status-cargo-max">20</span></div>
+        <div>Cargo: <span id="status-cargo">0</span>/<span id="status-cargo-max">20</span></div>
     </div>
 
     <div class="flex shrink-0 border-main border-t-0 border-l-0 border-r-0">
@@ -147,19 +147,13 @@
     }
 }
 
-        function getPoiDescription(poi) {
-            const descs = {
-                "Trade Hub": `A massive central trading hub. Everything is available.`,
-                "Wheat Farm": `Vast hydroponic bays provide grain for the sector.`,
-                "Ice Mine": `Chucnks of asteroid are superheated heated to release precious water vapour. `,
-                "Wheat Processing Plant": `Sterile corridors hum with food packaging machinery.`,
-                "Livestock Farm": `Large biological containment bays. Smells terrible.`,
-                "Meat Processing Plant": `You don't want to know how the sausage is made.`,
-                "Metal Ore Refinery": `The deafening roar of smelting arrays echoes in the dark.`,
-                "Machine Parts Factory": `Automated arms assemble components with precise rhythm.`,
-                "Chip Fab": `Dust-free cleanrooms manufacture high-tech circuitry.`
-            };
-            return poi.description || descs[poi.type] || `DEFAULT`;
+	function getPoiDescription(poi) {
+            // 1. Check if the specific station in the galaxy array has a custom description override
+            if (poi.description) return poi.description;
+            
+            // 2. Otherwise, fetch the default description for this type from data.js
+            const config = stationTypes[poi.type] || {};
+            return config.description || `DEFAULT`;
         }
 
         function checkExistingSave() {
@@ -542,15 +536,22 @@ function renderEncounter() {
             const node = encData.dialogue[currentDialogueNode];
             const encImagePath = `assets/${encData.image || 'default.png'}`;
 
-            html += `
+		html += `
                 <div class="flex flex-col h-full min-h-[50vh]">
                     <div class="flex-grow bg-gray-50 p-6 border-2 border-black mb-6 flex gap-6 shadow-inner">
-                        <div class="w-32 h-32 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
-                            <img src="${encImagePath}" alt="${currentEncounterName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                        
+                        <div class="shrink-0 flex flex-col items-center gap-2">
+                            <div class="w-32 h-32 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                                <img src="${encImagePath}" alt="${currentEncounterName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                            </div>
+                            <div class="text-lg font-bold uppercase text-center w-32 leading-tight">
+                                ${currentEncounterName}
+                            </div>
                         </div>
-			<div class="text-2xl font-bold text-gray-800 self-center">
-  				${node.text}
-			</div>
+
+                        <div class="text-2xl font-bold text-gray-800 self-center">
+                            ${node.text}
+                        </div>
                     </div>
                     <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
             `;
