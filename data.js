@@ -9,6 +9,7 @@ const interactions = {
                 text: "\"What're you drinking, spacer?\"",
                 options: [
                     { text: "Can you just, like, give me some money?", nextNode: "cash" },
+ 		    { text: "Got any work?", nextNode: "work", hidesOnFlag: "knows_frank" },
                     { text: "Whatever is on tap.", nextNode: "drink", credits: -1 },
                     { text: "[Leave]", nextNode: "leave" } // 'leave' is a special keyword
                 ]
@@ -23,6 +24,12 @@ const interactions = {
                 text: "He pours you a glowing blue liquid. It tastes like battery acid and regret.",
                 options: [
                     { text: "Ugh. Thanks. [Leave]", nextNode: "leave" }
+                ]
+            },
+            "work": {
+                text: "\"Speak to Frank at Sol taxis, they are always looking for drivers.\"",
+                options: [
+                    { text: "Thanks. [Leave]", nextNode: "leave", setFlag: "knows_frank" }
                 ]
             }
         }

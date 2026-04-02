@@ -118,7 +118,7 @@
         let dragThreshold = false;
         let initialPinchDistance = null;
 
-        let player = { credits: 1000, cargo: {}, cargoMax: 20 };
+        let player = { credits: 1000, cargo: {}, cargoMax: 20, flags: {} };
         let currentSystem = null;
         let currentPoi = null; 
         let jumpRange = 100;
@@ -168,9 +168,12 @@
             }
         }
 
-        function startNewGame() {
+	function startNewGame() {
             if (typeof galaxy === 'undefined') return alert("data.js missing!");
-            player = { credits: 100, cargo: {}, cargoMax: 20 };
+            
+            // --- FIXED: Added flags: {} to the new player object ---
+            player = { credits: 100, cargo: {}, cargoMax: 20, flags: {} }; 
+            
             currentSystem = galaxy[0];
             randomizeMarket(); // Initialize random prices
             document.getElementById('start-screen').style.display = 'none';
@@ -193,10 +196,14 @@
             setTimeout(() => btn.innerText = "SAVE", 1500);
         }
 
-        function loadGame() {
+	function loadGame() {
             const data = JSON.parse(localStorage.getItem('spaceTraderSaveV4'));
             if (data && typeof galaxy !== 'undefined') {
                 player = data.player;
+                
+                // --- FIXED: Safely inject flags into older save files ---
+                player.flags = player.flags || {};
+                
                 currentSystem = galaxy.find(s => s.id === data.systemId) || galaxy[0];
                 currentPoi = currentSystem.pois.find(p => p.name === data.poiName) || null;
                 jumpRange = data.jumpRange || 100;
@@ -368,19 +375,22 @@ function getStationMarket(type) {
             setLocalView('encounter');
         }
 
-	function selectDialogue(nextNode, creditChange = 0) {
-            // Apply the credit transaction (adds rewards, subtracts costs)
+function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = '') {
+            // Apply the credit transaction
             player.credits += creditChange;
+
+            // --- NEW: Apply state changes ---
+            if (setFlag) player.flags[setFlag] = true;
+            if (clearFlag) player.flags[clearFlag] = false;
 
             if (nextNode === 'leave') {
                 currentEncounterName = null;
                 currentDialogueNode = null;
                 
-                // --- Leave logic ---
                 if (currentPoi && currentPoi.type === 'Encounter') {
-                    triggerLocalTravel(-1); // Standalone: Undock back to space
+                    triggerLocalTravel(-1); 
                 } else {
-                    setLocalView('menu'); // Nested: Return to the POI trade menu
+                    setLocalView('menu'); 
                 }
                 
             } else {
@@ -513,7 +523,7 @@ function renderStationMenu() {
             return html;
         }
 
-        function renderEncounter() {
+function renderEncounter() {
             let html = '';
             if (currentPoi && currentPoi.type === 'Encounter') {
                 html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
@@ -536,7 +546,13 @@ function renderStationMenu() {
                     <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
             `;
 
-		node.options.forEach(opt => {
+            node.options.forEach(opt => {
+                // If it requires a flag and the player doesn't have it, skip rendering
+                if (opt.requiresFlag && !player.flags[opt.requiresFlag]) return;
+                
+                // If it should be hidden when a flag is active, and the player has it, skip rendering
+                if (opt.hidesOnFlag && player.flags[opt.hidesOnFlag]) return;
+
                 let disabledAttr = '';
                 let creditTag = '';
                 
@@ -550,7 +566,7 @@ function renderStationMenu() {
                     }
                 }
 
-                html += `<button class="btn" onclick="selectDialogue('${opt.nextNode}', ${opt.credits || 0})" ${disabledAttr}>
+                html += `<button class="btn" onclick="selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}')" ${disabledAttr}>
                     <span>${opt.text}${creditTag}</span>
                 </button>`;
             });
