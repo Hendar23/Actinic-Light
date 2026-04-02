@@ -435,9 +435,14 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
             updateShipCargoUI(totalCargo);
         }
 
-        function renderPoiList() {
+	function renderPoiList() {
             let html = `<h2 class="text-4xl font-bold uppercase">${currentSystem.name}</h2>`;
             currentSystem.pois.forEach((p, i) => {
+                
+                // --- NEW: Check flags before rendering the POI ---
+                if (p.requiresFlag && !player.flags[p.requiresFlag]) return;
+                if (p.hidesOnFlag && player.flags[p.hidesOnFlag]) return;
+
                 const stationConfig = stationTypes[p.type] || {};
                 const imageFile = p.image || stationConfig.defaultImage || 'default.png';
                 const imagePath = `assets/${imageFile}`;
@@ -491,19 +496,19 @@ function renderStationMenu() {
             }
 
             if (currentPoi.encounters && currentPoi.encounters.length > 0) {
-                const mtClass = hasMarket ? "mt-8" : ""; // Only add top margin if buttons are above it
-                html += `<div class="space-y-4 max-w-md mx-auto ${mtClass}">`;
+                let encounterHtml = '';
                 
                 currentPoi.encounters.forEach(encName => {
-                    // 1. Get the encounter data from data.js
                     const encData = interactions[encName] || {};
-                    // 2. Set the image path or fallback to default
+                    
+                    // --- NEW: Check flags before rendering the Encounter ---
+                    if (encData.requiresFlag && !player.flags[encData.requiresFlag]) return;
+                    if (encData.hidesOnFlag && player.flags[encData.hidesOnFlag]) return;
+
                     const encImageFile = encData.image || 'default.png';
                     const encImagePath = `assets/${encImageFile}`;
 
-                    // 3. Render the button using the flex/image layout (matching station buttons)
-                    // I've used w-16 h-16 (smaller) and bg-white (for the image container)
-                    html += `
+                    encounterHtml += `
                     <button class="btn bg-gray-100 !p-2" onclick="startEncounter('${encName}')">
                         <div class="flex items-center gap-4 text-left">
                             <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
@@ -516,7 +521,11 @@ function renderStationMenu() {
                     </button>`;
                 });
                 
-                html += `</div>`;
+                // Only draw the container if there are visible encounters
+                if (encounterHtml !== '') {
+                    const mtClass = hasMarket ? "mt-8" : ""; 
+                    html += `<div class="space-y-4 max-w-md mx-auto ${mtClass}">${encounterHtml}</div>`;
+                }
             }
 
             html += `<div class="space-y-4 max-w-md mx-auto mt-12 pb-8"><button class="btn bg-gray-200" onclick="triggerLocalTravel(-1)">UNDOCK</button></div>`;
