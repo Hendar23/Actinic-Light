@@ -191,16 +191,89 @@ const stationTypes = {
 // GALAXY MAP
 // ==========================================
 const galaxy = [
-    { id: 0, name: "Sol", x: 492, y: 535, pois: [{ name: "Earth Spacedock", type: "Trade Hub", encounters: ["Bartender Milo", "Brother Moo"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." }, { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" },  { name: "Martian Wheat Farm", type: "Wheat Farm" }, { name: "Sol Taxis", type: "Outpost",image: "station001.png", description: "Cheap but not cheerful.", encounters: ["Dispatcher Frank"], requiresFlag: "knows_frank" }] },
-    { id: 1, name: "Alpha Centauri", x: 520, y: 480, pois: [{ name: "Centauri Pastures", type: "Livestock Farm" }, { name: "Alpha Meats", type: "Meat Processing Plant" }] },
-    { id: 2, name: "Sirius", x: 580, y: 550, pois: [{ name: "Sirius Iron Works", type: "Iron Mine" }, { name: "Dog Star Copper", type: "Copper Mine" }] },
-    { id: 3, name: "Vega", x: 420, y: 410, pois: [{ name: "Vega Smelting", type: "Metal Ore Refinery" }, { name: "Lyra Machine Co.", type: "Machine Parts Factory" }] },
-    { id: 4, name: "Rigel", x: 350, y: 450, pois: [{ name: "Rigel Silicates", type: "Silicon Mine" }, { name: "Orion Gold", type: "Gold Mine" }] },
-    { id: 5, name: "Betelgeuse", x: 455, y: 585, pois: [{ name: "Red Supergiant Wafers", type: "Silicon Refinery" }, { name: "Betelgeuse Exchange", type: "Trade Hub" }] },
-    { id: 6, name: "Arcturus", x: 604, y: 458, pois: [{ name: "Arcturan Micro", type: "Chip Fab" }, { name: "Bootes Food Corp", type: "Wheat Processing Plant" }] },
-    { id: 7, name: "Altair", x: 620, y: 620, pois: [{ name: "Altair Ice Ring", type: "Ice Mine" }, { name: "Eagle Ranch", type: "Livestock Farm" }, { name: "Altair Platinum", type: "Platinum Mine" }] },
-    { id: 8, name: "Capella", x: 496, y: 421, pois: [{ name: "Capella Copper", type: "Copper Mine" }, { name: "Charioteer Smelting", type: "Metal Ore Refinery" }] },
-    { id: 9, name: "Procyon", x: 550, y: 380, pois: [{ name: "Procyon Free Market", type: "Trade Hub" }, { name: "Canis Minor Parts", type: "Machine Parts Factory" }] },
-    { id: 10, name: "New System", x: 1650, y: 1860, pois: [] },
-    { id: 11, name: "Obvious Test System", x: 427, y: 506, pois: [{ name: "This is a Test", type: "Trade Hub"}, { name: "This is also a test", type: "Ice Mine", description: "Testing the ICE!" }] }
+    {
+        id: 0, name: "Sol", x: 492, y: 535,
+        pois: [
+            { name: "Earth Spacedock", type: "Trade Hub", encounters: ["Bartender Milo", "Brother Moo"], description: "A massive central trading hub. Everything is available, but convenience comes at a high price." },
+            { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" },
+            { name: "Martian Wheat Farm", type: "Wheat Farm" },
+            { name: "Sol Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Frank"], requiresFlag: "knows_frank", description: "Cheap but not cheerful." }
+        ]
+    },
+    {
+        id: 1, name: "Alpha Centauri", x: 520, y: 480,
+        pois: [
+            { name: "Centauri Pastures", type: "Livestock Farm" },
+            { name: "Alpha Meats", type: "Meat Processing Plant" }
+        ]
+    },
+    {
+        id: 2, name: "Sirius", x: 580, y: 550,
+        pois: [
+            { name: "Sirius Iron Works", type: "Iron Mine" },
+            { name: "Dog Star Copper", type: "Copper Mine" }
+        ]
+    },
+    {
+        id: 3, name: "Vega", x: 420, y: 410,
+        pois: [
+            { name: "Vega Smelting", type: "Metal Ore Refinery" },
+            { name: "Lyra Machine Co.", type: "Machine Parts Factory" }
+        ]
+    },
+    {
+        id: 4, name: "Rigel", x: 350, y: 450,
+        pois: [
+            { name: "Rigel Silicates", type: "Silicon Mine" },
+            { name: "Orion Gold", type: "Gold Mine" }
+        ]
+    },
+    {
+        id: 5, name: "Betelgeuse", x: 455, y: 585,
+        pois: [
+            { name: "Red Supergiant Wafers", type: "Silicon Refinery" },
+            { name: "Betelgeuse Exchange", type: "Trade Hub" }
+        ]
+    },
+    {
+        id: 6, name: "Arcturus", x: 604, y: 458,
+        pois: [
+            { name: "Arcturan Micro", type: "Chip Fab" },
+            { name: "Bootes Food Corp", type: "Wheat Processing Plant" }
+        ]
+    },
+    {
+        id: 7, name: "Altair", x: 620, y: 620,
+        pois: [
+            { name: "Altair Ice Ring", type: "Ice Mine" },
+            { name: "Eagle Ranch", type: "Livestock Farm" },
+            { name: "Altair Platinum", type: "Platinum Mine" }
+        ]
+    },
+    {
+        id: 8, name: "Capella", x: 496, y: 421,
+        pois: [
+            { name: "Capella Copper", type: "Copper Mine" },
+            { name: "Charioteer Smelting", type: "Metal Ore Refinery" }
+        ]
+    },
+    {
+        id: 9, name: "Procyon", x: 550, y: 380,
+        pois: [
+            { name: "Procyon Free Market", type: "Trade Hub" },
+            { name: "Canis Minor Parts", type: "Machine Parts Factory" }
+        ]
+    },
+    {
+        id: 10, name: "New System", x: 1650, y: 1860,
+        pois: [
+        ]
+    },
+    {
+        id: 11, name: "Obvious Test 002", x: 427, y: 506,
+        pois: [
+            { name: "This is a Test", type: "Trade Hub" },
+            { name: "This is also a test", type: "Ice Mine", encounters: ["Brother Moo"], description: "Testing the ICE!" }
+        ]
+    }
 ];

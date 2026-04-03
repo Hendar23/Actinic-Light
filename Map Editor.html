@@ -293,6 +293,26 @@
                             <label class="block text-[10px] font-bold uppercase mt-1">Encounters (Comma Separated)</label>
                             <input type="text" class="text-xs" placeholder="Shady Bartender, Bouncer" value="${(poi.encounters || []).join(', ')}" oninput="updatePoiData(${index}, 'encounters', this.value)">
                         </div>
+<div>
+                            <label class="block text-[10px] font-bold uppercase mt-1">Encounters (Comma Separated)</label>
+                            <input type="text" class="text-xs" placeholder="Shady Bartender, Bouncer" value="${(poi.encounters || []).join(', ')}" oninput="updatePoiData(${index}, 'encounters', this.value)">
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-bold uppercase mt-1">Requires Flag</label>
+                                <input type="text" class="text-xs" placeholder="knows_frank" value="${poi.requiresFlag || ''}" oninput="updatePoiData(${index}, 'requiresFlag', this.value)">
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-[10px] font-bold uppercase mt-1">Hides on Flag</label>
+                                <input type="text" class="text-xs" placeholder="mission_done" value="${poi.hidesOnFlag || ''}" oninput="updatePoiData(${index}, 'hidesOnFlag', this.value)">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label>
+                            <textarea class="text-xs h-12 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
+                        </div>
                         
                         <div>
                             <label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label>
@@ -445,10 +465,15 @@ async function saveToFile() {
         let out = filePrefix + "const galaxy = [\n";
         
         galaxy.forEach((sys, i) => {
+            // Start the system object block
+            out += `    {\n`;
+            out += `        id: ${sys.id}, name: "${sys.name}", x: ${sys.x}, y: ${sys.y},\n`;
+            out += `        pois: [\n`;
+
             let poisStr = (sys.pois || []).map(p => {
-                let pStr = `{ name: "${p.name}", type: "${p.type}"`;
+                // Indent each POI line
+                let pStr = `            { name: "${p.name}", type: "${p.type}"`;
                 
-                // Allow empty strings to be saved so the game knows to override the default image
                 if (p.image !== undefined) {
                     pStr += `, image: "${p.image.trim()}"`;
                 }
@@ -457,15 +482,28 @@ async function saveToFile() {
                     pStr += `, encounters: [${p.encounters.map(e => `"${e}"`).join(", ")}]`;
                 }
 
+                if (p.requiresFlag) {
+                    pStr += `, requiresFlag: "${p.requiresFlag.trim()}"`;
+                }
+                
+                if (p.hidesOnFlag) {
+                    pStr += `, hidesOnFlag: "${p.hidesOnFlag.trim()}"`;
+                }
+
                 if (p.description !== undefined) {
                     pStr += `, description: "${p.description.replace(/"/g, '\\"')}"`;
                 }
                 
                 pStr += ` }`;
                 return pStr;
-            }).join(", ");
+            }).join(",\n"); // Put a comma and a line break between each POI!
             
-            out += `    { id: ${sys.id}, name: "${sys.name}", x: ${sys.x}, y: ${sys.y}, pois: [${poisStr}] }`;
+            // Add the POIs to the block, and close the system
+            out += poisStr + (poisStr ? "\n" : "");
+            out += `        ]\n`;
+            out += `    }`;
+            
+            // Add a comma if it's not the last system
             if (i < galaxy.length - 1) out += ",";
             out += "\n";
         });
