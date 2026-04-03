@@ -193,38 +193,46 @@
         }
 
 	function generateTaxiJob() {
-            let pickupSys, pickupPoi, dropoffSys, dropoffPoi;
-            let dist = 0; let attempts = 0;
-            
-            // 1. Pick a random pickup location
-            do {
-                pickupSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-                if (pickupSys.pois.length > 0) pickupPoi = pickupSys.pois[Math.floor(Math.random() * pickupSys.pois.length)];
-            } while (!pickupPoi);
+   	  let pickupSys, pickupPoi, dropoffSys, dropoffPoi;
+  	  let dist = 0; let attempts = 0;
+    
+   	 // 1. Pick a random pickup location
+   	 do {
+   	     pickupSys = galaxy[Math.floor(Math.random() * galaxy.length)];
+   	     if (pickupSys.pois.length > 0) pickupPoi = pickupSys.pois[Math.floor(Math.random() * pickupSys.pois.length)];
+   	 } while (!pickupPoi);
 
-            // 2. Pick a dropoff location (Make sure it's not the exact same station)
-            do {
-                dropoffSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-                if (dropoffSys.pois.length > 0) dropoffPoi = dropoffSys.pois[Math.floor(Math.random() * dropoffSys.pois.length)];
-                dist = Math.sqrt((pickupSys.x - dropoffSys.x)**2 + (pickupSys.y - dropoffSys.y)**2);
-                attempts++;
-            } while ((!dropoffPoi || (dropoffSys.id === pickupSys.id && dropoffPoi.name === pickupPoi.name) || dist > 400) && attempts < 100);
+   	 // 2. Pick a dropoff location (Make sure it's not the exact same station)
+    	do {
+       	 dropoffSys = galaxy[Math.floor(Math.random() * galaxy.length)];
+       	 if (dropoffSys.pois.length > 0) dropoffPoi = dropoffSys.pois[Math.floor(Math.random() * dropoffSys.pois.length)];
+     	   dist = Math.sqrt((pickupSys.x - dropoffSys.x)**2 + (pickupSys.y - dropoffSys.y)**2);
+    	    attempts++;
+    	} while ((!dropoffPoi || (dropoffSys.id === pickupSys.id && dropoffPoi.name === pickupPoi.name) || dist > 400) && attempts < 100);
 
-            const reward = Math.round((100 + (dist * 5)) / 10) * 1;
-            const client = generateRandomCharacter();
-            
-            const pickLines = (typeof taxiPickupLines !== 'undefined') ? taxiPickupLines : ["Let's go!"];
-            const dropLines = (typeof taxiDropoffLines !== 'undefined') ? taxiDropoffLines : ["Thanks for the ride!"];
+ 	   if (attempts >= 1000 || !dropoffPoi) {
+     	   // Fallback to a hardcoded location to prevent the game from crashing
+     	   dropoffSys = galaxy[0]; 
+  	      dropoffPoi = galaxy[0].pois[0];
+ 	   }
 
-            return {
-                status: 'pickup', // The mission starts in the 'pickup' phase
-                pickupSysId: pickupSys.id, pickupSysName: pickupSys.name, pickupPoiName: pickupPoi.name,
-                dropoffSysId: dropoffSys.id, dropoffSysName: dropoffSys.name, dropoffPoiName: dropoffPoi.name,
-                client: client, reward: reward, pickupText: pickLines[Math.floor(Math.random() * pickLines.length)], dropoffText: dropLines[Math.floor(Math.random() * dropLines.length)]
-            };
-        }
 
-        function acceptTaxiJob(index) {
+  
+  	  const reward = Math.round((100 + (dist * 5)) / 10) * 1;
+  	  const client = generateRandomCharacter();
+    
+  	  const pickLines = (typeof taxiPickupLines !== 'undefined') ? taxiPickupLines : ["Let's go!"];
+   	 const dropLines = (typeof taxiDropoffLines !== 'undefined') ? taxiDropoffLines : ["Thanks for the ride!"];
+
+   	 return {
+   	     status: 'pickup', // The mission starts in the 'pickup' phase
+   	     pickupSysId: pickupSys.id, pickupSysName: pickupSys.name, pickupPoiName: pickupPoi.name,
+  	      dropoffSysId: dropoffSys.id, dropoffSysName: dropoffSys.name, dropoffPoiName: dropoffPoi.name,
+   	     client: client, reward: reward, pickupText: pickLines[Math.floor(Math.random() * pickLines.length)], dropoffText: dropLines[Math.floor(Math.random() * dropLines.length)]
+ 	   };
+	}   
+     
+	function acceptTaxiJob(index) {
             const job = window.currentTaxiOffers[index];
             player.activeTaxi = job; 
             player.tasks['taxi_mission'] = 'active';
@@ -620,7 +628,6 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
             if (nextNode === 'leave') {
 		window.currentTaxiOffers = null; // Clear the taxi board
                 currentEncounterName = null;
-                currentEncounterName = null;
                 currentDialogueNode = null;
                 if (currentPoi && currentPoi.type === 'Encounter') {
                     triggerLocalTravel(-1); 
@@ -989,7 +996,7 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
                     
                     // If we clicked on a star node
                     if (d < 20 / camera.zoom) {
-                        if (s.id === currentSystem.id) {-
+                        if (s.id === currentSystem.id) {
                             switchTab('local');
                         } else {
                             // Existing logic: If it's a different system, try to warp there
@@ -1039,7 +1046,6 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
             initialPinchDistance = null; 
             if (e.changedTouches.length) handleUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY); 
         }, { passive: false });
-        canvas.addEventListener('touchend', e => { initialPinchDistance = null; if (e.changedTouches.length) handleUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY); });
 	window.addEventListener('resize', renderMap);
         checkExistingSave();
     </script> 

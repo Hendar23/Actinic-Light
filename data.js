@@ -94,14 +94,14 @@ const interactions = {
                 text: "<i>\"Yeah what?\"</i>",
                 options: [
                     // For the very first time they meet him (completes the quest)
-                    { text: "I heard you have work?", nextNode: "jobs", setFlag: "met_frank", hidesOnFlag: "met_frank", completeTask: "meet_frank" },
+                    { text: "I heard you got work?", nextNode: "jobs", setFlag: "met_frank", hidesOnFlag: "met_frank", completeTask: "meet_frank" },
                     // For every time after that
                     { text: "Got any taxi fares?", nextNode: "jobs", requiresFlag: "met_frank" },
                     { text: "Nevermind", nextNode: "leave" }
                 ]
             },
             "jobs": {
-                text: "\"We do. Here is what we have on the board right now.\"",
+                text: "\"Sure. Here is what we have on the board right now.\"",
                 generateTaxiJobs: true, // The engine will intercept this and generate the board!
                 options: [
                     { text: "Maybe later. [Leave]", nextNode: "leave" }
