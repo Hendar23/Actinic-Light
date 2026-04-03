@@ -19,12 +19,13 @@
         .btn:active:not(:disabled) { background: #000000; color: #ffffff; }
         .btn:disabled { opacity: 0.3; border-style: dotted; cursor: not-allowed; }
         
-        .tab-btn {
+	.tab-btn {
             flex: 1; padding: 14px 0; font-weight: bold; text-align: center;
-            border-top: 2px solid #000; border-right: 2px solid #000;
+            border-top: 2px solid #000; border-bottom: 2px solid #000; border-right: 2px solid #000;
             text-transform: uppercase; font-size: 20px; cursor: pointer;
         }
-        .tab-btn:last-child { border-right: none; }
+
+        .tab-btn:first-child { border-left: 2px solid #000; }
         .tab-active { background: #000000; color: #ffffff; }
         
         #star-map { width: 100%; height: 100%; background: #ffffff; touch-action: none; cursor: grab; }
@@ -100,7 +101,7 @@
         </div>
     </div>
 
-	<div class="flex shrink-0 border-main border-b-0 border-l-0 border-r-0">
+	<div class="flex shrink-0 w-full">
         <div class="tab-btn tab-active" onclick="switchTab('map')" id="btn-map">Map</div>
         <div class="tab-btn" onclick="switchTab('local')" id="btn-local">Local</div>
         <div class="tab-btn" onclick="switchTab('ship')" id="btn-ship">Ship</div>
