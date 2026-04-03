@@ -91,17 +91,17 @@ const interactions = {
         image: "portrait002.png",
         dialogue: {
             "start": {
-                text: "The dispatchers office is cluttered and dirty. Smoke hangs in the air.<br><br><i>\"Yeah?\"</i>",
+                text: "<i>\"Yeah what?\"</i>",
                 options: [
                     // For the very first time they meet him (completes the quest)
-                    { text: "The bartender sent me.", nextNode: "jobs", setFlag: "met_frank", hidesOnFlag: "met_frank", completeTask: "meet_frank" },
+                    { text: "I heard you have work?", nextNode: "jobs", setFlag: "met_frank", hidesOnFlag: "met_frank", completeTask: "meet_frank" },
                     // For every time after that
                     { text: "Got any taxi fares?", nextNode: "jobs", requiresFlag: "met_frank" },
                     { text: "Nevermind", nextNode: "leave" }
                 ]
             },
             "jobs": {
-                text: "\"Here is what we have on the board right now.\"",
+                text: "\"We do. Here is what we have on the board right now.\"",
                 generateTaxiJobs: true, // The engine will intercept this and generate the board!
                 options: [
                     { text: "Maybe later. [Leave]", nextNode: "leave" }
