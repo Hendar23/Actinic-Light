@@ -192,6 +192,80 @@
             };
         }
 
+	function generateTaxiJob() {
+            let destSys, destPoi;
+            let dist = 0;
+            let attempts = 0;
+            
+            do {
+                // Pick a random system
+                destSys = galaxy[Math.floor(Math.random() * galaxy.length)];
+                if (destSys.pois.length > 0) {
+                    // Pick a random POI in that system
+                    destPoi = destSys.pois[Math.floor(Math.random() * destSys.pois.length)];
+                }
+                dist = Math.sqrt((currentSystem.x - destSys.x)**2 + (currentSystem.y - destSys.y)**2);
+                attempts++;
+            // Try to find a valid dropoff within 400 range. Failsafe breakout after 100 tries
+            } while ((!destPoi || (destSys.id === currentSystem.id && destPoi.name === currentPoi.name) || dist > 400) && attempts < 100);
+
+            // Reward: base 100 + 5 per distance unit (rounded to nearest 10)
+            const reward = Math.round((100 + (dist * 5)) / 10) * 10;
+            const client = generateRandomCharacter();
+            
+            // Fetch dropoff lines from data.js
+            const linesToUse = (typeof taxiDropoffLines !== 'undefined') ? taxiDropoffLines : ["Thanks for the ride, spacer!"];
+            const dropoffText = linesToUse[Math.floor(Math.random() * linesToUse.length)];
+
+            return {
+                systemId: destSys.id, systemName: destSys.name, poiName: destPoi.name,
+                client: client, reward: reward, dropoffText: dropoffText
+            };
+        }
+
+        function acceptTaxiJob(index) {
+            const job = window.currentTaxiOffers[index];
+            player.activeTaxi = job; // Attach passenger to the player
+            player.tasks['taxi_mission'] = 'active';
+
+            // Create the quest map data dynamically
+            quests['taxi_mission'] = {
+                title: `Taxi: ${job.client.name}`,
+                description: `Deliver ${job.client.name} to ${job.poiName} in the ${job.systemName} system.`,
+                targetSystemId: job.systemId
+            };
+
+            showTaskPopup("NEW TASK ALERTS", quests['taxi_mission']);
+            window.currentTaxiOffers = null; 
+            selectDialogue('leave'); 
+        }
+
+        function startTaxiDropoff() {
+            currentEncounterName = "Passenger Dropoff"; 
+            
+            // Build a temporary encounter out of thin air
+            interactions[currentEncounterName] = {
+                image: player.activeTaxi.client.image,
+                dialogue: {
+                    "start": {
+                        text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward} credits to your account.</span>`,
+                        options: [
+                            { text: "Safe travels. [Leave]", nextNode: "leave", completeTaxi: true }
+                        ]
+                    }
+                }
+            };
+            currentDialogueNode = 'start';
+            setLocalView('encounter');
+        }
+
+        function completeTaxiDropoff() {
+             player.credits += player.activeTaxi.reward;
+             player.tasks['taxi_mission'] = 'completed';
+             showTaskPopup("TASK COMPLETE", quests['taxi_mission']);
+             player.activeTaxi = null;
+        }
+
 	function startNewGame() {
             if (typeof galaxy === 'undefined') return alert("data.js missing!");
             
@@ -226,6 +300,15 @@
                 player = data.player;
                 
                 player.flags = player.flags || {};
+
+		// Reconstruct active taxi mission quest data
+                if (player.activeTaxi) {
+                    quests['taxi_mission'] = {
+                        title: `Taxi: ${player.activeTaxi.client.name}`,
+                        description: `Deliver ${player.activeTaxi.client.name} to ${player.activeTaxi.poiName} in the ${player.activeTaxi.systemName} system.`,
+                        targetSystemId: player.activeTaxi.systemId
+                    };
+                }
                 
                 currentSystem = galaxy.find(s => s.id === data.systemId) || galaxy[0];
                 currentPoi = currentSystem.pois.find(p => p.name === data.poiName) || null;
@@ -482,7 +565,6 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
             if (setFlag) player.flags[setFlag] = true;
             if (clearFlag) player.flags[clearFlag] = false;
 
-            // --- NEW: Handle Task popups and state ---
             if (startTask) {
                 player.tasks[startTask] = "active";
                 showTaskPopup("NEW TASK ALERTS", quests[startTask]);
@@ -493,6 +575,8 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
             }
 
             if (nextNode === 'leave') {
+		window.currentTaxiOffers = null; // Clear the taxi board
+                currentEncounterName = null;
                 currentEncounterName = null;
                 currentDialogueNode = null;
                 if (currentPoi && currentPoi.type === 'Encounter') {
@@ -610,7 +694,6 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
                 currentPoi.encounters.forEach(encName => {
                     const encData = interactions[encName] || {};
                     
-                    // --- NEW: Check flags before rendering the Encounter ---
                     if (encData.requiresFlag && !player.flags[encData.requiresFlag]) return;
                     if (encData.hidesOnFlag && player.flags[encData.hidesOnFlag]) return;
 
@@ -635,6 +718,26 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
                     const mtClass = hasMarket ? "mt-8" : ""; 
                     html += `<div class="space-y-4 max-w-md mx-auto ${mtClass}">${encounterHtml}</div>`;
                 }
+            } // <--- The encounters block is now safely closed here!
+
+            // --- MOVED OUTSIDE: The game will now always check for a passenger! ---
+            if (player.activeTaxi && currentSystem.id === player.activeTaxi.systemId && currentPoi.name === player.activeTaxi.poiName) {
+                const passenger = player.activeTaxi.client;
+                
+                html += `
+                <div class="space-y-4 max-w-md mx-auto mt-4">
+                    <button class="btn bg-green-100 !p-2 border-green-600" onclick="startTaxiDropoff()">
+                        <div class="flex items-center gap-4 text-left">
+                            <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                                <img src="assets/${passenger.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                            </div>
+                            <div>
+                                <div class="text-2xl leading-none mb-1 text-green-800">${passenger.name.toUpperCase()}</div>
+                                <div class="text-sm font-bold text-green-700">PASSENGER DROPOFF</div>
+                            </div>
+                        </div>
+                    </button>
+                </div>`;
             }
 
             html += `<div class="space-y-4 max-w-md mx-auto mt-12 pb-8"><button class="btn bg-gray-200" onclick="triggerLocalTravel(-1)">UNDOCK</button></div>`;
@@ -651,10 +754,9 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
             const node = encData.dialogue[currentDialogueNode];
             const encImagePath = `assets/${encData.image || 'default.png'}`;
 
-		html += `
+            html += `
                 <div class="flex flex-col h-full min-h-[50vh]">
                     <div class="flex-grow bg-gray-50 p-6 border-2 border-black mb-6 flex gap-6 shadow-inner">
-                        
                         <div class="shrink-0 flex flex-col items-center gap-2">
                             <div class="w-32 h-32 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
                                 <img src="${encImagePath}" alt="${currentEncounterName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
@@ -663,7 +765,6 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
                                 ${currentEncounterName}
                             </div>
                         </div>
-
                         <div class="text-2xl font-bold text-gray-800 self-center">
                             ${node.text}
                         </div>
@@ -671,17 +772,34 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
                     <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
             `;
 
+            // --- INTERCEPT: Dynamic Taxi Job Generation ---
+            if (node.generateTaxiJobs) {
+                if (player.activeTaxi) {
+                    html += `<div class="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 font-bold text-yellow-800 text-xl text-center">
+                        "You already have a passenger, spacer! Drop them off before taking more fares."
+                    </div>`;
+                } else {
+                    if (!window.currentTaxiOffers) { // Generates 3 random jobs
+                        window.currentTaxiOffers = [generateTaxiJob(), generateTaxiJob(), generateTaxiJob()];
+                    }
+                    html += `<div class="space-y-3 mb-6">`;
+                    window.currentTaxiOffers.forEach((job, idx) => {
+                        html += `<button class="btn !bg-blue-50 text-left !p-3" onclick="acceptTaxiJob(${idx})">
+                            <div class="text-sm text-gray-500 font-bold mb-1">DESTINATION: ${job.poiName} (${job.systemName})</div>
+                            <div class="text-lg">Take ${job.client.name} [+${job.reward} CR]</div>
+                        </button>`;
+                    });
+                    html += `</div>`;
+                }
+            }
+
             node.options.forEach(opt => {
-                // If it requires a flag and the player doesn't have it, skip rendering
                 if (opt.requiresFlag && !player.flags[opt.requiresFlag]) return;
-                
-                // If it should be hidden when a flag is active, and the player has it, skip rendering
                 if (opt.hidesOnFlag && player.flags[opt.hidesOnFlag]) return;
 
                 let disabledAttr = '';
                 let creditTag = '';
                 
-                // If this option involves a transaction
                 if (opt.credits) {
                     if (opt.credits < 0) {
                         creditTag = ` [-${Math.abs(opt.credits)} CR]`;
@@ -691,9 +809,12 @@ function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = ''
                     }
                 }
 
-		html += `<button class="btn" onclick="selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}')" ${disabledAttr}>
-		    <span>${opt.text}${creditTag}</span>
-		</button>`;
+                // --- NEW: Wrap the button in completeTaxiDropoff() if the flag exists ---
+                const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
+
+                html += `<button class="btn" onclick="${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}')" ${disabledAttr}>
+                    <span>${opt.text}${creditTag}</span>
+                </button>`;
             });
 
             html += `</div></div>`;

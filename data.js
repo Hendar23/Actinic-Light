@@ -2,7 +2,7 @@
 // PROCEDURAL GENERATION DATA
 // ==========================================
 
-const TOTAL_ALIEN_PORTRAITS = 0; // Total number of random_alien_XXX.png images
+const TOTAL_ALIEN_PORTRAITS = 3; // Total number of random_alien_XXX.png images
 
 const firstNames = [
     "Frank", "Bobby", "Aaron", "Jason", "Aria", "Jaxon", "Kael", "Lyra", "Zane", "Nova", "Orion", "Pax", "Ren", "Sera",
@@ -14,6 +14,15 @@ const lastNames = [
     "Vance", "Korne", "Drex", "Farr", "Voss", "Graves", "Tark", "Zell", "Renn", "Vane",
     "Stark", "Vale", "Quinn", "Dax", "Kaelen", "Sol", "Nyx", "Cort", "Bane", "Jinn",
     "Kross", "Lenn", "Marn", "Nass", "Ordo", "Pryce", "Qel", "Rath", "Sato", "Tarn"
+];
+
+const taxiDropoffLines = [
+    "Hey man, let's hurry. I got an important meeting to get to... oh, we're here? Thanks!",
+    "Thanks for the ride, spacer! Kept the hull in one piece.",
+    "Finally! I thought I'd never get out of that bucket.",
+    "Smooth flying dude.",
+    "Not the worst flight I've had. Here are your credits.",
+    "Praise the stars we made it. Transferring your funds now."
 ];
 
 // ==========================================
@@ -69,24 +78,30 @@ const interactions = {
             }
         }
     },
+
     "Dispatcher Frank": {
         image: "portrait002.png",
         dialogue: {
             "start": {
                 text: "The dispatchers office is cluttered and dirty. Smoke hangs in the air.<br><br><i>\"Yeah?\"</i>",
                 options: [
-                    { text: "I'm looking for work", nextNode: "jobs", completeTask: "meet_frank" },
+                    // For the very first time they meet him (completes the quest)
+                    { text: "The bartender sent me.", nextNode: "jobs", setFlag: "met_frank", hidesOnFlag: "met_frank", completeTask: "meet_frank" },
+                    // For every time after that
+                    { text: "Got any taxi fares?", nextNode: "jobs", requiresFlag: "met_frank" },
                     { text: "Nevermind", nextNode: "leave" }
                 ]
             },
             "jobs": {
-                text: "Yeah we have a few fares you could help with.",
+                text: "\"Here is what we have on the board right now.\"",
+                generateTaxiJobs: true, // The engine will intercept this and generate the board!
                 options: [
-                    { text: "Awesome", nextNode: "leave" }
+                    { text: "Maybe later. [Leave]", nextNode: "leave" }
                 ]
             }
         }
     },
+
     "Brother Moo": {
         requiresFlag: "knows_frank",
         image: "brother_moo.png",
