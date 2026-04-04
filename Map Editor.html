@@ -35,13 +35,14 @@
         </div>
 
         <div class="border-t-2 border-black mt-2 pt-4">
-            <label class="block text-xs font-bold uppercase mb-1">Visualizer: Jump Range</label>
-            <div class="flex items-center gap-3">
-                <input type="range" id="jump-slider" min="10" max="500" value="100" class="flex-grow cursor-pointer" oninput="updateJumpRange(this.value)">
-                <span id="jump-val" class="font-bold text-lg w-10 text-right">100</span>
-            </div>
-            <p class="text-[10px] text-gray-500 mt-1 uppercase">Select a system to view its reach.</p>
-        </div>
+    <label class="block text-xs font-bold uppercase mb-1">Visualizer: Jump Range</label>
+    <div class="flex items-center gap-3">
+        <input type="range" id="jump-slider" min="10" max="500" value="100" class="flex-grow cursor-pointer" oninput="updateJumpRange(this.value)">
+        
+        <input type="number" id="jump-val" min="10" max="500" value="100" class="font-bold text-sm w-20 text-right" oninput="updateJumpRange(this.value)">
+    </div>
+    <p class="text-[10px] text-gray-500 mt-1 uppercase">Select a system to view its reach.</p>
+</div>
 
         <p class="text-xs text-gray-500 mt-auto italic">Note: File access requires a modern browser. Re-connect if you refresh.</p>
     </div>
