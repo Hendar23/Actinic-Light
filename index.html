@@ -293,19 +293,25 @@
          }
          
          function startTaxiPickup() {
-             currentEncounterName = "Passenger Pickup"; 
-             interactions[currentEncounterName] = {
-                 image: player.activeTaxi.client.image,
-                 dialogue: {
-                     "start": {
-                         text: `<i>"${player.activeTaxi.pickupText}"</i><br><br><span class="text-blue-600 font-bold">${player.activeTaxi.client.name} boards your ship.</span>`,
-                         options: [{ text: "Strap in. [Leave]", nextNode: "leave", completePickup: true }]
-                     }
-                 }
-             };
-             currentDialogueNode = 'start';
-             setLocalView('encounter');
-         }
+            currentEncounterName = "Passenger Pickup"; 
+            
+            // 1. Build the encounter text first
+            interactions[currentEncounterName] = {
+                image: player.activeTaxi.client.image,
+                dialogue: {
+                    "start": {
+                        text: `<i>"${player.activeTaxi.pickupText}"</i><br><br><span class="text-blue-600 font-bold">${player.activeTaxi.client.name} boards your ship.</span>`,
+                        options: [{ text: "Strap in. [Leave]", nextNode: "leave" }] // Removed completePickup flag
+                    }
+                }
+            };
+            
+            // 2. Instantly update the quest tracker and map marker
+            completeTaxiPickup();
+
+            currentDialogueNode = 'start';
+            setLocalView('encounter');
+        }
          
          function completeTaxiPickup() {
              // Shift the phase to dropoff and redirect the map marker!
@@ -317,19 +323,26 @@
          }
          
          function startTaxiDropoff() {
-             currentEncounterName = "Passenger Dropoff"; 
-             interactions[currentEncounterName] = {
-                 image: player.activeTaxi.client.image,
-                 dialogue: {
-                     "start": {
-                         text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward} credits to your account.</span>`,
-                         options: [{ text: "Safe travels. [Leave]", nextNode: "leave", completeTaxi: true }]
-                     }
-                 }
-             };
-             currentDialogueNode = 'start';
-             setLocalView('encounter');
-         }
+            currentEncounterName = "Passenger Dropoff"; 
+            
+            // 1. Build the encounter text while the passenger data still exists
+            interactions[currentEncounterName] = {
+                image: player.activeTaxi.client.image,
+                dialogue: {
+                    "start": {
+                        text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward} credits to your account.</span>`,
+                        options: [{ text: "Safe travels. [Leave]", nextNode: "leave" }] // Removed completeTaxi flag
+                    }
+                }
+            };
+            
+            // 2. Instantly process the payout and clear the passenger
+            completeTaxiDropoff();
+
+            // 3. Draw the screen (which will instantly show the new credits in the top bar)
+            currentDialogueNode = 'start';
+            setLocalView('encounter');
+        }
          
          function completeTaxiDropoff() {
               player.credits += player.activeTaxi.reward;
@@ -738,7 +751,7 @@
             
             const localTab = document.getElementById('tab-local');
             
-            // --- NEW: Save scroll positions before redrawing the UI ---
+            // --- Save scroll positions before redrawing the UI ---
             const localScroll = localTab.scrollTop;
             const marketContainer = document.getElementById('market-container');
             const marketScroll = marketContainer ? marketContainer.scrollTop : 0;
@@ -762,7 +775,7 @@
                 localTab.innerHTML = html;
             }
             
-            // --- NEW: Restore the scroll positions immediately after redrawing ---
+            // --- Restore the scroll positions immediately after redrawing ---
             localTab.scrollTop = localScroll;
             const newMarketContainer = document.getElementById('market-container');
             if (newMarketContainer) newMarketContainer.scrollTop = marketScroll;
@@ -780,7 +793,7 @@
                  if (p.requiresFlag && !player.flags[p.requiresFlag]) return;
                  if (p.hidesOnFlag && player.flags[p.hidesOnFlag]) return;
          
-                 // --- NEW: Check if this POI is a quest target ---
+                 // --- Check if this POI is a quest target ---
                  let isTarget = false;
                  Object.keys(player.tasks).forEach(taskId => {
                      if (player.tasks[taskId] === "active") {
@@ -796,7 +809,7 @@
                  const imageFile = p.image || stationConfig.defaultImage || 'default.png';
                  const imagePath = `assets/${imageFile}`;
          
-                 // --- NEW: Apply red border and background glow if it is a target ---
+                 // --- Apply red border and background glow if it is a target ---
                  const targetClasses = isTarget ? "!border-blue-600 !bg-blue-50 shadow-[0_0_15px_rgba(37,99,235,0.3)]" : "";
                  const textHighlight = isTarget ? "text-blue-700" : "";
          
@@ -961,7 +974,7 @@
                      </div>`;
                  } else {
                      if (!window.currentTaxiOffers) { 
-                         // --- NEW: Read the node properties or fallback to defaults ---
+                         // --- Read the node properties or fallback to defaults ---
                          const jobCount = node.taxiJobCount || 3;
                          const maxDist = node.taxiMaxDistance || 150;
                          
@@ -1127,7 +1140,7 @@
                      currentPoi = dest; 
                      ov.style.display = 'none'; 
                      
-                     // --- NEW: Check if we arrived at a standalone encounter ---
+                     // --- Check if we arrived at a standalone encounter ---
                      if (currentPoi && currentPoi.type === 'Encounter') {
                          startEncounter(currentPoi.name);
                      } else {
