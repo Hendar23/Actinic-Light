@@ -22,7 +22,7 @@ const shipHulls = {
             weapons: 1
         },
         modularSlots: 1
-    }
+    },
 
 	"Keiship": {
         name: "Keiship",
