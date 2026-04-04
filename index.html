@@ -330,8 +330,8 @@
                 image: player.activeTaxi.client.image,
                 dialogue: {
                     "start": {
-                        text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward} credits to your account.</span>`,
-                        options: [{ text: "Safe travels. [Leave]", nextNode: "leave" }] // Removed completeTaxi flag
+                        text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward.toLocaleString()} credits to your account.</span>`,
+                        options: [{ text: "Safe travels. [Leave]", nextNode: "leave" }] 
                     }
                 }
             };
@@ -744,7 +744,7 @@
             
             // 1. Update persistent top-bar stats
             const totalCargo = Object.values(player.cargo).reduce((a, b) => a + b, 0);
-            document.getElementById('status-credits').innerText = player.credits;
+            document.getElementById('status-credits').innerText = player.credits.toLocaleString(); // <-- Updated
             document.getElementById('status-cargo').innerText = totalCargo;
             document.getElementById('status-cargo-max').innerText = player.cargoMax;
             document.getElementById('map-range-val').innerText = jumpRange;
@@ -939,90 +939,89 @@
          }
          
          function renderEncounter() {
-             let html = '';
-             if (currentPoi && currentPoi.type === 'Encounter') {
-                 html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
-             }
-         
-             const encData = interactions[currentEncounterName];
-             const node = encData.dialogue[currentDialogueNode];
-             const encImagePath = `assets/${encData.image || 'default.png'}`;
-         
-             html += `
-                 <div class="flex flex-col h-full min-h-[50vh]">
-                     <div class="flex-grow bg-gray-50 p-6 border-2 border-black mb-6 flex gap-6 shadow-inner">
-                         <div class="shrink-0 flex flex-col items-center gap-2">
-                             <div class="w-32 h-32 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
-                                 <img src="${encImagePath}" alt="${currentEncounterName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
-                             </div>
-                             <div class="text-lg font-bold uppercase text-center w-32 leading-tight">
-                                 ${currentEncounterName}
-                             </div>
-                         </div>
-                         <div class="text-2xl font-bold text-gray-800 self-center">
-                             ${node.text}
-                         </div>
-                     </div>
-                     <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
-             `;
-         
-             // --- INTERCEPT: Dynamic Taxi Job Generation ---
-             if (node.generateTaxiJobs) {
-                 if (player.activeTaxi) {
-                     html += `<div class="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 font-bold text-yellow-800 text-xl text-center">
-                         "You already have a passenger, spacer! Drop them off before taking more fares."
-                     </div>`;
-                 } else {
-                     if (!window.currentTaxiOffers) { 
-                         // --- Read the node properties or fallback to defaults ---
-                         const jobCount = node.taxiJobCount || 3;
-                         const maxDist = node.taxiMaxDistance || 150;
-                         
-                         window.currentTaxiOffers = [];
-                         for (let i = 0; i < jobCount; i++) {
-                             window.currentTaxiOffers.push(generateTaxiJob(maxDist));
-                         }
-                     }
-                     html += `<div class="space-y-3 mb-6">`;
-                     window.currentTaxiOffers.forEach((job, idx) => {
-                         html += `<button class="btn !bg-blue-50 text-left !p-3" onclick="acceptTaxiJob(${idx})">
-                             <div class="text-lg text-gray-500 font-bold mb-1 uppercase">FROM: ${job.pickupPoiName} (${job.pickupSysName})</div>
-                             <div class="text-lg text-gray-500 font-bold mb-1 uppercase">TO: ${job.dropoffPoiName} (${job.dropoffSysName})</div>
-                             <div class="text-lg font-bold">Take ${job.client.name} [+${job.reward} CR]</div>
-                         </button>`;
-                     });
-                     html += `</div>`;
-                 }
-             }
-         
-             node.options.forEach(opt => {
-                 if (opt.requiresFlag && !player.flags[opt.requiresFlag]) return;
-                 if (opt.hidesOnFlag && player.flags[opt.hidesOnFlag]) return;
-         
-                 let disabledAttr = '';
-                 let creditTag = '';
-                 
-                 if (opt.credits) {
-                     if (opt.credits < 0) {
-                         creditTag = ` [-${Math.abs(opt.credits)} CR]`;
-                         if (player.credits < Math.abs(opt.credits)) disabledAttr = 'disabled';
-                     } else {
-                         creditTag = ` [+${opt.credits} CR]`;
-                     }
-                 }
-         
-                 // Wrap the button in the correct actions if the flags exist
-                 const pickupAction = opt.completePickup ? "completeTaxiPickup();" : "";
-                 const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
-         
-                 html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}')" ${disabledAttr}>
-                     <span>${opt.text}${creditTag}</span>
-                 </button>`;
-             });
-         
-             html += `</div></div>`;
-             return html;
-         }
+            let html = '';
+            if (currentPoi && currentPoi.type === 'Encounter') {
+                html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
+            }
+        
+            const encData = interactions[currentEncounterName];
+            const node = encData.dialogue[currentDialogueNode];
+            const encImagePath = `assets/${encData.image || 'default.png'}`;
+            
+            let displayText = node.text.replace(/\b(\d+)(?=\s*(?:credits|cr)\b)/gi, match => parseInt(match).toLocaleString());
+        
+            html += `
+                <div class="flex flex-col h-full min-h-[50vh]">
+                    <div class="flex-grow bg-gray-50 p-6 border-2 border-black mb-6 flex gap-6 shadow-inner">
+                        <div class="shrink-0 flex flex-col items-center gap-2">
+                            <div class="w-32 h-32 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                                <img src="${encImagePath}" alt="${currentEncounterName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                            </div>
+                            <div class="text-lg font-bold uppercase text-center w-32 leading-tight">
+                                ${currentEncounterName}
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold text-gray-800 self-center">
+                            ${displayText}
+                        </div>
+                    </div>
+                    <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
+            `;
+        
+            if (node.generateTaxiJobs) {
+                if (player.activeTaxi) {
+                    html += `<div class="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 font-bold text-yellow-800 text-xl text-center">
+                        "You already have a passenger, spacer! Drop them off before taking more fares."
+                    </div>`;
+                } else {
+                    if (!window.currentTaxiOffers) { 
+                        const jobCount = node.taxiJobCount || 3;
+                        const maxDist = node.taxiMaxDistance || 150;
+                        
+                        window.currentTaxiOffers = [];
+                        for (let i = 0; i < jobCount; i++) {
+                            window.currentTaxiOffers.push(generateTaxiJob(maxDist));
+                        }
+                    }
+                    html += `<div class="space-y-3 mb-6">`;
+                    window.currentTaxiOffers.forEach((job, idx) => {
+                        html += `<button class="btn !bg-blue-50 text-left !p-3" onclick="acceptTaxiJob(${idx})">
+                            <div class="text-lg text-gray-500 font-bold mb-1 uppercase">FROM: ${job.pickupPoiName} (${job.pickupSysName})</div>
+                            <div class="text-lg text-gray-500 font-bold mb-1 uppercase">TO: ${job.dropoffPoiName} (${job.dropoffSysName})</div>
+                            <div class="text-lg font-bold">Take ${job.client.name} [+${job.reward.toLocaleString()} CR]</div>
+                        </button>`;
+                    });
+                    html += `</div>`;
+                }
+            }
+        
+            node.options.forEach(opt => {
+                if (opt.requiresFlag && !player.flags[opt.requiresFlag]) return;
+                if (opt.hidesOnFlag && player.flags[opt.hidesOnFlag]) return;
+        
+                let disabledAttr = '';
+                let creditTag = '';
+                
+                if (opt.credits) {
+                    if (opt.credits < 0) {
+                        creditTag = ` [-${Math.abs(opt.credits).toLocaleString()} CR]`;
+                        if (player.credits < Math.abs(opt.credits)) disabledAttr = 'disabled';
+                    } else {
+                        creditTag = ` [+${opt.credits.toLocaleString()} CR]`;
+                    }
+                }
+        
+                const pickupAction = opt.completePickup ? "completeTaxiPickup();" : "";
+                const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
+        
+                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}')" ${disabledAttr}>
+                    <span>${opt.text}${creditTag}</span>
+                </button>`;
+            });
+        
+            html += `</div></div>`;
+            return html;
+        }
          
          function renderMarket(totalCargo) {
             let html = `<div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
@@ -1045,10 +1044,9 @@
                      const qty = player.cargo[itemName] || 0;
                      const can = localView === 'buy' ? (player.credits >= price && totalCargo < player.cargoMax) : (qty > 0);
                      
-                     // --- UPDATED: Placed the arrow directly next to the price ---
                      html += `<div class="market-item">
                          <span class="text-sm sm:text-lg leading-tight pr-1" title="${itemName}">${itemName}</span>
-                         <span class="text-center flex items-center justify-center">${price} ${getMarketContext(itemName, price, localView)}</span>
+                         <span class="text-center flex items-center justify-center">${price.toLocaleString()} ${getMarketContext(itemName, price, localView)}</span>
                          <span class="text-center">${qty}</span>
                          <button class="trade-btn" onclick="${localView}Good('${itemName}', ${price})" ${can ? '' : 'disabled'}>${localView.toUpperCase()}</button>
                      </div>`;
