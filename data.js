@@ -34,7 +34,7 @@ const equipment = {
         "Light Plating": { name: "Light Plating", size: "Tiny", type: "hullArmour", baseValue: 10, description: "Basic hull protection." }
     },
     cargoBay: {
-        "Tiny Hold": { name: "Tiny Hold", size: "Tiny", type: "cargoBay", baseValue: 20, description: "Just slightly bigger than the glove compartment." }
+        "Tiny Hold": { name: "Tiny Hold", size: "Tiny", type: "cargoBay", baseValue: 5, description: "Just slightly bigger than the glove compartment." }
     },
     thrusters: {
         "Basic Maneuvering Jets": { name: "Basic Maneuvering Jets", size: "Tiny", type: "thrusters", baseValue: 10, description: "Standard thrusters." }
@@ -152,7 +152,7 @@ const interactions = {
                 text: "\"Sure. Here is what we have on the board right now.\"",
                 generateTaxiJobs: true,
                 taxiJobCount: 3,
-                taxiMaxDistance: 100,
+                taxiMaxDistance: 50,
                 options: [
                     { text: "Maybe later. [Leave]", nextNode: "leave" }
                 ]
@@ -192,7 +192,7 @@ const interactions = {
                 text: "Of course.",
                 generateTaxiJobs: true,
                 taxiJobCount: 5,
-                taxiMaxDistance: 150,
+                taxiMaxDistance: 75,
                 options: [
                     { text: "Maybe another time. [Leave]", nextNode: "leave" }
                 ]

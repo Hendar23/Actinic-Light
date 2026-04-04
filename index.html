@@ -1,1225 +1,1206 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Space Trader</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { 
-            background: #ffffff; color: #000000; font-family: 'Courier New', Courier, monospace;
-            user-select: none; -webkit-tap-highlight-color: transparent; overflow: hidden;
-        }
-        .border-main { border: 2px solid #000000; }
-        .btn { 
-            border: 2px solid #000000; padding: 16px; background: #ffffff; color: #000000;
-            font-weight: bold; text-align: center; width: 100%; display: block;
-            margin-bottom: 8px; font-size: 24px; cursor: pointer;
-        }
-        .btn:active:not(:disabled) { background: #000000; color: #ffffff; }
-        .btn:disabled { opacity: 0.3; border-style: dotted; cursor: not-allowed; }
-        
-	.tab-btn {
-            flex: 1; padding: 14px 0; font-weight: bold; text-align: center;
-            border-top: 2px solid #000; border-bottom: 2px solid #000; border-right: 2px solid #000;
-            text-transform: uppercase; font-size: 20px; cursor: pointer;
-        }
-
-        .tab-btn:first-child { border-left: 2px solid #000; }
-        .tab-active { background: #000000; color: #ffffff; }
-        
-        #star-map { width: 100%; height: 100%; background: #ffffff; touch-action: none; cursor: grab; }
-        .progress-container { width: 80%; height: 32px; border: 2px solid #000000; margin-top: 16px; }
-        #progress-bar { height: 100%; background: #000000; width: 0%; }
-
-	.market-list-header {
-            display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 4px;
-            font-size: 18px; font-weight: bold; text-transform: uppercase;
-            border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 8px; opacity: 0.6;
-        }
-        .market-item {
-            display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 4px;
-            align-items: center; font-size: 18px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px;
-        }
-        .trade-btn { border: 2px solid black; padding: 10px 4px; font-weight: bold; font-size: 16px; text-align: center;}
-        .trade-btn:active:not(:disabled) { background: black; color: white; }
-        
-        #travel-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.95); z-index: 50;
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-        }
-        #start-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #ffffff; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-    </style>
-    <script src="data.js"></script>
-</head>
-<body class="flex flex-col h-[100dvh] max-h-[100dvh]">
-
-    <div id="start-screen" class="p-4">
-        <h1 class="text-6xl font-bold uppercase mb-12 tracking-widest text-center border-b-4 border-black pb-4">ACTINIC<br>LIGHT</h1>
-        <div class="w-full max-w-sm space-y-4">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <title>Space Trader</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+         body { 
+         background: #ffffff; color: #000000; font-family: 'Courier New', Courier, monospace;
+         user-select: none; -webkit-tap-highlight-color: transparent; overflow: hidden;
+         }
+         .border-main { border: 2px solid #000000; }
+         .btn { 
+         border: 2px solid #000000; padding: 16px; background: #ffffff; color: #000000;
+         font-weight: bold; text-align: center; width: 100%; display: block;
+         margin-bottom: 8px; font-size: 24px; cursor: pointer;
+         }
+         .btn:active:not(:disabled) { background: #000000; color: #ffffff; }
+         .btn:disabled { opacity: 0.3; border-style: dotted; cursor: not-allowed; }
+         .tab-btn {
+         flex: 1; padding: 14px 0; font-weight: bold; text-align: center;
+         border-top: 2px solid #000; border-bottom: 2px solid #000; border-right: 2px solid #000;
+         text-transform: uppercase; font-size: 20px; cursor: pointer;
+         }
+         .tab-btn:first-child { border-left: 2px solid #000; }
+         .tab-active { background: #000000; color: #ffffff; }
+         #star-map { width: 100%; height: 100%; background: #ffffff; touch-action: none; cursor: grab; }
+         .progress-container { width: 80%; height: 32px; border: 2px solid #000000; margin-top: 16px; }
+         #progress-bar { height: 100%; background: #000000; width: 0%; }
+         .market-list-header {
+         display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 4px;
+         font-size: 18px; font-weight: bold; text-transform: uppercase;
+         border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 8px; opacity: 0.6;
+         }
+         .market-item {
+         display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr; gap: 4px;
+         align-items: center; font-size: 18px; font-weight: bold; text-transform: uppercase; margin-bottom: 12px;
+         }
+         .trade-btn { border: 2px solid black; padding: 10px 4px; font-weight: bold; font-size: 16px; text-align: center;}
+         .trade-btn:active:not(:disabled) { background: black; color: white; }
+         #travel-overlay {
+         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+         background: rgba(255, 255, 255, 0.95); z-index: 50;
+         display: none; flex-direction: column; justify-content: center; align-items: center;
+         }
+         #start-screen {
+         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+         background: #ffffff; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center;
+         }
+      </style>
+      <script src="data.js"></script>
+   </head>
+   <body class="flex flex-col h-[100dvh] max-h-[100dvh]">
+      <div id="start-screen" class="p-4">
+         <h1 class="text-6xl font-bold uppercase mb-12 tracking-widest text-center border-b-4 border-black pb-4">ACTINIC<br>LIGHT</h1>
+         <div class="w-full max-w-sm space-y-4">
             <button class="btn !text-2xl !py-6" onclick="startNewGame()">NEW</button>
             <button id="btn-load-game" class="btn !text-2xl !py-6" onclick="loadGame()" disabled>CONTINUE</button>
-        </div>
-    </div>
-
-    <div class="bg-black text-white p-3 text-xl font-bold uppercase flex justify-between items-center shrink-0">
-        <div>Cr: <span id="status-credits">1000</span></div>
-        <div>Cargo: <span id="status-cargo">0</span>/<span id="status-cargo-max">20</span></div>
-    </div>
-
-<div id="main-content" class="flex-grow relative overflow-hidden flex flex-col p-4">
-        
-        <div id="tab-map" class="absolute inset-0 p-4 flex flex-col hidden">
+         </div>
+      </div>
+      <div class="bg-black text-white p-3 text-xl font-bold uppercase flex justify-between items-center shrink-0">
+         <div>Cr: <span id="status-credits">1000</span></div>
+         <div>Cargo: <span id="status-cargo">0</span>/<span id="status-cargo-max">20</span></div>
+      </div>
+      <div id="main-content" class="flex-grow relative overflow-hidden flex flex-col p-4">
+         <div id="tab-map" class="absolute inset-0 p-4 flex flex-col hidden">
             <div class="flex justify-between items-end mb-2 shrink-0">
-                <p class="text-xl font-bold uppercase">Galaxy Map</p>
-                <p class="text-xl font-bold uppercase">Range: <span id="map-range-val">---</span>ly</p>
+               <p class="text-xl font-bold uppercase">Galaxy Map</p>
+               <p class="text-xl font-bold uppercase">Range: <span id="map-range-val">---</span>ly</p>
             </div>
-            <div class="border-main flex-grow overflow-hidden relative"><canvas id="star-map"></canvas></div>
-        </div>
-
-        <div id="tab-local" class="hidden absolute inset-0 p-4 flex flex-col overflow-y-auto"></div>
-
-        <div id="tab-ship" class="hidden absolute inset-0 p-4 overflow-y-auto">
+            <div class="border-main flex-grow overflow-hidden relative">
+               <canvas id="star-map"></canvas>
+            </div>
+         </div>
+         <div id="tab-local" class="hidden absolute inset-0 p-4 flex flex-col overflow-y-auto"></div>
+         <div id="tab-ship" class="hidden absolute inset-0 p-4 overflow-y-auto">
             <div class="mb-6 border-b-4 border-black pb-4">
-                <h2 class="text-4xl font-bold uppercase mb-2" id="ui-ship-name">Unknown Class</h2>
-                <p class="text-lg italic text-gray-600 mb-4" id="ui-ship-desc"></p>
-                
-                <div class="grid grid-cols-2 gap-4 text-xl font-bold uppercase bg-gray-50 p-4 border-2 border-black">
-                    <div>Jump Range: <span id="ui-stat-jump" class="text-blue-600">0</span>ly</div>
-                    <div>Hull: <span id="ui-stat-hull" class="text-green-600">0</span></div>
-                    <div>Handling: <span id="ui-stat-handling">0</span></div>
-                    <div>Offense: <span id="ui-stat-offense" class="text-red-600">0</span></div>
-                    <div class="col-span-2 mt-2 pt-2 border-t border-gray-300">
-                        Cargo: <span id="ship-cargo-current">0</span> / <span id="ship-cargo-total">0</span> SCU
-                    </div>
-                </div>
+               <h2 class="text-4xl font-bold uppercase mb-2" id="ui-ship-name">Unknown Class</h2>
+               <p class="text-lg italic text-gray-600 mb-4" id="ui-ship-desc"></p>
+               <div class="grid grid-cols-2 gap-4 text-xl font-bold uppercase bg-gray-50 p-4 border-2 border-black">
+                  <div>Jump Range: <span id="ui-stat-jump" class="text-blue-600">0</span>ly</div>
+                  <div>Hull: <span id="ui-stat-hull" class="text-green-600">0</span></div>
+                  <div>Handling: <span id="ui-stat-handling">0</span></div>
+                  <div>Offense: <span id="ui-stat-offense" class="text-red-600">0</span></div>
+                  <div class="col-span-2 mt-2 pt-2 border-t border-gray-300">
+                     Cargo: <span id="ship-cargo-current">0</span> / <span id="ship-cargo-total">0</span> SCU
+                  </div>
+               </div>
             </div>
-
             <h3 class="text-2xl font-bold mb-3 uppercase bg-black text-white p-2">Core Systems</h3>
             <div id="ui-core-slots" class="space-y-2 mb-6 text-lg uppercase font-bold text-gray-800"></div>
-
             <h3 class="text-2xl font-bold mb-3 uppercase bg-black text-white p-2">Modular Slots</h3>
             <div id="ui-mod-slots" class="space-y-2 mb-8 text-lg uppercase font-bold text-gray-800"></div>
-
             <h3 class="text-2xl font-bold mb-3 uppercase bg-black text-white p-2">Cargo Manifest</h3>
             <div id="cargo-list" class="uppercase font-bold text-lg space-y-2 pb-8"></div>
-        </div>
-
-        <div id="tab-player" class="hidden absolute inset-0 p-4 flex-col overflow-y-auto">
+         </div>
+         <div id="tab-player" class="hidden absolute inset-0 p-4 flex-col overflow-y-auto">
             <h2 class="text-4xl font-bold uppercase mb-4 border-b-4 border-black pb-2">Player Status</h2>
             <p class="text-xl italic text-gray-500">Work in progress...</p>
-        </div>
-
-        <div id="tab-tasks" class="hidden absolute inset-0 p-4 flex-col overflow-y-auto">
+         </div>
+         <div id="tab-tasks" class="hidden absolute inset-0 p-4 flex-col overflow-y-auto">
             <h2 class="text-4xl font-bold uppercase mb-4 border-b-4 border-black pb-2">Active Tasks</h2>
             <div id="tasks-list" class="space-y-4"></div>
-        </div>
-        
-    </div>
-
-	<div class="flex shrink-0 w-full">
-        <div class="tab-btn tab-active" onclick="switchTab('map')" id="btn-map">Map</div>
-        <div class="tab-btn" onclick="switchTab('local')" id="btn-local">Local</div>
-        <div class="tab-btn" onclick="switchTab('ship')" id="btn-ship">Ship</div>
-        <div class="tab-btn" onclick="switchTab('player')" id="btn-player">Player</div>
-        <div class="tab-btn" onclick="switchTab('tasks')" id="btn-tasks">Tasks</div>
-    </div>
-
-    <div id="travel-overlay">
-        <h2 id="travel-text" class="animate-pulse text-5xl font-bold uppercase text-center px-4">WARP ACTIVE</h2>
-        <div class="progress-container"><div id="progress-bar"></div></div>
-    </div>
-
-    <script>
-        const drawScale = 4;
-        let camera = { x: 0, y: 0, zoom: 1 };
-        let isDragging = false;
-        let lastMouse = { x: 0, y: 0 };
-        let dragThreshold = false;
-        let initialPinchDistance = null;
-
-        let player = { credits: 100, cargo: {}, cargoMax: 20, flags: {}, tasks: {} };
-        let currentSystem = null;
-        let currentPoi = null; 
-        let jumpRange = 100;
-        let activeTab = 'map';
-        let localView = 'menu';
-	let currentEncounterName = null;
-        let currentDialogueNode = null; 
-        let currentMarketPrices = {}; // Tracks volatile system prices
-
-        const canvas = document.getElementById('star-map');
-        const ctx = canvas.getContext('2d');
-
-       function randomizeMarket() {
-    for (let item in commodities) {
-        const comm = commodities[item];
-        // Creates a random volatility modifier between 85% and 115%
-        const volatility = 0.85 + (Math.random() * 0.30);
-        
-        let volatilePrice = Math.floor(comm.basePrice * volatility);
-        
-        // Clamp the price strictly within the min and max bounds
-        if (comm.min !== undefined && volatilePrice < comm.min) volatilePrice = comm.min;
-        if (comm.max !== undefined && volatilePrice > comm.max) volatilePrice = comm.max;
-        
-        currentMarketPrices[item] = volatilePrice;
-    }
-}
-
-	function getPoiDescription(poi) {
-            // 1. Check if the specific station in the galaxy array has a custom description override
-            if (poi.description) return poi.description;
-            
-            // 2. Otherwise, fetch the default description for this type from data.js
-            const config = stationTypes[poi.type] || {};
-            return config.description || `DEFAULT`;
-        }
-
-        function checkExistingSave() {
-            if (localStorage.getItem('spaceTraderSaveV4') && typeof galaxy !== 'undefined') {
-                document.getElementById('btn-load-game').disabled = false;
-            }
-        }
-	
-	function generateRandomCharacter() {
-            if (typeof firstNames === 'undefined' || typeof lastNames === 'undefined') {
-                return { name: "Unknown Client", image: "default.png" };
-            }
-            
-            const first = firstNames[Math.floor(Math.random() * firstNames.length)];
-            const last = lastNames[Math.floor(Math.random() * lastNames.length)];
-            
-            // It defaults to 0 if you haven't set the variable yet
-            const maxImages = typeof TOTAL_ALIEN_PORTRAITS !== 'undefined' ? TOTAL_ALIEN_PORTRAITS : 0; 
-            
-            let generatedImage = "default.png";
-            
-            // Only try to generate an alien image if the count is greater than 0
-            if (maxImages > 0) {
-                const randomNum = Math.floor(Math.random() * maxImages) + 1;
-                const paddedNum = String(randomNum).padStart(3, '0'); 
-                generatedImage = `random_alien_${paddedNum}.png`;
-            }
-
-            return {
-                name: `${first} ${last}`,
-                image: generatedImage
-            };
-        }
-
-	function getShipStats(shipData) {
-  	  const hull = shipHulls[shipData.hull];
-    	if (!hull) return null;
-
-   	 // 1. Gather Base Stats from Core Equipment
-   	 let base = {
-     	   jumpRange: equipment.warpDrive[shipData.core.warpDrive]?.baseValue || 0,
-       	 hull: equipment.hullArmour[shipData.core.hullArmour]?.baseValue || 0,
-        	cargo: equipment.cargoBay[shipData.core.cargoBay]?.baseValue || 0,
-       	 handling: equipment.thrusters[shipData.core.thrusters]?.baseValue || 0,
-       	 offensive: equipment.weapons[shipData.core.weapons]?.baseValue || 0,
-   	 };
-
-  	  // 2. Add flat bonuses from Modules
-   	 shipData.modules.forEach(modName => {
-    	    const mod = equipment.modules[modName];
-       	 if (mod && mod.stat && base[mod.stat] !== undefined) {
-        	    base[mod.stat] += mod.flatBonus;
-       	 }
-  	  });
-
-   	 // 3. Apply Multipliers
-   	 return {
-       	 jumpRange: Math.floor(base.jumpRange * hull.multipliers.jumpRange),
-       	 hullMax: Math.floor(base.hull * hull.multipliers.hull),
-       	 cargoMax: Math.floor(base.cargo * hull.multipliers.cargo),
-       	 handling: Math.floor(base.handling * hull.multipliers.handling),
-        	offensive: Math.floor(base.offensive * hull.multipliers.offensive)
-   	 };
-	}
-
-	function generateTaxiJob(maxDist) {
-            let pickupSys, pickupPoi, dropoffSys, dropoffPoi;
-            let distToPickup = 0, distToDropoff = 0, totalTripDist = 0;
-            let attempts = 0;
-            
-            // 1. Pick a pickup location within maxDist of the CURRENT SYSTEM
-            do {
-                pickupSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-                if (pickupSys.pois.length > 0) pickupPoi = pickupSys.pois[Math.floor(Math.random() * pickupSys.pois.length)];
-                distToPickup = Math.sqrt((currentSystem.x - pickupSys.x)**2 + (currentSystem.y - pickupSys.y)**2);
-                attempts++;
-            } while ((!pickupPoi || distToPickup > maxDist) && attempts < 100);
-
-            // 2. Pick a dropoff location within maxDist of the CURRENT SYSTEM
-            attempts = 0;
-            do {
-                dropoffSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-                if (dropoffSys.pois.length > 0) dropoffPoi = dropoffSys.pois[Math.floor(Math.random() * dropoffSys.pois.length)];
-                distToDropoff = Math.sqrt((currentSystem.x - dropoffSys.x)**2 + (currentSystem.y - dropoffSys.y)**2);
-                
-                // Calculate the actual trip distance for the reward payout
-                totalTripDist = Math.sqrt((pickupSys.x - dropoffSys.x)**2 + (pickupSys.y - dropoffSys.y)**2);
-                attempts++;
-            } while ((!dropoffPoi || (dropoffSys.id === pickupSys.id && dropoffPoi.name === pickupPoi.name) || distToDropoff > maxDist) && attempts < 100);
-
-            // Fallbacks in case the system is totally isolated
-            if (!pickupPoi) { pickupSys = currentSystem; pickupPoi = currentSystem.pois[0]; }
-            if (!dropoffPoi) { dropoffSys = currentSystem; dropoffPoi = currentSystem.pois[0]; }
-
-            // --- UPDATED REWARD LOGIC ---
-            // Combine both the "deadhead" flight to the pickup and the actual trip distance.
-            // Reduced the base fee from 100 to 10, and the distance multiplier from 5 to 0.5 (1/10th the old payout scale).
-            const totalDistance = distToPickup + totalTripDist;
-            const reward = Math.round(10 + (totalDistance * 0.5));
-            
-            const client = generateRandomCharacter();
-            
-            const pickLines = (typeof taxiPickupLines !== 'undefined') ? taxiPickupLines : ["Let's go!"];
-            const dropLines = (typeof taxiDropoffLines !== 'undefined') ? taxiDropoffLines : ["Thanks for the ride!"];
-
-            return {
-                status: 'pickup', 
-                pickupSysId: pickupSys.id, pickupSysName: pickupSys.name, pickupPoiName: pickupPoi.name,
-                dropoffSysId: dropoffSys.id, dropoffSysName: dropoffSys.name, dropoffPoiName: dropoffPoi.name,
-                client: client, reward: reward, pickupText: pickLines[Math.floor(Math.random() * pickLines.length)], dropoffText: dropLines[Math.floor(Math.random() * dropLines.length)]
-            };
-        }
-     
-	function acceptTaxiJob(index) {
-            const job = window.currentTaxiOffers[index];
-            player.activeTaxi = job; 
-            player.tasks['taxi_mission'] = 'active';
-
-            // Point the mission tracker to the PICKUP location
-            quests['taxi_mission'] = {
-                title: `Taxi: Pick up ${job.client.name}`,
-                description: `Pick up ${job.client.name} from ${job.pickupPoiName} in the ${job.pickupSysName} system, then deliver them to ${job.dropoffPoiName} in the ${job.dropoffSysName} system.`,
-                targetSystemId: job.pickupSysId,
-                targetPoiName: job.pickupPoiName // NEW
-            };
-
-            showTaskPopup("NEW TASK ALERTS", quests['taxi_mission']);
-            window.currentTaxiOffers = null; 
-            selectDialogue('leave'); 
-        }
-
-        function startTaxiPickup() {
-            currentEncounterName = "Passenger Pickup"; 
-            interactions[currentEncounterName] = {
-                image: player.activeTaxi.client.image,
-                dialogue: {
-                    "start": {
-                        text: `<i>"${player.activeTaxi.pickupText}"</i><br><br><span class="text-blue-600 font-bold">${player.activeTaxi.client.name} boards your ship.</span>`,
-                        options: [{ text: "Strap in. [Leave]", nextNode: "leave", completePickup: true }]
-                    }
-                }
-            };
-            currentDialogueNode = 'start';
-            setLocalView('encounter');
-        }
-
-        function completeTaxiPickup() {
-            // Shift the phase to dropoff and redirect the map marker!
-            player.activeTaxi.status = 'dropoff';
-            quests['taxi_mission'].title = `Taxi: Deliver ${player.activeTaxi.client.name}`;
-            quests['taxi_mission'].targetSystemId = player.activeTaxi.dropoffSysId;
-            quests['taxi_mission'].targetPoiName = player.activeTaxi.dropoffPoiName; // NEW
-            showTaskPopup("NEW TASK ALERTS", quests['taxi_mission']);
-        }
-
-        function startTaxiDropoff() {
-            currentEncounterName = "Passenger Dropoff"; 
-            interactions[currentEncounterName] = {
-                image: player.activeTaxi.client.image,
-                dialogue: {
-                    "start": {
-                        text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward} credits to your account.</span>`,
-                        options: [{ text: "Safe travels. [Leave]", nextNode: "leave", completeTaxi: true }]
-                    }
-                }
-            };
-            currentDialogueNode = 'start';
-            setLocalView('encounter');
-        }
-
-        function completeTaxiDropoff() {
-             player.credits += player.activeTaxi.reward;
-             player.tasks['taxi_mission'] = 'completed';
-             showTaskPopup("TASK COMPLETE", quests['taxi_mission']);
-             player.activeTaxi = null;
-        }
-
-	function startNewGame() {
-    		if (typeof galaxy === 'undefined') return alert("data.js missing!");
-    
-   		 // Updated Player Initialization
-    		player = { 
-      		  credits: 100, 
-       		 cargo: {}, 
-       		 flags: {}, 
-       		 tasks: {},
-        		ship: {
-          		  hull: "Weescow",
-            		core: {
-               		warpDrive: "Civilian Drive T1",
-                	hullArmour: "Light Plating",
-                	cargoBay: "Tiny Hold",
-                	thrusters: "Basic Maneuvering Jets",
-                	weapons: "Pea Shooter"
-            	},
-            	modules: [
-                	"Cargo Expander I" 
-            	]
-        	}
-   	 }; 
-    
-    currentSystem = galaxy[0];
-    randomizeMarket(); 
-    document.getElementById('start-screen').style.display = 'none';
-    switchTab('map'); 
-    
-    setTimeout(() => {
-        centerOnSystem(currentSystem);
-    }, 50);
-}
-
-	function centerOnSystem(sys) {
-   	 // 1. Find out exactly how big the container is right now
-   	 const screenWidth = canvas.parentElement.clientWidth;
-   	 const screenHeight = canvas.parentElement.clientHeight;
-
-    	// 2. Use those dimensions to perfectly center the camera
-   	 camera.x = (sys.x * drawScale * camera.zoom) - (screenWidth / 2);
-   	 camera.y = (sys.y * drawScale * camera.zoom) - (screenHeight / 2);
-    
-   	 renderMap();
-	}
-
-	function saveGame() {
-            localStorage.setItem('spaceTraderSaveV4', JSON.stringify({
-                player, systemId: currentSystem.id, poiName: currentPoi?.name, jumpRange, currentMarketPrices
-            }));
-        }
-
-	function loadGame() {
-            try {
-                const data = JSON.parse(localStorage.getItem('spaceTraderSaveV4'));
-                if (data && typeof galaxy !== 'undefined') {
-                    player = data.player;
-                    
-                    // Safety checks to ensure core player objects exist
-                    player.flags = player.flags || {};
-                    player.tasks = player.tasks || {};
-
-                    // Reconstruct active taxi mission quest data
-                    if (player.activeTaxi) {
-                        // Failsafe: If it's an old or broken save format, wipe the passenger to prevent crashes
-                        if (!player.activeTaxi.client || !player.activeTaxi.client.name || !player.activeTaxi.status) {
-                            player.activeTaxi = null;
-                            delete player.tasks['taxi_mission'];
-                        } 
-                        // Otherwise, load the new two-phase mission properly
-                        else if (player.activeTaxi.status === 'pickup') {
-                            quests['taxi_mission'] = {
-                                title: `Taxi: Pick up ${player.activeTaxi.client.name}`,
-                                description: `Pick up ${player.activeTaxi.client.name} from ${player.activeTaxi.pickupPoiName} in the ${player.activeTaxi.pickupSysName} system, then deliver them to ${player.activeTaxi.dropoffPoiName} in the ${player.activeTaxi.dropoffSysName} system.`,
-                                targetSystemId: player.activeTaxi.pickupSysId,
-                                targetPoiName: player.activeTaxi.pickupPoiName // NEW
-                            };
-                        } else {
-                            quests['taxi_mission'] = {
-                                title: `Taxi: Deliver ${player.activeTaxi.client.name}`,
-                                description: `Pick up ${player.activeTaxi.client.name} from ${player.activeTaxi.pickupPoiName} in the ${player.activeTaxi.pickupSysName} system, then deliver them to ${player.activeTaxi.dropoffPoiName} in the ${player.activeTaxi.dropoffSysName} system.`,
-                                targetSystemId: player.activeTaxi.dropoffSysId,
-                                targetPoiName: player.activeTaxi.dropoffPoiName // NEW
-                            };
-                        }
-                    }
-                    
-                    currentSystem = galaxy.find(s => s.id === data.systemId) || galaxy[0];
-                    currentPoi = currentSystem.pois.find(p => p.name === data.poiName) || null;
-                    jumpRange = data.jumpRange || 100;
-                    currentMarketPrices = data.currentMarketPrices || {};
-                    
-                    if(Object.keys(currentMarketPrices).length === 0) randomizeMarket(); 
-
-                    document.getElementById('start-screen').style.display = 'none';
-                    switchTab('map');
-                    setTimeout(() => {
-                        centerOnSystem(currentSystem);
-                    }, 100);
-                }
-            } catch (err) {
-                // If anything goes wrong, catch the error, wipe the broken save, and warn the player
-                console.error("Save file corrupted, resetting...", err);
-                localStorage.removeItem('spaceTraderSaveV4');
-                alert("Old save file was incompatible and has been cleared. Please start a New Game.");
-                document.getElementById('btn-load-game').disabled = true;
-            }
-        }
-
-	function switchTab(tabId) {
-            activeTab = tabId;
-            
-            if (currentPoi && currentPoi.type === 'Encounter') {
-                localView = 'encounter';
-            } else {
-                localView = 'menu';
-            }
-
-            ['map', 'local', 'ship', 'player', 'tasks'].forEach(id => {
-                const el = document.getElementById(`tab-${id}`);
-                const btn = document.getElementById(`btn-${id}`);
-                if (el) el.style.display = (id === tabId) ? 'flex' : 'none';
-                if (btn) btn.classList.toggle('tab-active', id === tabId);
-            });
-            if (tabId === 'map') renderMap();
-            updateUI();
-        }
-
-        function setLocalView(view) {
-            localView = view;
-            updateUI();
-        }
-
-	let toastTimeout; // Keeps track of the timer so multiple popups don't glitch
-
-        function showTaskPopup(headerText, questData) {
-            if (!questData) return;
-
-            const toast = document.getElementById('toast-notification');
-            const titleEl = document.getElementById('toast-title');
-            const descEl = document.getElementById('toast-desc');
-
-            // Set the text based on whether it's a new task or a completion
-            if (headerText === "TASK COMPLETE") {
-                titleEl.innerText = headerText;
-                descEl.innerText = questData.title;
-            } else {
-                titleEl.innerText = questData.title;
-                descEl.innerText = questData.description;
-            }
-
-            // Slide the toast down into view
-            toast.classList.remove('-translate-y-full');
-            toast.classList.add('translate-y-4'); 
-
-            // Clear any existing timer just in case they trigger two popups really fast
-            if (toastTimeout) clearTimeout(toastTimeout);
-
-            // Automatically slide it back up after 3.5 seconds
-            toastTimeout = setTimeout(() => {
-                toast.classList.remove('translate-y-4');
-                toast.classList.add('-translate-y-full');
-            }, 3500);
-        }
-
-	function updateTasksUI() {
-            let html = '';
-            for (const [taskId, status] of Object.entries(player.tasks)) {
-                const q = quests[taskId];
-                if (!q) continue;
-                
-                if (status === 'completed') continue; 
-                
-                html += `
-                <div class="border-2 border-black p-4 bg-gray-50 shadow-md">
-                    <h3 class="text-2xl font-bold uppercase mb-2 text-black">
-                        ${q.title}
-                    </h3>
-                    <p class="text-lg italic">${q.description}</p>
-                </div>`;
-            }
-            document.getElementById('tasks-list').innerHTML = html || '<p class="text-gray-500 italic text-xl">No active tasks.</p>';
-        }
-
-        function renderMap() {
-            if (activeTab !== 'map' || typeof galaxy === 'undefined') return;
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.translate(-camera.x, -camera.y);
-            ctx.scale(camera.zoom, camera.zoom);
-            const cx = currentSystem.x * drawScale;
-            const cy = currentSystem.y * drawScale;
-            ctx.beginPath();
-            ctx.arc(cx, cy, jumpRange * drawScale, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(0, 0, 0, 0.03)"; ctx.fill();
-            ctx.strokeStyle = "#888888"; ctx.lineWidth = 2 / camera.zoom;
-            ctx.setLineDash([5 / camera.zoom, 5 / camera.zoom]); ctx.stroke(); ctx.setLineDash([]);
-            ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
-            galaxy.forEach(star => {
-                if (star.id !== currentSystem.id) {
-                    const dist = Math.sqrt((currentSystem.x - star.x)**2 + (currentSystem.y - star.y)**2);
-                    if (dist <= jumpRange) {
-                        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(star.x * drawScale, star.y * drawScale); ctx.stroke();
-                    }
-                }
-            });
-            galaxy.forEach(star => {
-                const sx = star.x * drawScale; const sy = star.y * drawScale;
-                const dist = Math.sqrt((currentSystem.x - star.x)**2 + (currentSystem.y - star.y)**2);
-                const inRange = dist <= jumpRange;
-                ctx.fillStyle = (star.id === currentSystem.id) ? "#000000" : "#ffffff";
-                ctx.strokeStyle = inRange ? "#000000" : "#777777";
-                ctx.lineWidth = 2 / camera.zoom;
-                ctx.beginPath(); ctx.arc(sx, sy, 8 / camera.zoom, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-                ctx.fillStyle = inRange ? "#000000" : "#777777"; 
-                ctx.font = `bold ${18 / camera.zoom}px Courier New`;
-                ctx.fillText(star.name.toUpperCase(), sx + (18 / camera.zoom), sy + (6 / camera.zoom));
-            });
-            Object.keys(player.tasks).forEach(taskId => {
-                if (player.tasks[taskId] === "active") {
-                    const q = quests[taskId];
-                    if (q && q.targetSystemId !== undefined) {
-                        const targetSys = galaxy.find(s => s.id === q.targetSystemId);
-                        if (targetSys) {
-                            const tx = targetSys.x * drawScale;
-                            const ty = targetSys.y * drawScale;
-                            ctx.beginPath();
-                            ctx.arc(tx, ty, 16 / camera.zoom, 0, Math.PI * 2);
-                            ctx.strokeStyle = "#2563eb"; // Changed to bright blue!
-                            ctx.lineWidth = 4 / camera.zoom;
-                            ctx.stroke();
-                        }
-                    }
-                }
-            });
-            ctx.restore();
-        }
-
-function getMarketContext(itemName, price, view) {
-            const comm = commodities[itemName];
-            const base = comm.basePrice;
-            
-            // Fallbacks included just in case a commodity is missing min/max data
-            const min = comm.min || (base * 0.6); 
-            const max = comm.max || (base * 1.5);
-
-            let arrow = "■", color = "text-gray-400";
-            
-            if (price > base) {
-                // Calculate how far the price has climbed toward the maximum
-                const ratio = (price - base) / (max - base);
-                
-                if (ratio >= 0.66) { arrow = "▲▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
-                else if (ratio >= 0.33) { arrow = "▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
-                else if (ratio > 0.05) { arrow = "▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
-                
-            } else if (price < base) {
-                // Calculate how far the price has dropped toward the minimum
-                const ratio = (base - price) / (base - min);
-                
-                if (ratio >= 0.66) { arrow = "▼▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
-                else if (ratio >= 0.33) { arrow = "▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
-                else if (ratio > 0.05) { arrow = "▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
-            }
-
-            return `<span class="${color} font-bold text-xl ml-1">${arrow}</span>`;
-        }
-
-function getStationMarket(type) {
-            const config = stationTypes[type];
-            const market = { selling: [], buying: [] };
-
-            if (!config) return market;
-
-            // --- A localized price memory bank ---
-            const resolvedPrices = {};
-
-            // 1. Calculate prices for items the station SELLS to the player
-            if (config.produces) {
-                config.produces.forEach(itemName => {
-                    const base = currentMarketPrices[itemName] || commodities[itemName].basePrice;
-                    
-                    // Normal stations sell at a 20% discount. 
-                    // Trade Hubs trade at flat market value (1.0 multiplier) to prevent exploits.
-                    let discountMultiplier = type === "Trade Hub" ? 1.0 : 0.8; 
-                    
-                    // Calculate and store the final price so we can reference it later
-                    resolvedPrices[itemName] = Math.floor(base * discountMultiplier);
-                    market.selling.push({ item: itemName, price: resolvedPrices[itemName] });
-                });
-            }
-
-            // 2. Calculate prices for items the station BUYS from the player
-            if (config.consumes) {
-                Object.keys(config.consumes).forEach(itemName => {
-                    
-                    if (resolvedPrices[itemName]) {
-                        market.buying.push({ item: itemName, price: resolvedPrices[itemName] });
-                    } else {
-                        // Otherwise, it's an item the station only buys, so calculate demand normally
-                        const base = currentMarketPrices[itemName] || commodities[itemName].basePrice;
-                        const demand = config.consumes[itemName];
-                        
-                        let multiplier = 1.0; 
-                        if (demand === "High") multiplier = 1.4;      
-                        else if (demand === "Average") multiplier = 1.2; 
-                        else if (demand === "Low") multiplier = 1.05;  
-
-                        market.buying.push({ item: itemName, price: Math.ceil(base * multiplier) });
-                    }
-                });
-            }
-
-            return market;
-        }
-
-	function buyGood(itemName, price) {
-            const total = Object.values(player.cargo).reduce((a, b) => a + b, 0);
-            if (player.credits >= price && total < player.cargoMax) {
-                player.credits -= price;
-                player.cargo[itemName] = (player.cargo[itemName] || 0) + 1;
-                updateUI();
-                saveGame(); // <--- AUTOSAVE
-            }
-        }
-
-        function sellGood(itemName, price) {
-            if (player.cargo[itemName] > 0) {
-                player.credits += price;
-                player.cargo[itemName] -= 1;
-                updateUI();
-                saveGame(); // <--- AUTOSAVE
-            }
-        }
-
-	function startEncounter(name) {
-            currentEncounterName = name;
-            currentDialogueNode = 'start'; // Always begin at the "start" node
-            setLocalView('encounter');
-        }
-
-function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = '', startTask = '', completeTask = '') {
-            player.credits += creditChange;
-            if (setFlag) player.flags[setFlag] = true;
-            if (clearFlag) player.flags[clearFlag] = false;
-
-            if (startTask) {
-                player.tasks[startTask] = "active";
-                showTaskPopup("NEW TASK ALERTS", quests[startTask]);
-            }
-            if (completeTask) {
-                player.tasks[completeTask] = "completed";
-                showTaskPopup("TASK COMPLETE", quests[completeTask]);
-            }
-
-            if (nextNode === 'leave') {
-		window.currentTaxiOffers = null; // Clear the taxi board
-                currentEncounterName = null;
-                currentDialogueNode = null;
-                if (currentPoi && currentPoi.type === 'Encounter') {
-                    triggerLocalTravel(-1); 
-                } else {
-                    setLocalView('menu'); 
-                }
-            } else {
-                currentDialogueNode = nextNode; 
-                updateUI();
-            }
-            saveGame(); 
-        }
-
-	// ==========================================
-        // UI RENDERING ENGINE
-        // ==========================================
-
-        function updateUI() {
-            // Calculate current ship stats
-    		const stats = getShipStats(player.ship);
-   		 jumpRange = stats.jumpRange; 
-    		player.cargoMax = stats.cargoMax;
-
-    		// 1. Update persistent top-bar stats
-    		const totalCargo = Object.values(player.cargo).reduce((a, b) => a + b, 0);
-    		document.getElementById('status-credits').innerText = player.credits;
-    		document.getElementById('status-cargo').innerText = totalCargo;
-   		document.getElementById('status-cargo-max').innerText = player.cargoMax;
-   		document.getElementById('map-range-val').innerText = jumpRange;
-
-            const localTab = document.getElementById('tab-local');
-            if (!currentSystem) return;
-
-            // 2. Delegate rendering based on current state
-            if (!currentPoi) {
-                localTab.innerHTML = renderPoiList();
-            } else {
-                let html = renderPoiHeader();
-                
-                if (localView === 'menu') {
-                    html += renderStationMenu();
-                } else if (localView === 'encounter') {
-                    html += renderEncounter();
-                } else {
-                    html += renderMarket(totalCargo);
-                }
-                
-                localTab.innerHTML = html;
-            }
-            
-            // 3. Update Ship and Player Tabs
-            updateShipCargoUI(totalCargo);
-	    updateTasksUI();
-        }
-
-	function renderPoiList() {
-            let html = `<h2 class="text-4xl font-bold uppercase">${currentSystem.name}</h2>`;
-            currentSystem.pois.forEach((p, i) => {
-                
-                // Check flags before rendering the POI
-                if (p.requiresFlag && !player.flags[p.requiresFlag]) return;
-                if (p.hidesOnFlag && player.flags[p.hidesOnFlag]) return;
-
-                // --- NEW: Check if this POI is a quest target ---
-                let isTarget = false;
-                Object.keys(player.tasks).forEach(taskId => {
-                    if (player.tasks[taskId] === "active") {
-                        const q = quests[taskId];
-                        // If the active quest points to this exact System and POI
-                        if (q && q.targetSystemId === currentSystem.id && q.targetPoiName === p.name) {
-                            isTarget = true;
-                        }
-                    }
-                });
-
-                const stationConfig = stationTypes[p.type] || {};
-                const imageFile = p.image || stationConfig.defaultImage || 'default.png';
-                const imagePath = `assets/${imageFile}`;
-
-                // --- NEW: Apply red border and background glow if it is a target ---
-                const targetClasses = isTarget ? "!border-blue-600 !bg-blue-50 shadow-[0_0_15px_rgba(37,99,235,0.3)]" : "";
-                const textHighlight = isTarget ? "text-blue-700" : "";
-
-                html += `
-                <button class="btn !p-2 ${targetClasses}" onclick="triggerLocalTravel(${i})">
-                    <div class="flex items-center gap-4 text-left">
-                        <div class="w-16 h-16 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
-                            <img src="${imagePath}" alt="${p.type}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
-                        </div>
-                        <div>
-                            <div class="text-2xl leading-none mb-1 ${textHighlight}">${p.name.toUpperCase()}</div>
-                            ${p.type === 'Encounter' || p.type === 'Outpost' ? '' : `<div class="text-lg text-gray-600">${p.type}</div>`}
-                        </div>
-                    </div>
-                </button>`;
-            });
-            return html;
-        }
-
-        function renderPoiHeader() {
-            const stationConfig = stationTypes[currentPoi.type] || {};
-            const imageFile = currentPoi.image || stationConfig.defaultImage || 'default.png';
-            const imagePath = `assets/${imageFile}`;
-
-            return `
-                <div class="flex items-center gap-4 mb-4 border-b-2 border-black pb-4">
-                    <div class="w-24 h-24 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
-                        <img src="${imagePath}" alt="${currentPoi.type}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
-                    </div>
-                    <div>
-                        <h2 class="text-4xl font-bold uppercase">${currentPoi.name}</h2>
-                        ${currentPoi.type === 'Encounter' || currentPoi.type === 'Outpost' ? '' : `<p class="text-xl font-bold uppercase text-gray-600"> ${currentPoi.type}</p>`}
-                    </div>
-                </div>
-            `;
-        }
-
-	function renderStationMenu() {
-            let html = `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
-
-            // Check if the station actually has a market
-            const config = stationTypes[currentPoi.type] || {};
-            const hasMarket = (config.produces && config.produces.length > 0) || (config.consumes && Object.keys(config.consumes).length > 0);
-
-            if (hasMarket) {
-                html += `<div class="space-y-4 max-w-md mx-auto">
-                    <button class="btn" onclick="setLocalView('buy')">BUY COMMODITIES</button>
-                    <button class="btn" onclick="setLocalView('sell')">SELL COMMODITIES</button>
-                </div>`;
-            }
-
-            if (currentPoi.encounters && currentPoi.encounters.length > 0) {
-                let encounterHtml = '';
-                
-                currentPoi.encounters.forEach(encName => {
-                    const encData = interactions[encName] || {};
-                    
-                    if (encData.requiresFlag && !player.flags[encData.requiresFlag]) return;
-                    if (encData.hidesOnFlag && player.flags[encData.hidesOnFlag]) return;
-
-                    const encImageFile = encData.image || 'default.png';
-                    const encImagePath = `assets/${encImageFile}`;
-
-                    encounterHtml += `
-                    <button class="btn bg-gray-100 !p-2" onclick="startEncounter('${encName}')">
-                        <div class="flex items-center gap-4 text-left">
-                            <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
-                                <img src="${encImagePath}" alt="${encName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
-                            </div>
-                            <div>
-                                <div class="text-2xl leading-none mb-1">${encName.toUpperCase()}</div>
-                            </div>
-                        </div>
-                    </button>`;
-                });
-                
-                // Only draw the container if there are visible encounters
-                if (encounterHtml !== '') {
-                    const mtClass = hasMarket ? "mt-8" : ""; 
-                    html += `<div class="space-y-4 max-w-md mx-auto ${mtClass}">${encounterHtml}</div>`;
-                }
-            } 
-
-	// --- TAXI ENCOUNTERS ---
-            if (player.activeTaxi) {
-                const passenger = player.activeTaxi.client;
-                
-                // PHASE 1: PICKUP
-                if (player.activeTaxi.status === 'pickup' && currentSystem.id === player.activeTaxi.pickupSysId && currentPoi.name === player.activeTaxi.pickupPoiName) {
-                    html += `
-                    <div class="space-y-4 max-w-md mx-auto mt-4">
-                        <button class="btn bg-blue-100 !p-2 border-blue-600" onclick="startTaxiPickup()">
-                            <div class="flex items-center gap-4 text-left">
-                                <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
-                                    <img src="assets/${passenger.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
-                                </div>
-                                <div>
-                                    <div class="text-2xl leading-none mb-1 text-blue-800">${passenger.name.toUpperCase()}</div>
-                                    <div class="text-sm font-bold text-blue-700">PASSENGER PICKUP</div>
-                                </div>
-                            </div>
-                        </button>
-                    </div>`;
-                }
-
-                // PHASE 2: DROPOFF
-                if (player.activeTaxi.status === 'dropoff' && currentSystem.id === player.activeTaxi.dropoffSysId && currentPoi.name === player.activeTaxi.dropoffPoiName) {
-                    html += `
-                    <div class="space-y-4 max-w-md mx-auto mt-4">
-                        <button class="btn bg-green-100 !p-2 border-green-600" onclick="startTaxiDropoff()">
-                            <div class="flex items-center gap-4 text-left">
-                                <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
-                                    <img src="assets/${passenger.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
-                                </div>
-                                <div>
-                                    <div class="text-2xl leading-none mb-1 text-green-800">${passenger.name.toUpperCase()}</div>
-                                    <div class="text-sm font-bold text-green-700">PASSENGER DROPOFF</div>
-                                </div>
-                            </div>
-                        </button>
-                    </div>`;
-                }
-            }
-
-            html += `<div class="space-y-4 max-w-md mx-auto mt-12 pb-8"><button class="btn bg-gray-200" onclick="triggerLocalTravel(-1)">UNDOCK</button></div>`;
-            return html;
-        }
-
-	function renderEncounter() {
-            let html = '';
-            if (currentPoi && currentPoi.type === 'Encounter') {
-                html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
-            }
-
-            const encData = interactions[currentEncounterName];
-            const node = encData.dialogue[currentDialogueNode];
-            const encImagePath = `assets/${encData.image || 'default.png'}`;
-
-            html += `
-                <div class="flex flex-col h-full min-h-[50vh]">
-                    <div class="flex-grow bg-gray-50 p-6 border-2 border-black mb-6 flex gap-6 shadow-inner">
-                        <div class="shrink-0 flex flex-col items-center gap-2">
-                            <div class="w-32 h-32 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
-                                <img src="${encImagePath}" alt="${currentEncounterName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
-                            </div>
-                            <div class="text-lg font-bold uppercase text-center w-32 leading-tight">
-                                ${currentEncounterName}
-                            </div>
-                        </div>
-                        <div class="text-2xl font-bold text-gray-800 self-center">
-                            ${node.text}
-                        </div>
-                    </div>
-                    <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
-            `;
-
-            // --- INTERCEPT: Dynamic Taxi Job Generation ---
-            if (node.generateTaxiJobs) {
-                if (player.activeTaxi) {
-                    html += `<div class="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 font-bold text-yellow-800 text-xl text-center">
-                        "You already have a passenger, spacer! Drop them off before taking more fares."
-                    </div>`;
-                } else {
-                    if (!window.currentTaxiOffers) { 
-                        // --- NEW: Read the node properties or fallback to defaults ---
-                        const jobCount = node.taxiJobCount || 3;
-                        const maxDist = node.taxiMaxDistance || 150;
-                        
-                        window.currentTaxiOffers = [];
-                        for (let i = 0; i < jobCount; i++) {
-                            window.currentTaxiOffers.push(generateTaxiJob(maxDist));
-                        }
-                    }
-                    html += `<div class="space-y-3 mb-6">`;
-                    window.currentTaxiOffers.forEach((job, idx) => {
-                        html += `<button class="btn !bg-blue-50 text-left !p-3" onclick="acceptTaxiJob(${idx})">
-                            <div class="text-lg text-gray-500 font-bold mb-1 uppercase">FROM: ${job.pickupPoiName} (${job.pickupSysName})</div>
-                            <div class="text-lg text-gray-500 font-bold mb-1 uppercase">TO: ${job.dropoffPoiName} (${job.dropoffSysName})</div>
-                            <div class="text-lg font-bold">Take ${job.client.name} [+${job.reward} CR]</div>
-                        </button>`;
-                    });
-                    html += `</div>`;
-                }
-            }
-
-            node.options.forEach(opt => {
-                if (opt.requiresFlag && !player.flags[opt.requiresFlag]) return;
-                if (opt.hidesOnFlag && player.flags[opt.hidesOnFlag]) return;
-
-                let disabledAttr = '';
-                let creditTag = '';
-                
-                if (opt.credits) {
-                    if (opt.credits < 0) {
-                        creditTag = ` [-${Math.abs(opt.credits)} CR]`;
-                        if (player.credits < Math.abs(opt.credits)) disabledAttr = 'disabled';
-                    } else {
-                        creditTag = ` [+${opt.credits} CR]`;
-                    }
-                }
-
-                // Wrap the button in the correct actions if the flags exist
-                const pickupAction = opt.completePickup ? "completeTaxiPickup();" : "";
-                const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
-
-                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}')" ${disabledAttr}>
-                    <span>${opt.text}${creditTag}</span>
-                </button>`;
-            });
-
-            html += `</div></div>`;
-            return html;
-        }
-
-	function renderMarket(totalCargo) {
-            let html = `<div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
-                <h3 class="text-3xl font-bold uppercase">${localView}ING</h3>
-                <button class="btn !w-auto !mb-0 !py-2 !px-4 !text-xl" onclick="setLocalView('menu')">◀ BACK</button>
-            </div><div class="overflow-y-auto pb-8">`;
-            
-            const marketData = getStationMarket(currentPoi.type);
-            const activeMarket = localView === 'buy' ? marketData.selling : marketData.buying;
-            
-            // --- UPDATED: Removed the "Avg" header ---
-            html += `<div class="market-list-header"><span>Item</span><span class="text-center">Price</span><span class="text-center">Hold</span><span class="text-center">Action</span></div>`;
-            
-            if (activeMarket.length === 0) {
-                html += `<p class="text-gray-500 italic mt-4">No goods available for ${localView}.</p>`;
-            } else {
-                activeMarket.forEach(m => {
-                    const itemName = m.item;
-                    const price = m.price;
-                    const qty = player.cargo[itemName] || 0;
-                    const can = localView === 'buy' ? (player.credits >= price && totalCargo < player.cargoMax) : (qty > 0);
-                    
-                    // --- UPDATED: Placed the arrow directly next to the price ---
-                    html += `<div class="market-item">
-                        <span class="text-sm sm:text-lg leading-tight pr-1" title="${itemName}">${itemName}</span>
-                        <span class="text-center flex items-center justify-center">${price} ${getMarketContext(itemName, price, localView)}</span>
-                        <span class="text-center">${qty}</span>
-                        <button class="trade-btn" onclick="${localView}Good('${itemName}', ${price})" ${can ? '' : 'disabled'}>${localView.toUpperCase()}</button>
-                    </div>`;
-                });
-            }
-            html += `</div>`;
-            return html;
-        }
-
-        function updateShipCargoUI(totalCargo) {
-    const stats = getShipStats(player.ship);
-    const hullData = shipHulls[player.ship.hull];
-
-    // Update Header & Stats
-    document.getElementById('ui-ship-name').innerText = hullData.name + " (" + hullData.size + ")";
-    document.getElementById('ui-ship-desc').innerText = hullData.description;
-    
-    document.getElementById('ui-stat-jump').innerText = stats.jumpRange;
-    document.getElementById('ui-stat-hull').innerText = stats.hullMax;
-    document.getElementById('ui-stat-handling').innerText = stats.handling;
-    document.getElementById('ui-stat-offense').innerText = stats.offensive;
-    document.getElementById('ship-cargo-total').innerText = stats.cargoMax;
-    document.getElementById('ship-cargo-current').innerText = totalCargo;
-
-    // Render Core Slots
-    let coreHtml = '';
-    const coreTypes = { warpDrive: "Warp", hullArmour: "Armor", cargoBay: "Cargo", thrusters: "Engines", weapons: "Weapons" };
-    
-    for (const [key, label] of Object.entries(coreTypes)) {
-        const itemName = player.ship.core[key];
-        const itemData = itemName ? equipment[key][itemName] : null;
-        const displayValue = itemData ? `${itemData.name} (Base: ${itemData.baseValue})` : `<span class="text-red-500">EMPTY</span>`;
-        
-        coreHtml += `
-        <div class="flex justify-between border-b-2 border-gray-200 py-2">
-            <span class="text-gray-500">${label}</span>
-            <span class="text-right">${displayValue}</span>
-        </div>`;
-    }
-    document.getElementById('ui-core-slots').innerHTML = coreHtml;
-
-    // Render Modular Slots
-    let modHtml = '';
-    for (let i = 0; i < hullData.modularSlots; i++) {
-        const itemName = player.ship.modules[i];
-        const itemData = itemName ? equipment.modules[itemName] : null;
-        
-        let displayValue = `<span class="text-gray-400 italic">EMPTY SLOT</span>`;
-        if (itemData) {
-            displayValue = `${itemData.name} <span class="text-green-600">(+${itemData.flatBonus} ${itemData.stat})</span>`;
-        }
-        
-        modHtml += `
-        <div class="flex justify-between border-b-2 border-gray-200 py-2">
-            <span class="text-gray-500">Slot ${i + 1}</span>
-            <span class="text-right">${displayValue}</span>
-        </div>`;
-    }
-    document.getElementById('ui-mod-slots').innerHTML = modHtml || '<p class="text-gray-500 italic">No modular slots available.</p>';
-
-    // Render Cargo
-    let cl = '';
-    for (const [itemName, q] of Object.entries(player.cargo)) {
-        if (q > 0) cl += `<div class="flex justify-between border-b border-gray-300 py-1"><span>${itemName}</span><span>${q} SCU</span></div>`;
-    }
-    document.getElementById('cargo-list').innerHTML = cl || '<p class="text-gray-500 italic">Empty.</p>';
-}
-
-        // ==========================================
-        // END UI RENDERING ENGINE
-        // ==========================================
-
-        function triggerLocalTravel(i) {
-            const dest = i === -1 ? null : currentSystem.pois[i];
-            triggerTravel(dest, dest ? `APPROACHING ${dest.name}` : "DEPARTING STATION", 1000);
-        }
-
-	function triggerTravel(dest, msg, dur) {
-            const ov = document.getElementById('travel-overlay');
-            const bar = document.getElementById('progress-bar');
-            document.getElementById('travel-text').innerText = msg;
-            ov.style.display = 'flex';
-            let start = Date.now();
-            let t = setInterval(() => {
-                let pc = ((Date.now() - start) / dur) * 100;
-                bar.style.width = pc + "%";
-                if (pc >= 100) { 
-                    clearInterval(t); 
-                    currentPoi = dest; 
-                    ov.style.display = 'none'; 
-                    
-                    // --- NEW: Check if we arrived at a standalone encounter ---
-                    if (currentPoi && currentPoi.type === 'Encounter') {
-                        startEncounter(currentPoi.name);
-                    } else {
-                        setLocalView('menu'); // Normal station
-                    }
-                    
-                    if (activeTab === 'map') renderMap();
-		    saveGame(); // <--- AUTOSAVE
-                }
-            }, 30);
-        }
-
-        function handleDown(x, y) { isDragging = true; dragThreshold = false; lastMouse = { x, y }; }
-        function handleMove(x, y) {
-            if (!isDragging || activeTab !== 'map') return;
-            let dx = x - lastMouse.x, dy = y - lastMouse.y;
-            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) dragThreshold = true;
-            camera.x -= dx; camera.y -= dy; lastMouse = { x, y }; renderMap();
-        }
-
-	function handleUp(x, y) {
-            if (!isDragging || activeTab !== 'map') return;
-            isDragging = false;
-            
-            if (!dragThreshold) {
-                const r = canvas.getBoundingClientRect();
-                const wx = ((x - r.left) + camera.x) / camera.zoom;
-                const wy = ((y - r.top) + camera.y) / camera.zoom;
-                
-                galaxy.forEach(s => {
-                    const d = Math.sqrt((wx - s.x * drawScale)**2 + (wy - s.y * drawScale)**2);
-                    
-                    // If we clicked on a star node
-                    if (d < 20 / camera.zoom) {
-                        if (s.id === currentSystem.id) {
-                            switchTab('local');
-                        } else {
-                            // Existing logic: If it's a different system, try to warp there
-                            if (Math.sqrt((currentSystem.x - s.x)**2 + (currentSystem.y - s.y)**2) <= jumpRange) {
-                                currentSystem = s; 
-                                centerOnSystem(s); 
-                                randomizeMarket(); // Market fluctuates when jumping to a new star
-                                triggerTravel(null, `WARPING TO ${s.name}`, 2500);
-                            }
-                        }
-                    }
-                });
-            }
-        }
-
-     canvas.addEventListener('wheel', e => {
-            if (activeTab !== 'map') return; e.preventDefault();
-            const r = canvas.getBoundingClientRect();
-            const mx = e.clientX - r.left, my = e.clientY - r.top;
-            const wx = (mx + camera.x) / camera.zoom, wy = (my + camera.y) / camera.zoom;
-            camera.zoom *= (e.deltaY > 0 ? 0.9 : 1.1); camera.zoom = Math.min(Math.max(camera.zoom, 0.2), 3);
-            camera.x = (wx * camera.zoom) - mx; camera.y = (wy * camera.zoom) - my; renderMap();
-        }, { passive: false });
-        canvas.addEventListener('mousedown', e => handleDown(e.clientX, e.clientY));
-        window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
-        window.addEventListener('mouseup', e => handleUp(e.clientX, e.clientY));
-        canvas.addEventListener('touchstart', e => {
-            e.preventDefault(); // Cancels the ghost click
-            if (e.touches.length === 2) initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-            else handleDown(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
-
-        canvas.addEventListener('touchmove', e => {
-            if (activeTab !== 'map') return; e.preventDefault();
-            if (e.touches.length === 2 && initialPinchDistance) {
-                const cur = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-                const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2, midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                const wx = (midX + camera.x) / camera.zoom, wy = (midY + camera.y) / camera.zoom;
-                camera.zoom *= (cur / initialPinchDistance); camera.zoom = Math.min(Math.max(camera.zoom, 0.2), 3);
-                camera.x = (wx * camera.zoom) - midX; camera.y = (wy * camera.zoom) - midY;
-                initialPinchDistance = cur; renderMap();
-            } else handleMove(e.touches[0].clientX, e.touches[0].clientY);
-        }, { passive: false });
-
-        canvas.addEventListener('touchend', e => { 
-            e.preventDefault(); // Cancels the ghost click
-            initialPinchDistance = null; 
-            if (e.changedTouches.length) handleUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY); 
-        }, { passive: false });
-	window.addEventListener('resize', renderMap);
-        checkExistingSave();
-    </script> 
-
-	<div id="toast-notification" class="fixed top-0 left-1/2 transform -translate-x-1/2 -translate-y-full transition-transform duration-300 ease-in-out z-[200] p-4 w-full max-w-md pointer-events-none">
-        <div class="bg-black text-white border-4 border-white p-4 shadow-2xl text-center pointer-events-auto">
+         </div>
+      </div>
+      <div class="flex shrink-0 w-full">
+         <div class="tab-btn tab-active" onclick="switchTab('map')" id="btn-map">Map</div>
+         <div class="tab-btn" onclick="switchTab('local')" id="btn-local">Local</div>
+         <div class="tab-btn" onclick="switchTab('ship')" id="btn-ship">Ship</div>
+         <div class="tab-btn" onclick="switchTab('player')" id="btn-player">Player</div>
+         <div class="tab-btn" onclick="switchTab('tasks')" id="btn-tasks">Tasks</div>
+      </div>
+      <div id="travel-overlay">
+         <h2 id="travel-text" class="animate-pulse text-5xl font-bold uppercase text-center px-4">WARP ACTIVE</h2>
+         <div class="progress-container">
+            <div id="progress-bar"></div>
+         </div>
+      </div>
+      <script>
+         const drawScale = 4;
+         let camera = { x: 0, y: 0, zoom: 1 };
+         let isDragging = false;
+         let lastMouse = { x: 0, y: 0 };
+         let dragThreshold = false;
+         let initialPinchDistance = null;
+         
+         let player = { credits: 100, cargo: {}, cargoMax: 20, flags: {}, tasks: {} };
+         let currentSystem = null;
+         let currentPoi = null; 
+         let jumpRange = 100;
+         let activeTab = 'map';
+         let localView = 'menu';
+         let currentEncounterName = null;
+         let currentDialogueNode = null; 
+         let currentMarketPrices = {}; // Tracks volatile system prices
+         
+         const canvas = document.getElementById('star-map');
+         const ctx = canvas.getContext('2d');
+         
+         function randomizeMarket() {
+         for (let item in commodities) {
+         const comm = commodities[item];
+         // Creates a random volatility modifier between 85% and 115%
+         const volatility = 0.85 + (Math.random() * 0.30);
+         
+         let volatilePrice = Math.floor(comm.basePrice * volatility);
+         
+         // Clamp the price strictly within the min and max bounds
+         if (comm.min !== undefined && volatilePrice < comm.min) volatilePrice = comm.min;
+         if (comm.max !== undefined && volatilePrice > comm.max) volatilePrice = comm.max;
+         
+         currentMarketPrices[item] = volatilePrice;
+         }
+         }
+         
+         function getPoiDescription(poi) {
+             // 1. Check if the specific station in the galaxy array has a custom description override
+             if (poi.description) return poi.description;
+             
+             // 2. Otherwise, fetch the default description for this type from data.js
+             const config = stationTypes[poi.type] || {};
+             return config.description || `DEFAULT`;
+         }
+         
+         function checkExistingSave() {
+             if (localStorage.getItem('spaceTraderSaveV4') && typeof galaxy !== 'undefined') {
+                 document.getElementById('btn-load-game').disabled = false;
+             }
+         }
+         
+         function generateRandomCharacter() {
+             if (typeof firstNames === 'undefined' || typeof lastNames === 'undefined') {
+                 return { name: "Unknown Client", image: "default.png" };
+             }
+             
+             const first = firstNames[Math.floor(Math.random() * firstNames.length)];
+             const last = lastNames[Math.floor(Math.random() * lastNames.length)];
+             
+             // It defaults to 0 if you haven't set the variable yet
+             const maxImages = typeof TOTAL_ALIEN_PORTRAITS !== 'undefined' ? TOTAL_ALIEN_PORTRAITS : 0; 
+             
+             let generatedImage = "default.png";
+             
+             // Only try to generate an alien image if the count is greater than 0
+             if (maxImages > 0) {
+                 const randomNum = Math.floor(Math.random() * maxImages) + 1;
+                 const paddedNum = String(randomNum).padStart(3, '0'); 
+                 generatedImage = `random_alien_${paddedNum}.png`;
+             }
+         
+             return {
+                 name: `${first} ${last}`,
+                 image: generatedImage
+             };
+         }
+         
+         function getShipStats(shipData) {
+         const hull = shipHulls[shipData.hull];
+         if (!hull) return null;
+         
+         // 1. Gather Base Stats from Core Equipment
+         let base = {
+          jumpRange: equipment.warpDrive[shipData.core.warpDrive]?.baseValue || 0,
+          hull: equipment.hullArmour[shipData.core.hullArmour]?.baseValue || 0,
+         	cargo: equipment.cargoBay[shipData.core.cargoBay]?.baseValue || 0,
+          handling: equipment.thrusters[shipData.core.thrusters]?.baseValue || 0,
+          offensive: equipment.weapons[shipData.core.weapons]?.baseValue || 0,
+         };
+         
+         // 2. Add flat bonuses from Modules
+         shipData.modules.forEach(modName => {
+          const mod = equipment.modules[modName];
+          if (mod && mod.stat && base[mod.stat] !== undefined) {
+         	    base[mod.stat] += mod.flatBonus;
+          }
+         });
+         
+         // 3. Apply Multipliers
+         return {
+          jumpRange: Math.floor(base.jumpRange * hull.multipliers.jumpRange),
+          hullMax: Math.floor(base.hull * hull.multipliers.hull),
+          cargoMax: Math.floor(base.cargo * hull.multipliers.cargo),
+          handling: Math.floor(base.handling * hull.multipliers.handling),
+         	offensive: Math.floor(base.offensive * hull.multipliers.offensive)
+         };
+         }
+         
+         function generateTaxiJob(maxDist) {
+             let pickupSys, pickupPoi, dropoffSys, dropoffPoi;
+             let distToPickup = 0, distToDropoff = 0, totalTripDist = 0;
+             let attempts = 0;
+             
+             // 1. Pick a pickup location within maxDist of the CURRENT SYSTEM
+             do {
+                 pickupSys = galaxy[Math.floor(Math.random() * galaxy.length)];
+                 if (pickupSys.pois.length > 0) pickupPoi = pickupSys.pois[Math.floor(Math.random() * pickupSys.pois.length)];
+                 distToPickup = Math.sqrt((currentSystem.x - pickupSys.x)**2 + (currentSystem.y - pickupSys.y)**2);
+                 attempts++;
+             } while ((!pickupPoi || distToPickup > maxDist) && attempts < 100);
+         
+             // 2. Pick a dropoff location within maxDist of the CURRENT SYSTEM
+             attempts = 0;
+             do {
+                 dropoffSys = galaxy[Math.floor(Math.random() * galaxy.length)];
+                 if (dropoffSys.pois.length > 0) dropoffPoi = dropoffSys.pois[Math.floor(Math.random() * dropoffSys.pois.length)];
+                 distToDropoff = Math.sqrt((currentSystem.x - dropoffSys.x)**2 + (currentSystem.y - dropoffSys.y)**2);
+                 
+                 // Calculate the actual trip distance for the reward payout
+                 totalTripDist = Math.sqrt((pickupSys.x - dropoffSys.x)**2 + (pickupSys.y - dropoffSys.y)**2);
+                 attempts++;
+             } while ((!dropoffPoi || (dropoffSys.id === pickupSys.id && dropoffPoi.name === pickupPoi.name) || distToDropoff > maxDist) && attempts < 100);
+         
+             // Fallbacks in case the system is totally isolated
+             if (!pickupPoi) { pickupSys = currentSystem; pickupPoi = currentSystem.pois[0]; }
+             if (!dropoffPoi) { dropoffSys = currentSystem; dropoffPoi = currentSystem.pois[0]; }
+         
+             // --- UPDATED REWARD LOGIC ---
+             // Combine both the "deadhead" flight to the pickup and the actual trip distance.
+             // Reduced the base fee from 100 to 10, and the distance multiplier from 5 to 0.5 (1/10th the old payout scale).
+             const totalDistance = distToPickup + totalTripDist;
+             const reward = Math.round(10 + (totalDistance * 0.5));
+             
+             const client = generateRandomCharacter();
+             
+             const pickLines = (typeof taxiPickupLines !== 'undefined') ? taxiPickupLines : ["Let's go!"];
+             const dropLines = (typeof taxiDropoffLines !== 'undefined') ? taxiDropoffLines : ["Thanks for the ride!"];
+         
+             return {
+                 status: 'pickup', 
+                 pickupSysId: pickupSys.id, pickupSysName: pickupSys.name, pickupPoiName: pickupPoi.name,
+                 dropoffSysId: dropoffSys.id, dropoffSysName: dropoffSys.name, dropoffPoiName: dropoffPoi.name,
+                 client: client, reward: reward, pickupText: pickLines[Math.floor(Math.random() * pickLines.length)], dropoffText: dropLines[Math.floor(Math.random() * dropLines.length)]
+             };
+         }
+         
+         function acceptTaxiJob(index) {
+             const job = window.currentTaxiOffers[index];
+             player.activeTaxi = job; 
+             player.tasks['taxi_mission'] = 'active';
+         
+             // Point the mission tracker to the PICKUP location
+             quests['taxi_mission'] = {
+                 title: `Taxi: Pick up ${job.client.name}`,
+                 description: `Pick up ${job.client.name} from ${job.pickupPoiName} in the ${job.pickupSysName} system, then deliver them to ${job.dropoffPoiName} in the ${job.dropoffSysName} system.`,
+                 targetSystemId: job.pickupSysId,
+                 targetPoiName: job.pickupPoiName // NEW
+             };
+         
+             showTaskPopup("NEW TASK ALERTS", quests['taxi_mission']);
+             window.currentTaxiOffers = null; 
+             selectDialogue('leave'); 
+         }
+         
+         function startTaxiPickup() {
+             currentEncounterName = "Passenger Pickup"; 
+             interactions[currentEncounterName] = {
+                 image: player.activeTaxi.client.image,
+                 dialogue: {
+                     "start": {
+                         text: `<i>"${player.activeTaxi.pickupText}"</i><br><br><span class="text-blue-600 font-bold">${player.activeTaxi.client.name} boards your ship.</span>`,
+                         options: [{ text: "Strap in. [Leave]", nextNode: "leave", completePickup: true }]
+                     }
+                 }
+             };
+             currentDialogueNode = 'start';
+             setLocalView('encounter');
+         }
+         
+         function completeTaxiPickup() {
+             // Shift the phase to dropoff and redirect the map marker!
+             player.activeTaxi.status = 'dropoff';
+             quests['taxi_mission'].title = `Taxi: Deliver ${player.activeTaxi.client.name}`;
+             quests['taxi_mission'].targetSystemId = player.activeTaxi.dropoffSysId;
+             quests['taxi_mission'].targetPoiName = player.activeTaxi.dropoffPoiName; // NEW
+             showTaskPopup("NEW TASK ALERTS", quests['taxi_mission']);
+         }
+         
+         function startTaxiDropoff() {
+             currentEncounterName = "Passenger Dropoff"; 
+             interactions[currentEncounterName] = {
+                 image: player.activeTaxi.client.image,
+                 dialogue: {
+                     "start": {
+                         text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward} credits to your account.</span>`,
+                         options: [{ text: "Safe travels. [Leave]", nextNode: "leave", completeTaxi: true }]
+                     }
+                 }
+             };
+             currentDialogueNode = 'start';
+             setLocalView('encounter');
+         }
+         
+         function completeTaxiDropoff() {
+              player.credits += player.activeTaxi.reward;
+              player.tasks['taxi_mission'] = 'completed';
+              showTaskPopup("TASK COMPLETE", quests['taxi_mission']);
+              player.activeTaxi = null;
+         }
+         
+         function startNewGame() {
+         if (typeof galaxy === 'undefined') return alert("data.js missing!");
+         
+         // Updated Player Initialization
+         player = { 
+           credits: 100, 
+         	 cargo: {}, 
+         	 flags: {}, 
+         	 tasks: {},
+         		ship: {
+           		  hull: "Weescow",
+             		core: {
+                		warpDrive: "Civilian Drive T1",
+                 	hullArmour: "Light Plating",
+                 	cargoBay: "Tiny Hold",
+                 	thrusters: "Basic Maneuvering Jets",
+                 	weapons: "Pea Shooter"
+             	},
+             	modules: [
+                 	"Cargo Expander I" 
+             	]
+         	}
+         }; 
+         
+         currentSystem = galaxy[0];
+         randomizeMarket(); 
+         document.getElementById('start-screen').style.display = 'none';
+         switchTab('map'); 
+         
+         setTimeout(() => {
+         centerOnSystem(currentSystem);
+         }, 50);
+         }
+         
+         function centerOnSystem(sys) {
+         // 1. Find out exactly how big the container is right now
+         const screenWidth = canvas.parentElement.clientWidth;
+         const screenHeight = canvas.parentElement.clientHeight;
+         
+         // 2. Use those dimensions to perfectly center the camera
+         camera.x = (sys.x * drawScale * camera.zoom) - (screenWidth / 2);
+         camera.y = (sys.y * drawScale * camera.zoom) - (screenHeight / 2);
+         
+         renderMap();
+         }
+         
+         function saveGame() {
+             localStorage.setItem('spaceTraderSaveV4', JSON.stringify({
+                 player, systemId: currentSystem.id, poiName: currentPoi?.name, jumpRange, currentMarketPrices
+             }));
+         }
+         
+         function loadGame() {
+             try {
+                 const data = JSON.parse(localStorage.getItem('spaceTraderSaveV4'));
+                 if (data && typeof galaxy !== 'undefined') {
+                     player = data.player;
+                     
+                     // Safety checks to ensure core player objects exist
+                     player.flags = player.flags || {};
+                     player.tasks = player.tasks || {};
+         
+                     // Reconstruct active taxi mission quest data
+                     if (player.activeTaxi) {
+                         // Failsafe: If it's an old or broken save format, wipe the passenger to prevent crashes
+                         if (!player.activeTaxi.client || !player.activeTaxi.client.name || !player.activeTaxi.status) {
+                             player.activeTaxi = null;
+                             delete player.tasks['taxi_mission'];
+                         } 
+                         // Otherwise, load the new two-phase mission properly
+                         else if (player.activeTaxi.status === 'pickup') {
+                             quests['taxi_mission'] = {
+                                 title: `Taxi: Pick up ${player.activeTaxi.client.name}`,
+                                 description: `Pick up ${player.activeTaxi.client.name} from ${player.activeTaxi.pickupPoiName} in the ${player.activeTaxi.pickupSysName} system, then deliver them to ${player.activeTaxi.dropoffPoiName} in the ${player.activeTaxi.dropoffSysName} system.`,
+                                 targetSystemId: player.activeTaxi.pickupSysId,
+                                 targetPoiName: player.activeTaxi.pickupPoiName // NEW
+                             };
+                         } else {
+                             quests['taxi_mission'] = {
+                                 title: `Taxi: Deliver ${player.activeTaxi.client.name}`,
+                                 description: `Pick up ${player.activeTaxi.client.name} from ${player.activeTaxi.pickupPoiName} in the ${player.activeTaxi.pickupSysName} system, then deliver them to ${player.activeTaxi.dropoffPoiName} in the ${player.activeTaxi.dropoffSysName} system.`,
+                                 targetSystemId: player.activeTaxi.dropoffSysId,
+                                 targetPoiName: player.activeTaxi.dropoffPoiName // NEW
+                             };
+                         }
+                     }
+                     
+                     currentSystem = galaxy.find(s => s.id === data.systemId) || galaxy[0];
+                     currentPoi = currentSystem.pois.find(p => p.name === data.poiName) || null;
+                     jumpRange = data.jumpRange || 100;
+                     currentMarketPrices = data.currentMarketPrices || {};
+                     
+                     if(Object.keys(currentMarketPrices).length === 0) randomizeMarket(); 
+         
+                     document.getElementById('start-screen').style.display = 'none';
+                     switchTab('map');
+                     setTimeout(() => {
+                         centerOnSystem(currentSystem);
+                     }, 100);
+                 }
+             } catch (err) {
+                 // If anything goes wrong, catch the error, wipe the broken save, and warn the player
+                 console.error("Save file corrupted, resetting...", err);
+                 localStorage.removeItem('spaceTraderSaveV4');
+                 alert("Old save file was incompatible and has been cleared. Please start a New Game.");
+                 document.getElementById('btn-load-game').disabled = true;
+             }
+         }
+         
+         function switchTab(tabId) {
+             activeTab = tabId;
+             
+             if (currentPoi && currentPoi.type === 'Encounter') {
+                 localView = 'encounter';
+             } else {
+                 localView = 'menu';
+             }
+         
+             ['map', 'local', 'ship', 'player', 'tasks'].forEach(id => {
+                 const el = document.getElementById(`tab-${id}`);
+                 const btn = document.getElementById(`btn-${id}`);
+                 if (el) el.style.display = (id === tabId) ? 'flex' : 'none';
+                 if (btn) btn.classList.toggle('tab-active', id === tabId);
+             });
+             if (tabId === 'map') renderMap();
+             updateUI();
+         }
+         
+         function setLocalView(view) {
+             localView = view;
+             updateUI();
+         }
+         
+         let toastTimeout; // Keeps track of the timer so multiple popups don't glitch
+         
+         function showTaskPopup(headerText, questData) {
+             if (!questData) return;
+         
+             const toast = document.getElementById('toast-notification');
+             const titleEl = document.getElementById('toast-title');
+             const descEl = document.getElementById('toast-desc');
+         
+             // Set the text based on whether it's a new task or a completion
+             if (headerText === "TASK COMPLETE") {
+                 titleEl.innerText = headerText;
+                 descEl.innerText = questData.title;
+             } else {
+                 titleEl.innerText = questData.title;
+                 descEl.innerText = questData.description;
+             }
+         
+             // Slide the toast down into view
+             toast.classList.remove('-translate-y-full');
+             toast.classList.add('translate-y-4'); 
+         
+             // Clear any existing timer just in case they trigger two popups really fast
+             if (toastTimeout) clearTimeout(toastTimeout);
+         
+             // Automatically slide it back up after 3.5 seconds
+             toastTimeout = setTimeout(() => {
+                 toast.classList.remove('translate-y-4');
+                 toast.classList.add('-translate-y-full');
+             }, 3500);
+         }
+         
+         function updateTasksUI() {
+             let html = '';
+             for (const [taskId, status] of Object.entries(player.tasks)) {
+                 const q = quests[taskId];
+                 if (!q) continue;
+                 
+                 if (status === 'completed') continue; 
+                 
+                 html += `
+                 <div class="border-2 border-black p-4 bg-gray-50 shadow-md">
+                     <h3 class="text-2xl font-bold uppercase mb-2 text-black">
+                         ${q.title}
+                     </h3>
+                     <p class="text-lg italic">${q.description}</p>
+                 </div>`;
+             }
+             document.getElementById('tasks-list').innerHTML = html || '<p class="text-gray-500 italic text-xl">No active tasks.</p>';
+         }
+         
+         function renderMap() {
+             if (activeTab !== 'map' || typeof galaxy === 'undefined') return;
+             canvas.width = canvas.parentElement.clientWidth;
+             canvas.height = canvas.parentElement.clientHeight;
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+             ctx.save();
+             ctx.translate(-camera.x, -camera.y);
+             ctx.scale(camera.zoom, camera.zoom);
+             const cx = currentSystem.x * drawScale;
+             const cy = currentSystem.y * drawScale;
+             ctx.beginPath();
+             ctx.arc(cx, cy, jumpRange * drawScale, 0, Math.PI * 2);
+             ctx.fillStyle = "rgba(0, 0, 0, 0.03)"; ctx.fill();
+             ctx.strokeStyle = "#888888"; ctx.lineWidth = 2 / camera.zoom;
+             ctx.setLineDash([5 / camera.zoom, 5 / camera.zoom]); ctx.stroke(); ctx.setLineDash([]);
+             ctx.strokeStyle = "rgba(0, 0, 0, 0.15)";
+             galaxy.forEach(star => {
+                 if (star.id !== currentSystem.id) {
+                     const dist = Math.sqrt((currentSystem.x - star.x)**2 + (currentSystem.y - star.y)**2);
+                     if (dist <= jumpRange) {
+                         ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(star.x * drawScale, star.y * drawScale); ctx.stroke();
+                     }
+                 }
+             });
+             galaxy.forEach(star => {
+                 const sx = star.x * drawScale; const sy = star.y * drawScale;
+                 const dist = Math.sqrt((currentSystem.x - star.x)**2 + (currentSystem.y - star.y)**2);
+                 const inRange = dist <= jumpRange;
+                 ctx.fillStyle = (star.id === currentSystem.id) ? "#000000" : "#ffffff";
+                 ctx.strokeStyle = inRange ? "#000000" : "#777777";
+                 ctx.lineWidth = 2 / camera.zoom;
+                 ctx.beginPath(); ctx.arc(sx, sy, 8 / camera.zoom, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+                 ctx.fillStyle = inRange ? "#000000" : "#777777"; 
+                 ctx.font = `bold ${18 / camera.zoom}px Courier New`;
+                 ctx.fillText(star.name.toUpperCase(), sx + (18 / camera.zoom), sy + (6 / camera.zoom));
+             });
+             Object.keys(player.tasks).forEach(taskId => {
+                 if (player.tasks[taskId] === "active") {
+                     const q = quests[taskId];
+                     if (q && q.targetSystemId !== undefined) {
+                         const targetSys = galaxy.find(s => s.id === q.targetSystemId);
+                         if (targetSys) {
+                             const tx = targetSys.x * drawScale;
+                             const ty = targetSys.y * drawScale;
+                             ctx.beginPath();
+                             ctx.arc(tx, ty, 16 / camera.zoom, 0, Math.PI * 2);
+                             ctx.strokeStyle = "#2563eb"; // Changed to bright blue!
+                             ctx.lineWidth = 4 / camera.zoom;
+                             ctx.stroke();
+                         }
+                     }
+                 }
+             });
+             ctx.restore();
+         }
+         
+         function getMarketContext(itemName, price, view) {
+             const comm = commodities[itemName];
+             const base = comm.basePrice;
+             
+             // Fallbacks included just in case a commodity is missing min/max data
+             const min = comm.min || (base * 0.6); 
+             const max = comm.max || (base * 1.5);
+         
+             let arrow = "■", color = "text-gray-400";
+             
+             if (price > base) {
+                 // Calculate how far the price has climbed toward the maximum
+                 const ratio = (price - base) / (max - base);
+                 
+                 if (ratio >= 0.66) { arrow = "▲▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
+                 else if (ratio >= 0.33) { arrow = "▲▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
+                 else if (ratio > 0.05) { arrow = "▲"; color = view === 'buy' ? "text-red-600" : "text-green-600"; }
+                 
+             } else if (price < base) {
+                 // Calculate how far the price has dropped toward the minimum
+                 const ratio = (base - price) / (base - min);
+                 
+                 if (ratio >= 0.66) { arrow = "▼▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
+                 else if (ratio >= 0.33) { arrow = "▼▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
+                 else if (ratio > 0.05) { arrow = "▼"; color = view === 'buy' ? "text-green-600" : "text-red-600"; }
+             }
+         
+             return `<span class="${color} font-bold text-xl ml-1">${arrow}</span>`;
+         }
+         
+         function getStationMarket(type) {
+             const config = stationTypes[type];
+             const market = { selling: [], buying: [] };
+         
+             if (!config) return market;
+         
+             // --- A localized price memory bank ---
+             const resolvedPrices = {};
+         
+             // 1. Calculate prices for items the station SELLS to the player
+             if (config.produces) {
+                 config.produces.forEach(itemName => {
+                     const base = currentMarketPrices[itemName] || commodities[itemName].basePrice;
+                     
+                     // Normal stations sell at a 20% discount. 
+                     // Trade Hubs trade at flat market value (1.0 multiplier) to prevent exploits.
+                     let discountMultiplier = type === "Trade Hub" ? 1.0 : 0.8; 
+                     
+                     // Calculate and store the final price so we can reference it later
+                     resolvedPrices[itemName] = Math.floor(base * discountMultiplier);
+                     market.selling.push({ item: itemName, price: resolvedPrices[itemName] });
+                 });
+             }
+         
+             // 2. Calculate prices for items the station BUYS from the player
+             if (config.consumes) {
+                 Object.keys(config.consumes).forEach(itemName => {
+                     
+                     if (resolvedPrices[itemName]) {
+                         market.buying.push({ item: itemName, price: resolvedPrices[itemName] });
+                     } else {
+                         // Otherwise, it's an item the station only buys, so calculate demand normally
+                         const base = currentMarketPrices[itemName] || commodities[itemName].basePrice;
+                         const demand = config.consumes[itemName];
+                         
+                         let multiplier = 1.0; 
+                         if (demand === "High") multiplier = 1.4;      
+                         else if (demand === "Average") multiplier = 1.2; 
+                         else if (demand === "Low") multiplier = 1.05;  
+         
+                         market.buying.push({ item: itemName, price: Math.ceil(base * multiplier) });
+                     }
+                 });
+             }
+         
+             return market;
+         }
+         
+         function buyGood(itemName, price) {
+             const total = Object.values(player.cargo).reduce((a, b) => a + b, 0);
+             if (player.credits >= price && total < player.cargoMax) {
+                 player.credits -= price;
+                 player.cargo[itemName] = (player.cargo[itemName] || 0) + 1;
+                 updateUI();
+                 saveGame(); // <--- AUTOSAVE
+             }
+         }
+         
+         function sellGood(itemName, price) {
+             if (player.cargo[itemName] > 0) {
+                 player.credits += price;
+                 player.cargo[itemName] -= 1;
+                 updateUI();
+                 saveGame(); // <--- AUTOSAVE
+             }
+         }
+         
+         function startEncounter(name) {
+             currentEncounterName = name;
+             currentDialogueNode = 'start'; // Always begin at the "start" node
+             setLocalView('encounter');
+         }
+         
+         function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = '', startTask = '', completeTask = '') {
+             player.credits += creditChange;
+             if (setFlag) player.flags[setFlag] = true;
+             if (clearFlag) player.flags[clearFlag] = false;
+         
+             if (startTask) {
+                 player.tasks[startTask] = "active";
+                 showTaskPopup("NEW TASK ALERTS", quests[startTask]);
+             }
+             if (completeTask) {
+                 player.tasks[completeTask] = "completed";
+                 showTaskPopup("TASK COMPLETE", quests[completeTask]);
+             }
+         
+             if (nextNode === 'leave') {
+         window.currentTaxiOffers = null; // Clear the taxi board
+                 currentEncounterName = null;
+                 currentDialogueNode = null;
+                 if (currentPoi && currentPoi.type === 'Encounter') {
+                     triggerLocalTravel(-1); 
+                 } else {
+                     setLocalView('menu'); 
+                 }
+             } else {
+                 currentDialogueNode = nextNode; 
+                 updateUI();
+             }
+             saveGame(); 
+         }
+         
+         // ==========================================
+         // UI RENDERING ENGINE
+         // ==========================================
+         
+         function updateUI() {
+             // Calculate current ship stats
+         const stats = getShipStats(player.ship);
+         jumpRange = stats.jumpRange; 
+         player.cargoMax = stats.cargoMax;
+         
+         // 1. Update persistent top-bar stats
+         const totalCargo = Object.values(player.cargo).reduce((a, b) => a + b, 0);
+         document.getElementById('status-credits').innerText = player.credits;
+         document.getElementById('status-cargo').innerText = totalCargo;
+         document.getElementById('status-cargo-max').innerText = player.cargoMax;
+         document.getElementById('map-range-val').innerText = jumpRange;
+         
+             const localTab = document.getElementById('tab-local');
+             if (!currentSystem) return;
+         
+             // 2. Delegate rendering based on current state
+             if (!currentPoi) {
+                 localTab.innerHTML = renderPoiList();
+             } else {
+                 let html = renderPoiHeader();
+                 
+                 if (localView === 'menu') {
+                     html += renderStationMenu();
+                 } else if (localView === 'encounter') {
+                     html += renderEncounter();
+                 } else {
+                     html += renderMarket(totalCargo);
+                 }
+                 
+                 localTab.innerHTML = html;
+             }
+             
+             // 3. Update Ship and Player Tabs
+             updateShipCargoUI(totalCargo);
+         updateTasksUI();
+         }
+         
+         function renderPoiList() {
+             let html = `<h2 class="text-4xl font-bold uppercase">${currentSystem.name}</h2>`;
+             currentSystem.pois.forEach((p, i) => {
+                 
+                 // Check flags before rendering the POI
+                 if (p.requiresFlag && !player.flags[p.requiresFlag]) return;
+                 if (p.hidesOnFlag && player.flags[p.hidesOnFlag]) return;
+         
+                 // --- NEW: Check if this POI is a quest target ---
+                 let isTarget = false;
+                 Object.keys(player.tasks).forEach(taskId => {
+                     if (player.tasks[taskId] === "active") {
+                         const q = quests[taskId];
+                         // If the active quest points to this exact System and POI
+                         if (q && q.targetSystemId === currentSystem.id && q.targetPoiName === p.name) {
+                             isTarget = true;
+                         }
+                     }
+                 });
+         
+                 const stationConfig = stationTypes[p.type] || {};
+                 const imageFile = p.image || stationConfig.defaultImage || 'default.png';
+                 const imagePath = `assets/${imageFile}`;
+         
+                 // --- NEW: Apply red border and background glow if it is a target ---
+                 const targetClasses = isTarget ? "!border-blue-600 !bg-blue-50 shadow-[0_0_15px_rgba(37,99,235,0.3)]" : "";
+                 const textHighlight = isTarget ? "text-blue-700" : "";
+         
+                 html += `
+                 <button class="btn !p-2 ${targetClasses}" onclick="triggerLocalTravel(${i})">
+                     <div class="flex items-center gap-4 text-left">
+                         <div class="w-16 h-16 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
+                             <img src="${imagePath}" alt="${p.type}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                         </div>
+                         <div>
+                             <div class="text-2xl leading-none mb-1 ${textHighlight}">${p.name.toUpperCase()}</div>
+                             ${p.type === 'Encounter' || p.type === 'Outpost' ? '' : `<div class="text-lg text-gray-600">${p.type}</div>`}
+                         </div>
+                     </div>
+                 </button>`;
+             });
+             return html;
+         }
+         
+         function renderPoiHeader() {
+             const stationConfig = stationTypes[currentPoi.type] || {};
+             const imageFile = currentPoi.image || stationConfig.defaultImage || 'default.png';
+             const imagePath = `assets/${imageFile}`;
+         
+             return `
+                 <div class="flex items-center gap-4 mb-4 border-b-2 border-black pb-4">
+                     <div class="w-24 h-24 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
+                         <img src="${imagePath}" alt="${currentPoi.type}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                     </div>
+                     <div>
+                         <h2 class="text-4xl font-bold uppercase">${currentPoi.name}</h2>
+                         ${currentPoi.type === 'Encounter' || currentPoi.type === 'Outpost' ? '' : `<p class="text-xl font-bold uppercase text-gray-600"> ${currentPoi.type}</p>`}
+                     </div>
+                 </div>
+             `;
+         }
+         
+         function renderStationMenu() {
+             let html = `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
+         
+             // Check if the station actually has a market
+             const config = stationTypes[currentPoi.type] || {};
+             const hasMarket = (config.produces && config.produces.length > 0) || (config.consumes && Object.keys(config.consumes).length > 0);
+         
+             if (hasMarket) {
+                 html += `<div class="space-y-4 max-w-md mx-auto">
+                     <button class="btn" onclick="setLocalView('buy')">BUY COMMODITIES</button>
+                     <button class="btn" onclick="setLocalView('sell')">SELL COMMODITIES</button>
+                 </div>`;
+             }
+         
+             if (currentPoi.encounters && currentPoi.encounters.length > 0) {
+                 let encounterHtml = '';
+                 
+                 currentPoi.encounters.forEach(encName => {
+                     const encData = interactions[encName] || {};
+                     
+                     if (encData.requiresFlag && !player.flags[encData.requiresFlag]) return;
+                     if (encData.hidesOnFlag && player.flags[encData.hidesOnFlag]) return;
+         
+                     const encImageFile = encData.image || 'default.png';
+                     const encImagePath = `assets/${encImageFile}`;
+         
+                     encounterHtml += `
+                     <button class="btn bg-gray-100 !p-2" onclick="startEncounter('${encName}')">
+                         <div class="flex items-center gap-4 text-left">
+                             <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                                 <img src="${encImagePath}" alt="${encName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                             </div>
+                             <div>
+                                 <div class="text-2xl leading-none mb-1">${encName.toUpperCase()}</div>
+                             </div>
+                         </div>
+                     </button>`;
+                 });
+                 
+                 // Only draw the container if there are visible encounters
+                 if (encounterHtml !== '') {
+                     const mtClass = hasMarket ? "mt-8" : ""; 
+                     html += `<div class="space-y-4 max-w-md mx-auto ${mtClass}">${encounterHtml}</div>`;
+                 }
+             } 
+         
+         // --- TAXI ENCOUNTERS ---
+             if (player.activeTaxi) {
+                 const passenger = player.activeTaxi.client;
+                 
+                 // PHASE 1: PICKUP
+                 if (player.activeTaxi.status === 'pickup' && currentSystem.id === player.activeTaxi.pickupSysId && currentPoi.name === player.activeTaxi.pickupPoiName) {
+                     html += `
+                     <div class="space-y-4 max-w-md mx-auto mt-4">
+                         <button class="btn bg-blue-100 !p-2 border-blue-600" onclick="startTaxiPickup()">
+                             <div class="flex items-center gap-4 text-left">
+                                 <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                                     <img src="assets/${passenger.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                                 </div>
+                                 <div>
+                                     <div class="text-2xl leading-none mb-1 text-blue-800">${passenger.name.toUpperCase()}</div>
+                                     <div class="text-sm font-bold text-blue-700">PASSENGER PICKUP</div>
+                                 </div>
+                             </div>
+                         </button>
+                     </div>`;
+                 }
+         
+                 // PHASE 2: DROPOFF
+                 if (player.activeTaxi.status === 'dropoff' && currentSystem.id === player.activeTaxi.dropoffSysId && currentPoi.name === player.activeTaxi.dropoffPoiName) {
+                     html += `
+                     <div class="space-y-4 max-w-md mx-auto mt-4">
+                         <button class="btn bg-green-100 !p-2 border-green-600" onclick="startTaxiDropoff()">
+                             <div class="flex items-center gap-4 text-left">
+                                 <div class="w-16 h-16 shrink-0 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                                     <img src="assets/${passenger.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                                 </div>
+                                 <div>
+                                     <div class="text-2xl leading-none mb-1 text-green-800">${passenger.name.toUpperCase()}</div>
+                                     <div class="text-sm font-bold text-green-700">PASSENGER DROPOFF</div>
+                                 </div>
+                             </div>
+                         </button>
+                     </div>`;
+                 }
+             }
+         
+             html += `<div class="space-y-4 max-w-md mx-auto mt-12 pb-8"><button class="btn bg-gray-200" onclick="triggerLocalTravel(-1)">UNDOCK</button></div>`;
+             return html;
+         }
+         
+         function renderEncounter() {
+             let html = '';
+             if (currentPoi && currentPoi.type === 'Encounter') {
+                 html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
+             }
+         
+             const encData = interactions[currentEncounterName];
+             const node = encData.dialogue[currentDialogueNode];
+             const encImagePath = `assets/${encData.image || 'default.png'}`;
+         
+             html += `
+                 <div class="flex flex-col h-full min-h-[50vh]">
+                     <div class="flex-grow bg-gray-50 p-6 border-2 border-black mb-6 flex gap-6 shadow-inner">
+                         <div class="shrink-0 flex flex-col items-center gap-2">
+                             <div class="w-32 h-32 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                                 <img src="${encImagePath}" alt="${currentEncounterName}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                             </div>
+                             <div class="text-lg font-bold uppercase text-center w-32 leading-tight">
+                                 ${currentEncounterName}
+                             </div>
+                         </div>
+                         <div class="text-2xl font-bold text-gray-800 self-center">
+                             ${node.text}
+                         </div>
+                     </div>
+                     <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
+             `;
+         
+             // --- INTERCEPT: Dynamic Taxi Job Generation ---
+             if (node.generateTaxiJobs) {
+                 if (player.activeTaxi) {
+                     html += `<div class="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 font-bold text-yellow-800 text-xl text-center">
+                         "You already have a passenger, spacer! Drop them off before taking more fares."
+                     </div>`;
+                 } else {
+                     if (!window.currentTaxiOffers) { 
+                         // --- NEW: Read the node properties or fallback to defaults ---
+                         const jobCount = node.taxiJobCount || 3;
+                         const maxDist = node.taxiMaxDistance || 150;
+                         
+                         window.currentTaxiOffers = [];
+                         for (let i = 0; i < jobCount; i++) {
+                             window.currentTaxiOffers.push(generateTaxiJob(maxDist));
+                         }
+                     }
+                     html += `<div class="space-y-3 mb-6">`;
+                     window.currentTaxiOffers.forEach((job, idx) => {
+                         html += `<button class="btn !bg-blue-50 text-left !p-3" onclick="acceptTaxiJob(${idx})">
+                             <div class="text-lg text-gray-500 font-bold mb-1 uppercase">FROM: ${job.pickupPoiName} (${job.pickupSysName})</div>
+                             <div class="text-lg text-gray-500 font-bold mb-1 uppercase">TO: ${job.dropoffPoiName} (${job.dropoffSysName})</div>
+                             <div class="text-lg font-bold">Take ${job.client.name} [+${job.reward} CR]</div>
+                         </button>`;
+                     });
+                     html += `</div>`;
+                 }
+             }
+         
+             node.options.forEach(opt => {
+                 if (opt.requiresFlag && !player.flags[opt.requiresFlag]) return;
+                 if (opt.hidesOnFlag && player.flags[opt.hidesOnFlag]) return;
+         
+                 let disabledAttr = '';
+                 let creditTag = '';
+                 
+                 if (opt.credits) {
+                     if (opt.credits < 0) {
+                         creditTag = ` [-${Math.abs(opt.credits)} CR]`;
+                         if (player.credits < Math.abs(opt.credits)) disabledAttr = 'disabled';
+                     } else {
+                         creditTag = ` [+${opt.credits} CR]`;
+                     }
+                 }
+         
+                 // Wrap the button in the correct actions if the flags exist
+                 const pickupAction = opt.completePickup ? "completeTaxiPickup();" : "";
+                 const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
+         
+                 html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}')" ${disabledAttr}>
+                     <span>${opt.text}${creditTag}</span>
+                 </button>`;
+             });
+         
+             html += `</div></div>`;
+             return html;
+         }
+         
+         function renderMarket(totalCargo) {
+             let html = `<div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
+                 <h3 class="text-3xl font-bold uppercase">${localView}ING</h3>
+                 <button class="btn !w-auto !mb-0 !py-2 !px-4 !text-xl" onclick="setLocalView('menu')">◀ BACK</button>
+             </div><div class="overflow-y-auto pb-8">`;
+             
+             const marketData = getStationMarket(currentPoi.type);
+             const activeMarket = localView === 'buy' ? marketData.selling : marketData.buying;
+             
+             // --- UPDATED: Removed the "Avg" header ---
+             html += `<div class="market-list-header"><span>Item</span><span class="text-center">Price</span><span class="text-center">Hold</span><span class="text-center">Action</span></div>`;
+             
+             if (activeMarket.length === 0) {
+                 html += `<p class="text-gray-500 italic mt-4">No goods available for ${localView}.</p>`;
+             } else {
+                 activeMarket.forEach(m => {
+                     const itemName = m.item;
+                     const price = m.price;
+                     const qty = player.cargo[itemName] || 0;
+                     const can = localView === 'buy' ? (player.credits >= price && totalCargo < player.cargoMax) : (qty > 0);
+                     
+                     // --- UPDATED: Placed the arrow directly next to the price ---
+                     html += `<div class="market-item">
+                         <span class="text-sm sm:text-lg leading-tight pr-1" title="${itemName}">${itemName}</span>
+                         <span class="text-center flex items-center justify-center">${price} ${getMarketContext(itemName, price, localView)}</span>
+                         <span class="text-center">${qty}</span>
+                         <button class="trade-btn" onclick="${localView}Good('${itemName}', ${price})" ${can ? '' : 'disabled'}>${localView.toUpperCase()}</button>
+                     </div>`;
+                 });
+             }
+             html += `</div>`;
+             return html;
+         }
+         
+         function updateShipCargoUI(totalCargo) {
+         const stats = getShipStats(player.ship);
+         const hullData = shipHulls[player.ship.hull];
+         
+         // Update Header & Stats
+         document.getElementById('ui-ship-name').innerText = hullData.name + " (" + hullData.size + ")";
+         document.getElementById('ui-ship-desc').innerText = hullData.description;
+         
+         document.getElementById('ui-stat-jump').innerText = stats.jumpRange;
+         document.getElementById('ui-stat-hull').innerText = stats.hullMax;
+         document.getElementById('ui-stat-handling').innerText = stats.handling;
+         document.getElementById('ui-stat-offense').innerText = stats.offensive;
+         document.getElementById('ship-cargo-total').innerText = stats.cargoMax;
+         document.getElementById('ship-cargo-current').innerText = totalCargo;
+         
+         // Render Core Slots
+         let coreHtml = '';
+         const coreTypes = { warpDrive: "Warp", hullArmour: "Armor", cargoBay: "Cargo", thrusters: "Engines", weapons: "Weapons" };
+         
+         for (const [key, label] of Object.entries(coreTypes)) {
+         const itemName = player.ship.core[key];
+         const itemData = itemName ? equipment[key][itemName] : null;
+         const displayValue = itemData ? `${itemData.name} (Base: ${itemData.baseValue})` : `<span class="text-red-500">EMPTY</span>`;
+         
+         coreHtml += `
+         <div class="flex justify-between border-b-2 border-gray-200 py-2">
+             <span class="text-gray-500">${label}</span>
+             <span class="text-right">${displayValue}</span>
+         </div>`;
+         }
+         document.getElementById('ui-core-slots').innerHTML = coreHtml;
+         
+         // Render Modular Slots
+         let modHtml = '';
+         for (let i = 0; i < hullData.modularSlots; i++) {
+         const itemName = player.ship.modules[i];
+         const itemData = itemName ? equipment.modules[itemName] : null;
+         
+         let displayValue = `<span class="text-gray-400 italic">EMPTY SLOT</span>`;
+         if (itemData) {
+             displayValue = `${itemData.name} <span class="text-green-600">(+${itemData.flatBonus} ${itemData.stat})</span>`;
+         }
+         
+         modHtml += `
+         <div class="flex justify-between border-b-2 border-gray-200 py-2">
+             <span class="text-gray-500">Slot ${i + 1}</span>
+             <span class="text-right">${displayValue}</span>
+         </div>`;
+         }
+         document.getElementById('ui-mod-slots').innerHTML = modHtml || '<p class="text-gray-500 italic">No modular slots available.</p>';
+         
+         // Render Cargo
+         let cl = '';
+         for (const [itemName, q] of Object.entries(player.cargo)) {
+         if (q > 0) cl += `<div class="flex justify-between border-b border-gray-300 py-1"><span>${itemName}</span><span>${q} SCU</span></div>`;
+         }
+         document.getElementById('cargo-list').innerHTML = cl || '<p class="text-gray-500 italic">Empty.</p>';
+         }
+         
+         // ==========================================
+         // END UI RENDERING ENGINE
+         // ==========================================
+         
+         function triggerLocalTravel(i) {
+             const dest = i === -1 ? null : currentSystem.pois[i];
+             triggerTravel(dest, dest ? `APPROACHING ${dest.name}` : "DEPARTING STATION", 1000);
+         }
+         
+         function triggerTravel(dest, msg, dur) {
+             const ov = document.getElementById('travel-overlay');
+             const bar = document.getElementById('progress-bar');
+             document.getElementById('travel-text').innerText = msg;
+             ov.style.display = 'flex';
+             let start = Date.now();
+             let t = setInterval(() => {
+                 let pc = ((Date.now() - start) / dur) * 100;
+                 bar.style.width = pc + "%";
+                 if (pc >= 100) { 
+                     clearInterval(t); 
+                     currentPoi = dest; 
+                     ov.style.display = 'none'; 
+                     
+                     // --- NEW: Check if we arrived at a standalone encounter ---
+                     if (currentPoi && currentPoi.type === 'Encounter') {
+                         startEncounter(currentPoi.name);
+                     } else {
+                         setLocalView('menu'); // Normal station
+                     }
+                     
+                     if (activeTab === 'map') renderMap();
+         saveGame(); // <--- AUTOSAVE
+                 }
+             }, 30);
+         }
+         
+         function handleDown(x, y) { isDragging = true; dragThreshold = false; lastMouse = { x, y }; }
+         function handleMove(x, y) {
+             if (!isDragging || activeTab !== 'map') return;
+             let dx = x - lastMouse.x, dy = y - lastMouse.y;
+             if (Math.abs(dx) > 5 || Math.abs(dy) > 5) dragThreshold = true;
+             camera.x -= dx; camera.y -= dy; lastMouse = { x, y }; renderMap();
+         }
+         
+         function handleUp(x, y) {
+             if (!isDragging || activeTab !== 'map') return;
+             isDragging = false;
+             
+             if (!dragThreshold) {
+                 const r = canvas.getBoundingClientRect();
+                 const wx = ((x - r.left) + camera.x) / camera.zoom;
+                 const wy = ((y - r.top) + camera.y) / camera.zoom;
+                 
+                 galaxy.forEach(s => {
+                     const d = Math.sqrt((wx - s.x * drawScale)**2 + (wy - s.y * drawScale)**2);
+                     
+                     // If we clicked on a star node
+                     if (d < 20 / camera.zoom) {
+                         if (s.id === currentSystem.id) {
+                             switchTab('local');
+                         } else {
+                             // Existing logic: If it's a different system, try to warp there
+                             if (Math.sqrt((currentSystem.x - s.x)**2 + (currentSystem.y - s.y)**2) <= jumpRange) {
+                                 currentSystem = s; 
+                                 centerOnSystem(s); 
+                                 randomizeMarket(); // Market fluctuates when jumping to a new star
+                                 triggerTravel(null, `WARPING TO ${s.name}`, 2500);
+                             }
+                         }
+                     }
+                 });
+             }
+         }
+         
+         canvas.addEventListener('wheel', e => {
+             if (activeTab !== 'map') return; e.preventDefault();
+             const r = canvas.getBoundingClientRect();
+             const mx = e.clientX - r.left, my = e.clientY - r.top;
+             const wx = (mx + camera.x) / camera.zoom, wy = (my + camera.y) / camera.zoom;
+             camera.zoom *= (e.deltaY > 0 ? 0.9 : 1.1); camera.zoom = Math.min(Math.max(camera.zoom, 0.2), 3);
+             camera.x = (wx * camera.zoom) - mx; camera.y = (wy * camera.zoom) - my; renderMap();
+         }, { passive: false });
+         canvas.addEventListener('mousedown', e => handleDown(e.clientX, e.clientY));
+         window.addEventListener('mousemove', e => handleMove(e.clientX, e.clientY));
+         window.addEventListener('mouseup', e => handleUp(e.clientX, e.clientY));
+         canvas.addEventListener('touchstart', e => {
+             e.preventDefault(); // Cancels the ghost click
+             if (e.touches.length === 2) initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+             else handleDown(e.touches[0].clientX, e.touches[0].clientY);
+         }, { passive: false });
+         
+         canvas.addEventListener('touchmove', e => {
+             if (activeTab !== 'map') return; e.preventDefault();
+             if (e.touches.length === 2 && initialPinchDistance) {
+                 const cur = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                 const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2, midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                 const wx = (midX + camera.x) / camera.zoom, wy = (midY + camera.y) / camera.zoom;
+                 camera.zoom *= (cur / initialPinchDistance); camera.zoom = Math.min(Math.max(camera.zoom, 0.2), 3);
+                 camera.x = (wx * camera.zoom) - midX; camera.y = (wy * camera.zoom) - midY;
+                 initialPinchDistance = cur; renderMap();
+             } else handleMove(e.touches[0].clientX, e.touches[0].clientY);
+         }, { passive: false });
+         
+         canvas.addEventListener('touchend', e => { 
+             e.preventDefault(); // Cancels the ghost click
+             initialPinchDistance = null; 
+             if (e.changedTouches.length) handleUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY); 
+         }, { passive: false });
+         window.addEventListener('resize', renderMap);
+         checkExistingSave();
+      </script> 
+      <div id="toast-notification" class="fixed top-0 left-1/2 transform -translate-x-1/2 -translate-y-full transition-transform duration-300 ease-in-out z-[200] p-4 w-full max-w-md pointer-events-none">
+         <div class="bg-black text-white border-4 border-white p-4 shadow-2xl text-center pointer-events-auto">
             <h3 id="toast-title" class="text-2xl font-bold uppercase mb-1"></h3>
             <p id="toast-desc" class="text-lg italic text-gray-300"></p>
-        </div>
-    </div>
-
-</body>
+         </div>
+      </div>
+   </body>
 </html>

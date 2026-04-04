@@ -1,548 +1,538 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Space Trader - Map Editor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        body { font-family: 'Courier New', Courier, monospace; background: #f0f0f0; margin: 0; overflow: hidden; }
-        #canvas-container { cursor: grab; background: #ffffff; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 40px 40px; }
-        #canvas-container:active { cursor: grabbing; }
-        .panel { background: #ffffff; border: 2px solid #000; display: flex; flex-direction: column; }
-        .btn { border: 2px solid #000; padding: 12px 8px; background: #fff; font-weight: bold; cursor: pointer; text-transform: uppercase; text-align: center; transition: all 0.1s; }
-        .btn:hover:not(:disabled) { background: #e5e7eb; }
-        .btn:active:not(:disabled) { background: #000; color: #fff; }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
-        input[type="text"], input[type="number"], textarea, select { border: 1px solid #000; padding: 4px; width: 100%; font-family: inherit; box-sizing: border-box; }
-        input[type="range"] { accent-color: #000; }
-    </style>
-</head>
-<body class="flex h-screen w-screen">
-
-    <div class="panel w-80 m-2 p-4 shrink-0 flex flex-col gap-4 z-10">
-        <h2 class="font-bold text-xl uppercase border-b-2 border-black pb-2">Editor Settings</h2>
-        
-        <div id="connection-status" class="p-3 bg-red-100 border border-red-500 text-sm font-bold text-center">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Space Trader - Map Editor</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+         body { font-family: 'Courier New', Courier, monospace; background: #f0f0f0; margin: 0; overflow: hidden; }
+         #canvas-container { cursor: grab; background: #ffffff; background-image: radial-gradient(#d1d5db 1px, transparent 1px); background-size: 40px 40px; }
+         #canvas-container:active { cursor: grabbing; }
+         .panel { background: #ffffff; border: 2px solid #000; display: flex; flex-direction: column; }
+         .btn { border: 2px solid #000; padding: 12px 8px; background: #fff; font-weight: bold; cursor: pointer; text-transform: uppercase; text-align: center; transition: all 0.1s; }
+         .btn:hover:not(:disabled) { background: #e5e7eb; }
+         .btn:active:not(:disabled) { background: #000; color: #fff; }
+         .btn:disabled { opacity: 0.5; cursor: not-allowed; border-style: dashed; }
+         input[type="text"], input[type="number"], textarea, select { border: 1px solid #000; padding: 4px; width: 100%; font-family: inherit; box-sizing: border-box; }
+         input[type="range"] { accent-color: #000; }
+      </style>
+   </head>
+   <body class="flex h-screen w-screen">
+      <div class="panel w-80 m-2 p-4 shrink-0 flex flex-col gap-4 z-10">
+         <h2 class="font-bold text-xl uppercase border-b-2 border-black pb-2">Editor Settings</h2>
+         <div id="connection-status" class="p-3 bg-red-100 border border-red-500 text-sm font-bold text-center">
             NOT CONNECTED
-        </div>
-
-        <button class="btn bg-blue-100" onclick="connectFile()">1. Connect to data.js</button>
-        <button class="btn bg-green-100" id="btn-save" onclick="saveToFile()" disabled>2. Save Changes</button>
-        
-        <div class="border-t-2 border-black mt-2 pt-4">
+         </div>
+         <button class="btn bg-blue-100" onclick="connectFile()">1. Connect to data.js</button>
+         <button class="btn bg-green-100" id="btn-save" onclick="saveToFile()" disabled>2. Save Changes</button>
+         <div class="border-t-2 border-black mt-2 pt-4">
             <button class="btn bg-yellow-100 w-full" id="btn-add-sys" onclick="addNewSystem()" disabled>+ Add New System</button>
-        </div>
-
-        <div class="border-t-2 border-black mt-2 pt-4">
-    <label class="block text-xs font-bold uppercase mb-1">Visualizer: Jump Range</label>
-    <div class="flex items-center gap-3">
-        <input type="range" id="jump-slider" min="10" max="500" value="100" class="flex-grow cursor-pointer" oninput="updateJumpRange(this.value)">
-        
-        <input type="number" id="jump-val" min="10" max="500" value="100" class="font-bold text-sm w-20 text-right" oninput="updateJumpRange(this.value)">
-    </div>
-    <p class="text-[10px] text-gray-500 mt-1 uppercase">Select a system to view its reach.</p>
-</div>
-
-        <p class="text-xs text-gray-500 mt-auto italic">Note: File access requires a modern browser. Re-connect if you refresh.</p>
-    </div>
-
-    <div id="canvas-container" class="flex-grow relative border-y-2 border-black my-2 overflow-hidden">
-        <canvas id="map-canvas" class="absolute inset-0"></canvas>
-    </div>
-
-    <div class="panel w-96 m-2 p-4 shrink-0 flex flex-col gap-4 z-10 overflow-y-auto" id="inspector-panel">
-        <div class="text-gray-500 italic text-center mt-10">Connect a file and select a system on the map to edit it.</div>
-    </div>
-
-    <script>
-        let galaxy = [];
-        let filePrefix = ""; // Stores data above the galaxy array (e.g., commodities)
-        let fileSuffix = ""; // Stores data below the galaxy array (e.g., interactions)
-        let selectedSystem = null;
-        let fileHandle = null; 
-        
-        let camera = { x: -100, y: -100, zoom: 0.8 };
-        let isDraggingMap = false;
-        let isDraggingNode = false;
-        let lastMouse = { x: 0, y: 0 };
-        let jumpRange = 100;
-
-        const canvas = document.getElementById('map-canvas');
-        const ctx = canvas.getContext('2d');
-        const inspector = document.getElementById('inspector-panel');
-
-	const typesList = [
-            'Trade Hub', 'Outpost', 'Wheat Farm', 'Ice Mine', 'Wheat Processing Plant', 
-            'Livestock Farm', 'Meat Processing Plant', 'Copper Mine', 'Iron Mine', 
-            'Platinum Mine', 'Silicon Mine', 'Gold Mine', 'Metal Ore Refinery', 
-            'Silicon Refinery', 'Machine Parts Factory', 'Chip Fab', 'Encounter' // <-- Added here
-        ];
-
-        function resize() {
-            canvas.width = canvas.parentElement.clientWidth;
-            canvas.height = canvas.parentElement.clientHeight;
-            render();
-        }
-        window.addEventListener('resize', resize);
-
-        function updateJumpRange(val) {
-            jumpRange = parseInt(val);
-            document.getElementById('jump-val').innerText = jumpRange;
-            render();
-        }
-
-        function render() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.save();
-            ctx.translate(-camera.x, -camera.y);
-            ctx.scale(camera.zoom, camera.zoom);
-
-            if (selectedSystem) {
-                ctx.beginPath();
-                ctx.arc(selectedSystem.x, selectedSystem.y, jumpRange, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(59, 130, 246, 0.05)'; 
-                ctx.fill();
-                ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'; 
-                ctx.setLineDash([8, 8]);
-                ctx.lineWidth = 2 / camera.zoom; 
-                ctx.stroke();
-                ctx.setLineDash([]); 
-
-                ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
-                ctx.lineWidth = 2 / camera.zoom;
-                galaxy.forEach(sys => {
-                    if (sys.id !== selectedSystem.id) {
-                        const dist = Math.sqrt((selectedSystem.x - sys.x)**2 + (selectedSystem.y - sys.y)**2);
-                        if (dist <= jumpRange) {
-                            ctx.beginPath();
-                            ctx.moveTo(selectedSystem.x, selectedSystem.y);
-                            ctx.lineTo(sys.x, sys.y);
-                            ctx.stroke();
-                        }
-                    }
-                });
-            }
-
-            galaxy.forEach(sys => {
-                const isSelected = selectedSystem && selectedSystem.id === sys.id;
-                
-                ctx.beginPath();
-                ctx.arc(sys.x, sys.y, isSelected ? 12 : 8, 0, Math.PI * 2);
-                ctx.fillStyle = isSelected ? '#ef4444' : '#000000';
-                ctx.fill();
-                
-                if (isSelected) {
-                    ctx.strokeStyle = '#000';
-                    ctx.lineWidth = 2 / camera.zoom;
-                    ctx.stroke();
-                    
-                    ctx.beginPath();
-                    ctx.arc(sys.x, sys.y, 20, 0, Math.PI * 2);
-                    ctx.strokeStyle = '#ef4444';
-                    ctx.setLineDash([4, 4]);
-                    ctx.stroke();
-                    ctx.setLineDash([]);
-                }
-
-                ctx.fillStyle = '#000000';
-                ctx.font = isSelected ? "bold 16px Courier New" : "14px Courier New";
-                ctx.fillText(sys.name, sys.x + 15, sys.y + 5);
-            });
-            ctx.restore();
-        }
-
-        function getWorldCoords(e) {
-            const rect = canvas.getBoundingClientRect();
-            return {
-                x: ((e.clientX - rect.left) + camera.x) / camera.zoom,
-                y: ((e.clientY - rect.top) + camera.y) / camera.zoom
-            };
-        }
-
-        canvas.addEventListener('mousedown', (e) => {
-            if (!fileHandle) return; 
-
-            const w = getWorldCoords(e);
-            let clickedNode = null;
-
-            for (let i = galaxy.length - 1; i >= 0; i--) {
-                const sys = galaxy[i];
-                const dist = Math.sqrt((w.x - sys.x)**2 + (w.y - sys.y)**2);
-                if (dist < 15 / camera.zoom) {
-                    clickedNode = sys;
-                    break;
-                }
-            }
-
-            if (clickedNode) {
-                selectedSystem = clickedNode;
-                isDraggingNode = true;
-                buildInspector();
-            } else {
-                selectedSystem = null;
-                isDraggingMap = true;
-                buildInspector();
-            }
-            
-            lastMouse = { x: e.clientX, y: e.clientY };
-            render();
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isDraggingNode && selectedSystem) {
-                const w = getWorldCoords(e);
-                selectedSystem.x = Math.round(w.x);
-                selectedSystem.y = Math.round(w.y);
-                updateInspectorCoords();
-                render();
-            } else if (isDraggingMap) {
-                camera.x -= (e.clientX - lastMouse.x);
-                camera.y -= (e.clientY - lastMouse.y);
-                document.getElementById('canvas-container').style.backgroundPosition = `${-camera.x}px ${-camera.y}px`;
-                render();
-            }
-            lastMouse = { x: e.clientX, y: e.clientY };
-        });
-
-        window.addEventListener('mouseup', () => {
-            isDraggingNode = false;
-            isDraggingMap = false;
-        });
-
-        canvas.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const r = canvas.getBoundingClientRect();
-            const mx = e.clientX - r.left;
-            const my = e.clientY - r.top;
-            
-            const wx = (mx + camera.x) / camera.zoom;
-            const wy = (my + camera.y) / camera.zoom;
-            
-            const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
-            camera.zoom *= zoomAmount;
-            camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 4);
-            
-            camera.x = (wx * camera.zoom) - mx;
-            camera.y = (wy * camera.zoom) - my;
-            
-            document.getElementById('canvas-container').style.backgroundPosition = `${-camera.x}px ${-camera.y}px`;
-            render();
-        }, { passive: false });
-
-        function buildInspector() {
-            if (!selectedSystem) {
-                inspector.innerHTML = `<div class="text-gray-500 italic text-center mt-10">Select a system on the map to edit it.</div>`;
-                return;
-            }
-
-            let html = `
-                <div class="flex justify-between items-center border-b-2 border-black pb-2">
-                    <h2 class="font-bold text-xl uppercase">Edit System</h2>
-                    <button class="text-red-600 font-bold hover:underline" onclick="deleteSystem()">DELETE</button>
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="block text-xs font-bold uppercase mt-2">System Name</label>
-                    <input type="text" value="${selectedSystem.name}" oninput="updateSystemData('name', this.value)">
-                </div>
-
-                <div class="flex gap-2">
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold uppercase mt-2">X Coordinate</label>
-                        <input type="number" id="insp-x" value="${selectedSystem.x}" oninput="updateSystemData('x', this.value)">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-xs font-bold uppercase mt-2">Y Coordinate</label>
-                        <input type="number" id="insp-y" value="${selectedSystem.y}" oninput="updateSystemData('y', this.value)">
-                    </div>
-                </div>
-
-                <div class="mt-4 border-t-2 border-black pt-4">
-                    <div class="flex justify-between items-center mb-2">
-                        <h3 class="font-bold text-lg uppercase">Points of Interest</h3>
-                        <button class="btn text-xs !p-1 bg-green-100" onclick="addPoi()">+ Add POI</button>
-                    </div>
-                    <div class="space-y-4" id="poi-list">
-            `;
-
-            (selectedSystem.pois || []).forEach((poi, index) => {
-                html += `
-                    <div class="border border-gray-400 p-2 bg-gray-50 relative flex flex-col gap-1">
-                        <button class="absolute top-1 right-2 text-red-500 font-bold text-xs" onclick="deletePoi(${index})">X</button>
-                        
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mt-1">Name</label>
-                            <input type="text" class="text-sm" value="${poi.name || ''}" oninput="updatePoiData(${index}, 'name', this.value)">
-                        </div>
-                        
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mt-1">Station Type</label>
-                            <select class="text-xs" oninput="updatePoiData(${index}, 'type', this.value)">
-                                ${typesList.map(t => `<option value="${t}" ${poi.type === t ? 'selected' : ''}>${t}</option>`).join('')}
-                            </select>
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <div class="flex-1">
-                                <label class="block text-[10px] font-bold uppercase mt-1">Custom Image</label>
-                                <input type="text" class="text-xs" placeholder="default.png" value="${poi.image || ''}" oninput="updatePoiData(${index}, 'image', this.value)">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mt-1">Encounters (Comma Separated)</label>
-                            <input type="text" class="text-xs" placeholder="Shady Bartender, Bouncer" value="${(poi.encounters || []).join(', ')}" oninput="updatePoiData(${index}, 'encounters', this.value)">
-                        </div>
-                        
-                        <div class="flex gap-2">
-                            <div class="flex-1">
-                                <label class="block text-[10px] font-bold uppercase mt-1">Requires Flag</label>
-                                <input type="text" class="text-xs" placeholder="knows_frank" value="${poi.requiresFlag || ''}" oninput="updatePoiData(${index}, 'requiresFlag', this.value)">
-                            </div>
-                            <div class="flex-1">
-                                <label class="block text-[10px] font-bold uppercase mt-1">Hides on Flag</label>
-                                <input type="text" class="text-xs" placeholder="mission_done" value="${poi.hidesOnFlag || ''}" oninput="updatePoiData(${index}, 'hidesOnFlag', this.value)">
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label>
-                            <textarea class="text-xs h-12 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
-                        </div>
-                    </div>
-                `;
-            });
-
-            html += `</div></div>`;
-            inspector.innerHTML = html;
-        }
-
-        function updateInspectorCoords() {
-            const xInp = document.getElementById('insp-x');
-            const yInp = document.getElementById('insp-y');
-            if(xInp && yInp) {
-                xInp.value = selectedSystem.x;
-                yInp.value = selectedSystem.y;
-            }
-        }
-
-        function updateSystemData(key, value) {
-            if(key === 'x' || key === 'y') value = parseInt(value) || 0;
-            selectedSystem[key] = value;
-            render();
-        }
-
-        function updatePoiData(index, key, value) {
-            if (key === 'encounters') {
-                // Convert the comma-separated string back into an array, filtering out empty strings
-                selectedSystem.pois[index][key] = value.split(',').map(s => s.trim()).filter(s => s !== '');
-            } else {
-                selectedSystem.pois[index][key] = value;
-            }
-        }
-
-        function addNewSystem() {
-            let maxId = galaxy.reduce((max, sys) => Math.max(max, sys.id), -1);
-            const newSys = {
-                id: maxId + 1,
-                name: "New System",
-                x: Math.round(camera.x + (canvas.width/2)/camera.zoom),
-                y: Math.round(camera.y + (canvas.height/2)/camera.zoom),
-                pois: []
-            };
-            galaxy.push(newSys);
-            selectedSystem = newSys;
-            buildInspector();
-            render();
-        }
-
-        function deleteSystem() {
-            if(!confirm("Delete this system?")) return;
-            galaxy = galaxy.filter(s => s.id !== selectedSystem.id);
-            selectedSystem = null;
-            buildInspector();
-            render();
-        }
-
-        function addPoi() {
-            if(!selectedSystem.pois) selectedSystem.pois = [];
-            selectedSystem.pois.push({ name: "New POI", type: "Trade Hub", description: "", encounters: [] });
-            buildInspector();
-        }
-
-        function deletePoi(index) {
-            selectedSystem.pois.splice(index, 1);
-            buildInspector();
-        }
-
-        async function connectFile() {
-            try {
-                [fileHandle] = await window.showOpenFilePicker({
-                    types: [{
-                        description: 'JavaScript Files',
-                        accept: { 'text/javascript': ['.js'] }
-                    }],
-                    multiple: false
-                });
-
-                const file = await fileHandle.getFile();
-                let text = await file.text();
-
-                const galaxyIndex = text.indexOf('const galaxy =');
-                if (galaxyIndex === -1) { 
-                    alert("Could not find 'const galaxy' in file."); 
-                    return; 
-                }
-
-                // Preserve everything before the galaxy array
-                filePrefix = text.substring(0, galaxyIndex);
-                let restOfText = text.substring(galaxyIndex);
-                
-                // Smart regex to extract just the array and capture any suffix (like the interactions object)
-                const match = restOfText.match(/const\s+galaxy\s*=\s*(\[[\s\S]*?\])\s*;/);
-                
-                let galaxyText = "";
-                if (match) {
-                    galaxyText = match[1];
-                    fileSuffix = restOfText.substring(match[0].length); // Save the interactions block
-                } else {
-                    // Fallback
-                    galaxyText = restOfText.replace(/const\s+galaxy\s*=\s*/, '').trim();
-                    if (galaxyText.endsWith(';')) galaxyText = galaxyText.slice(0, -1);
-                    fileSuffix = "";
-                }
-                
-                const parsed = new Function('return ' + galaxyText)(); 
-                
-                if (Array.isArray(parsed)) {
-                    galaxy = parsed;
-                    selectedSystem = null;
-                    buildInspector();
-                    
-                    if(galaxy.length > 0) {
-                        camera.x = galaxy[0].x - (canvas.width / 2);
-                        camera.y = galaxy[0].y - (canvas.height / 2);
-                    }
-                    render();
-                    
-                    const status = document.getElementById('connection-status');
-                    status.innerText = `CONNECTED: ${file.name}`;
-                    status.classList.replace('bg-red-100', 'bg-green-100');
-                    status.classList.replace('border-red-500', 'border-green-500');
-                    
-                    document.getElementById('btn-save').disabled = false;
-                    document.getElementById('btn-add-sys').disabled = false;
-
-                } else {
-                    alert("The file was loaded, but no valid array was found.");
-                }
-            } catch (err) {
-                console.error(err);
-                if (err.name !== 'AbortError') {
-                    alert("Could not connect to file. Make sure you are using Chrome/Edge.");
-                }
-            }
-        }
-
-async function saveToFile() {
-    if (!fileHandle) return;
-
-    const btn = document.getElementById("btn-save");
-    const originalText = btn.innerText;
-    btn.innerText = "SAVING...";
-
-    try {
-        // Recombine prefix, updated galaxy array, and the suffix
-        let out = filePrefix + "const galaxy = [\n";
-        
-        galaxy.forEach((sys, i) => {
-            // Start the system object block
-            out += `    {\n`;
-            out += `        id: ${sys.id}, name: "${sys.name}", x: ${sys.x}, y: ${sys.y},\n`;
-            out += `        pois: [\n`;
-
-            let poisStr = (sys.pois || []).map(p => {
-                // Indent each POI line
-                let pStr = `            { name: "${p.name}", type: "${p.type}"`;
-                
-                if (p.image !== undefined) {
-                    pStr += `, image: "${p.image.trim()}"`;
-                }
-                
-                if (p.encounters && p.encounters.length > 0) {
-                    pStr += `, encounters: [${p.encounters.map(e => `"${e}"`).join(", ")}]`;
-                }
-
-                if (p.requiresFlag) {
-                    pStr += `, requiresFlag: "${p.requiresFlag.trim()}"`;
-                }
-                
-                if (p.hidesOnFlag) {
-                    pStr += `, hidesOnFlag: "${p.hidesOnFlag.trim()}"`;
-                }
-
-                if (p.description !== undefined) {
-                    pStr += `, description: "${p.description.replace(/"/g, '\\"')}"`;
-                }
-                
-                pStr += ` }`;
-                return pStr;
-            }).join(",\n"); // Put a comma and a line break between each POI!
-            
-            // Add the POIs to the block, and close the system
-            out += poisStr + (poisStr ? "\n" : "");
-            out += `        ]\n`;
-            out += `    }`;
-            
-            // Add a comma if it's not the last system
-            if (i < galaxy.length - 1) out += ",";
-            out += "\n";
-        });
-        
-        // Add the suffix back safely
-        out += "];" + (fileSuffix.startsWith('\n') ? '' : '\n') + fileSuffix;
-
-        try {
-            // Attempt direct file overwrite
-            const writable = await fileHandle.createWritable();
-            await writable.write(out);
-            await writable.close();
-
-            btn.innerText = "SAVED SUCCESSFULLY!";
-            btn.classList.add("bg-black", "text-white");
-        } catch (writeErr) {
-            console.warn("Direct write failed, falling back to download:", writeErr);
-            
-            // Fallback: Trigger a download of the modified data.js
-            const blob = new Blob([out], { type: "text/javascript" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "data.js";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-
-            btn.innerText = "DOWNLOADED FILE!";
-            btn.classList.add("bg-yellow-500", "text-black");
-        }
-        
-    } catch (err) {
-        console.error("Critical string generation error:", err);
-        btn.innerText = "SAVE FAILED!";
-        btn.classList.add("bg-red-500", "text-white");
-    }
-
-    setTimeout(() => {
-        btn.innerText = originalText;
-        btn.classList.remove("bg-black", "text-white", "bg-red-500", "bg-yellow-500", "text-black");
-    }, 2500);
-}
-
-        setTimeout(resize, 100);
-
-    </script>
-</body>
+         </div>
+         <div class="border-t-2 border-black mt-2 pt-4">
+            <label class="block text-xs font-bold uppercase mb-1">Visualizer: Jump Range</label>
+            <div class="flex items-center gap-3">
+               <input type="range" id="jump-slider" min="10" max="500" value="100" class="flex-grow cursor-pointer" oninput="updateJumpRange(this.value)">
+               <input type="number" id="jump-val" min="10" max="500" value="100" class="font-bold text-sm w-20 text-right" oninput="updateJumpRange(this.value)">
+            </div>
+            <p class="text-[10px] text-gray-500 mt-1 uppercase">Select a system to view its reach.</p>
+         </div>
+         <p class="text-xs text-gray-500 mt-auto italic">Note: File access requires a modern browser. Re-connect if you refresh.</p>
+      </div>
+      <div id="canvas-container" class="flex-grow relative border-y-2 border-black my-2 overflow-hidden">
+         <canvas id="map-canvas" class="absolute inset-0"></canvas>
+      </div>
+      <div class="panel w-96 m-2 p-4 shrink-0 flex flex-col gap-4 z-10 overflow-y-auto" id="inspector-panel">
+         <div class="text-gray-500 italic text-center mt-10">Connect a file and select a system on the map to edit it.</div>
+      </div>
+      <script>
+         let galaxy = [];
+         let filePrefix = ""; // Stores data above the galaxy array (e.g., commodities)
+         let fileSuffix = ""; // Stores data below the galaxy array (e.g., interactions)
+         let selectedSystem = null;
+         let fileHandle = null; 
+         
+         let camera = { x: -100, y: -100, zoom: 0.8 };
+         let isDraggingMap = false;
+         let isDraggingNode = false;
+         let lastMouse = { x: 0, y: 0 };
+         let jumpRange = 100;
+         
+         const canvas = document.getElementById('map-canvas');
+         const ctx = canvas.getContext('2d');
+         const inspector = document.getElementById('inspector-panel');
+         
+         const typesList = [
+             'Trade Hub', 'Outpost', 'Wheat Farm', 'Ice Mine', 'Wheat Processing Plant', 
+             'Livestock Farm', 'Meat Processing Plant', 'Copper Mine', 'Iron Mine', 
+             'Platinum Mine', 'Silicon Mine', 'Gold Mine', 'Metal Ore Refinery', 
+             'Silicon Refinery', 'Machine Parts Factory', 'Chip Fab', 'Encounter' // <-- Added here
+         ];
+         
+         function resize() {
+             canvas.width = canvas.parentElement.clientWidth;
+             canvas.height = canvas.parentElement.clientHeight;
+             render();
+         }
+         window.addEventListener('resize', resize);
+         
+         function updateJumpRange(val) {
+             jumpRange = parseInt(val);
+             document.getElementById('jump-val').innerText = jumpRange;
+             render();
+         }
+         
+         function render() {
+             ctx.clearRect(0, 0, canvas.width, canvas.height);
+             ctx.save();
+             ctx.translate(-camera.x, -camera.y);
+             ctx.scale(camera.zoom, camera.zoom);
+         
+             if (selectedSystem) {
+                 ctx.beginPath();
+                 ctx.arc(selectedSystem.x, selectedSystem.y, jumpRange, 0, Math.PI * 2);
+                 ctx.fillStyle = 'rgba(59, 130, 246, 0.05)'; 
+                 ctx.fill();
+                 ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)'; 
+                 ctx.setLineDash([8, 8]);
+                 ctx.lineWidth = 2 / camera.zoom; 
+                 ctx.stroke();
+                 ctx.setLineDash([]); 
+         
+                 ctx.strokeStyle = 'rgba(59, 130, 246, 0.3)';
+                 ctx.lineWidth = 2 / camera.zoom;
+                 galaxy.forEach(sys => {
+                     if (sys.id !== selectedSystem.id) {
+                         const dist = Math.sqrt((selectedSystem.x - sys.x)**2 + (selectedSystem.y - sys.y)**2);
+                         if (dist <= jumpRange) {
+                             ctx.beginPath();
+                             ctx.moveTo(selectedSystem.x, selectedSystem.y);
+                             ctx.lineTo(sys.x, sys.y);
+                             ctx.stroke();
+                         }
+                     }
+                 });
+             }
+         
+             galaxy.forEach(sys => {
+                 const isSelected = selectedSystem && selectedSystem.id === sys.id;
+                 
+                 ctx.beginPath();
+                 ctx.arc(sys.x, sys.y, isSelected ? 12 : 8, 0, Math.PI * 2);
+                 ctx.fillStyle = isSelected ? '#ef4444' : '#000000';
+                 ctx.fill();
+                 
+                 if (isSelected) {
+                     ctx.strokeStyle = '#000';
+                     ctx.lineWidth = 2 / camera.zoom;
+                     ctx.stroke();
+                     
+                     ctx.beginPath();
+                     ctx.arc(sys.x, sys.y, 20, 0, Math.PI * 2);
+                     ctx.strokeStyle = '#ef4444';
+                     ctx.setLineDash([4, 4]);
+                     ctx.stroke();
+                     ctx.setLineDash([]);
+                 }
+         
+                 ctx.fillStyle = '#000000';
+                 ctx.font = isSelected ? "bold 16px Courier New" : "14px Courier New";
+                 ctx.fillText(sys.name, sys.x + 15, sys.y + 5);
+             });
+             ctx.restore();
+         }
+         
+         function getWorldCoords(e) {
+             const rect = canvas.getBoundingClientRect();
+             return {
+                 x: ((e.clientX - rect.left) + camera.x) / camera.zoom,
+                 y: ((e.clientY - rect.top) + camera.y) / camera.zoom
+             };
+         }
+         
+         canvas.addEventListener('mousedown', (e) => {
+             if (!fileHandle) return; 
+         
+             const w = getWorldCoords(e);
+             let clickedNode = null;
+         
+             for (let i = galaxy.length - 1; i >= 0; i--) {
+                 const sys = galaxy[i];
+                 const dist = Math.sqrt((w.x - sys.x)**2 + (w.y - sys.y)**2);
+                 if (dist < 15 / camera.zoom) {
+                     clickedNode = sys;
+                     break;
+                 }
+             }
+         
+             if (clickedNode) {
+                 selectedSystem = clickedNode;
+                 isDraggingNode = true;
+                 buildInspector();
+             } else {
+                 selectedSystem = null;
+                 isDraggingMap = true;
+                 buildInspector();
+             }
+             
+             lastMouse = { x: e.clientX, y: e.clientY };
+             render();
+         });
+         
+         window.addEventListener('mousemove', (e) => {
+             if (isDraggingNode && selectedSystem) {
+                 const w = getWorldCoords(e);
+                 selectedSystem.x = Math.round(w.x);
+                 selectedSystem.y = Math.round(w.y);
+                 updateInspectorCoords();
+                 render();
+             } else if (isDraggingMap) {
+                 camera.x -= (e.clientX - lastMouse.x);
+                 camera.y -= (e.clientY - lastMouse.y);
+                 document.getElementById('canvas-container').style.backgroundPosition = `${-camera.x}px ${-camera.y}px`;
+                 render();
+             }
+             lastMouse = { x: e.clientX, y: e.clientY };
+         });
+         
+         window.addEventListener('mouseup', () => {
+             isDraggingNode = false;
+             isDraggingMap = false;
+         });
+         
+         canvas.addEventListener('wheel', (e) => {
+             e.preventDefault();
+             const r = canvas.getBoundingClientRect();
+             const mx = e.clientX - r.left;
+             const my = e.clientY - r.top;
+             
+             const wx = (mx + camera.x) / camera.zoom;
+             const wy = (my + camera.y) / camera.zoom;
+             
+             const zoomAmount = e.deltaY > 0 ? 0.9 : 1.1;
+             camera.zoom *= zoomAmount;
+             camera.zoom = Math.min(Math.max(camera.zoom, 0.1), 4);
+             
+             camera.x = (wx * camera.zoom) - mx;
+             camera.y = (wy * camera.zoom) - my;
+             
+             document.getElementById('canvas-container').style.backgroundPosition = `${-camera.x}px ${-camera.y}px`;
+             render();
+         }, { passive: false });
+         
+         function buildInspector() {
+             if (!selectedSystem) {
+                 inspector.innerHTML = `<div class="text-gray-500 italic text-center mt-10">Select a system on the map to edit it.</div>`;
+                 return;
+             }
+         
+             let html = `
+                 <div class="flex justify-between items-center border-b-2 border-black pb-2">
+                     <h2 class="font-bold text-xl uppercase">Edit System</h2>
+                     <button class="text-red-600 font-bold hover:underline" onclick="deleteSystem()">DELETE</button>
+                 </div>
+                 
+                 <div class="space-y-2">
+                     <label class="block text-xs font-bold uppercase mt-2">System Name</label>
+                     <input type="text" value="${selectedSystem.name}" oninput="updateSystemData('name', this.value)">
+                 </div>
+         
+                 <div class="flex gap-2">
+                     <div class="flex-1">
+                         <label class="block text-xs font-bold uppercase mt-2">X Coordinate</label>
+                         <input type="number" id="insp-x" value="${selectedSystem.x}" oninput="updateSystemData('x', this.value)">
+                     </div>
+                     <div class="flex-1">
+                         <label class="block text-xs font-bold uppercase mt-2">Y Coordinate</label>
+                         <input type="number" id="insp-y" value="${selectedSystem.y}" oninput="updateSystemData('y', this.value)">
+                     </div>
+                 </div>
+         
+                 <div class="mt-4 border-t-2 border-black pt-4">
+                     <div class="flex justify-between items-center mb-2">
+                         <h3 class="font-bold text-lg uppercase">Points of Interest</h3>
+                         <button class="btn text-xs !p-1 bg-green-100" onclick="addPoi()">+ Add POI</button>
+                     </div>
+                     <div class="space-y-4" id="poi-list">
+             `;
+         
+             (selectedSystem.pois || []).forEach((poi, index) => {
+                 html += `
+                     <div class="border border-gray-400 p-2 bg-gray-50 relative flex flex-col gap-1">
+                         <button class="absolute top-1 right-2 text-red-500 font-bold text-xs" onclick="deletePoi(${index})">X</button>
+                         
+                         <div>
+                             <label class="block text-[10px] font-bold uppercase mt-1">Name</label>
+                             <input type="text" class="text-sm" value="${poi.name || ''}" oninput="updatePoiData(${index}, 'name', this.value)">
+                         </div>
+                         
+                         <div>
+                             <label class="block text-[10px] font-bold uppercase mt-1">Station Type</label>
+                             <select class="text-xs" oninput="updatePoiData(${index}, 'type', this.value)">
+                                 ${typesList.map(t => `<option value="${t}" ${poi.type === t ? 'selected' : ''}>${t}</option>`).join('')}
+                             </select>
+                         </div>
+                         
+                         <div class="flex gap-2">
+                             <div class="flex-1">
+                                 <label class="block text-[10px] font-bold uppercase mt-1">Custom Image</label>
+                                 <input type="text" class="text-xs" placeholder="default.png" value="${poi.image || ''}" oninput="updatePoiData(${index}, 'image', this.value)">
+                             </div>
+                         </div>
+         
+                         <div>
+                             <label class="block text-[10px] font-bold uppercase mt-1">Encounters (Comma Separated)</label>
+                             <input type="text" class="text-xs" placeholder="Shady Bartender, Bouncer" value="${(poi.encounters || []).join(', ')}" oninput="updatePoiData(${index}, 'encounters', this.value)">
+                         </div>
+                         
+                         <div class="flex gap-2">
+                             <div class="flex-1">
+                                 <label class="block text-[10px] font-bold uppercase mt-1">Requires Flag</label>
+                                 <input type="text" class="text-xs" placeholder="knows_frank" value="${poi.requiresFlag || ''}" oninput="updatePoiData(${index}, 'requiresFlag', this.value)">
+                             </div>
+                             <div class="flex-1">
+                                 <label class="block text-[10px] font-bold uppercase mt-1">Hides on Flag</label>
+                                 <input type="text" class="text-xs" placeholder="mission_done" value="${poi.hidesOnFlag || ''}" oninput="updatePoiData(${index}, 'hidesOnFlag', this.value)">
+                             </div>
+                         </div>
+         
+                         <div>
+                             <label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label>
+                             <textarea class="text-xs h-12 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${poi.description || ''}</textarea>
+                         </div>
+                     </div>
+                 `;
+             });
+         
+             html += `</div></div>`;
+             inspector.innerHTML = html;
+         }
+         
+         function updateInspectorCoords() {
+             const xInp = document.getElementById('insp-x');
+             const yInp = document.getElementById('insp-y');
+             if(xInp && yInp) {
+                 xInp.value = selectedSystem.x;
+                 yInp.value = selectedSystem.y;
+             }
+         }
+         
+         function updateSystemData(key, value) {
+             if(key === 'x' || key === 'y') value = parseInt(value) || 0;
+             selectedSystem[key] = value;
+             render();
+         }
+         
+         function updatePoiData(index, key, value) {
+             if (key === 'encounters') {
+                 // Convert the comma-separated string back into an array, filtering out empty strings
+                 selectedSystem.pois[index][key] = value.split(',').map(s => s.trim()).filter(s => s !== '');
+             } else {
+                 selectedSystem.pois[index][key] = value;
+             }
+         }
+         
+         function addNewSystem() {
+             let maxId = galaxy.reduce((max, sys) => Math.max(max, sys.id), -1);
+             const newSys = {
+                 id: maxId + 1,
+                 name: "New System",
+                 x: Math.round(camera.x + (canvas.width/2)/camera.zoom),
+                 y: Math.round(camera.y + (canvas.height/2)/camera.zoom),
+                 pois: []
+             };
+             galaxy.push(newSys);
+             selectedSystem = newSys;
+             buildInspector();
+             render();
+         }
+         
+         function deleteSystem() {
+             if(!confirm("Delete this system?")) return;
+             galaxy = galaxy.filter(s => s.id !== selectedSystem.id);
+             selectedSystem = null;
+             buildInspector();
+             render();
+         }
+         
+         function addPoi() {
+             if(!selectedSystem.pois) selectedSystem.pois = [];
+             selectedSystem.pois.push({ name: "New POI", type: "Trade Hub", description: "", encounters: [] });
+             buildInspector();
+         }
+         
+         function deletePoi(index) {
+             selectedSystem.pois.splice(index, 1);
+             buildInspector();
+         }
+         
+         async function connectFile() {
+             try {
+                 [fileHandle] = await window.showOpenFilePicker({
+                     types: [{
+                         description: 'JavaScript Files',
+                         accept: { 'text/javascript': ['.js'] }
+                     }],
+                     multiple: false
+                 });
+         
+                 const file = await fileHandle.getFile();
+                 let text = await file.text();
+         
+                 const galaxyIndex = text.indexOf('const galaxy =');
+                 if (galaxyIndex === -1) { 
+                     alert("Could not find 'const galaxy' in file."); 
+                     return; 
+                 }
+         
+                 // Preserve everything before the galaxy array
+                 filePrefix = text.substring(0, galaxyIndex);
+                 let restOfText = text.substring(galaxyIndex);
+                 
+                 // Smart regex to extract just the array and capture any suffix (like the interactions object)
+                 const match = restOfText.match(/const\s+galaxy\s*=\s*(\[[\s\S]*?\])\s*;/);
+                 
+                 let galaxyText = "";
+                 if (match) {
+                     galaxyText = match[1];
+                     fileSuffix = restOfText.substring(match[0].length); // Save the interactions block
+                 } else {
+                     // Fallback
+                     galaxyText = restOfText.replace(/const\s+galaxy\s*=\s*/, '').trim();
+                     if (galaxyText.endsWith(';')) galaxyText = galaxyText.slice(0, -1);
+                     fileSuffix = "";
+                 }
+                 
+                 const parsed = new Function('return ' + galaxyText)(); 
+                 
+                 if (Array.isArray(parsed)) {
+                     galaxy = parsed;
+                     selectedSystem = null;
+                     buildInspector();
+                     
+                     if(galaxy.length > 0) {
+                         camera.x = galaxy[0].x - (canvas.width / 2);
+                         camera.y = galaxy[0].y - (canvas.height / 2);
+                     }
+                     render();
+                     
+                     const status = document.getElementById('connection-status');
+                     status.innerText = `CONNECTED: ${file.name}`;
+                     status.classList.replace('bg-red-100', 'bg-green-100');
+                     status.classList.replace('border-red-500', 'border-green-500');
+                     
+                     document.getElementById('btn-save').disabled = false;
+                     document.getElementById('btn-add-sys').disabled = false;
+         
+                 } else {
+                     alert("The file was loaded, but no valid array was found.");
+                 }
+             } catch (err) {
+                 console.error(err);
+                 if (err.name !== 'AbortError') {
+                     alert("Could not connect to file. Make sure you are using Chrome/Edge.");
+                 }
+             }
+         }
+         
+         async function saveToFile() {
+         if (!fileHandle) return;
+         
+         const btn = document.getElementById("btn-save");
+         const originalText = btn.innerText;
+         btn.innerText = "SAVING...";
+         
+         try {
+         // Recombine prefix, updated galaxy array, and the suffix
+         let out = filePrefix + "const galaxy = [\n";
+         
+         galaxy.forEach((sys, i) => {
+             // Start the system object block
+             out += `    {\n`;
+             out += `        id: ${sys.id}, name: "${sys.name}", x: ${sys.x}, y: ${sys.y},\n`;
+             out += `        pois: [\n`;
+         
+             let poisStr = (sys.pois || []).map(p => {
+                 // Indent each POI line
+                 let pStr = `            { name: "${p.name}", type: "${p.type}"`;
+                 
+                 if (p.image !== undefined) {
+                     pStr += `, image: "${p.image.trim()}"`;
+                 }
+                 
+                 if (p.encounters && p.encounters.length > 0) {
+                     pStr += `, encounters: [${p.encounters.map(e => `"${e}"`).join(", ")}]`;
+                 }
+         
+                 if (p.requiresFlag) {
+                     pStr += `, requiresFlag: "${p.requiresFlag.trim()}"`;
+                 }
+                 
+                 if (p.hidesOnFlag) {
+                     pStr += `, hidesOnFlag: "${p.hidesOnFlag.trim()}"`;
+                 }
+         
+                 if (p.description !== undefined) {
+                     pStr += `, description: "${p.description.replace(/"/g, '\\"')}"`;
+                 }
+                 
+                 pStr += ` }`;
+                 return pStr;
+             }).join(",\n"); // Put a comma and a line break between each POI!
+             
+             // Add the POIs to the block, and close the system
+             out += poisStr + (poisStr ? "\n" : "");
+             out += `        ]\n`;
+             out += `    }`;
+             
+             // Add a comma if it's not the last system
+             if (i < galaxy.length - 1) out += ",";
+             out += "\n";
+         });
+         
+         // Add the suffix back safely
+         out += "];" + (fileSuffix.startsWith('\n') ? '' : '\n') + fileSuffix;
+         
+         try {
+             // Attempt direct file overwrite
+             const writable = await fileHandle.createWritable();
+             await writable.write(out);
+             await writable.close();
+         
+             btn.innerText = "SAVED SUCCESSFULLY!";
+             btn.classList.add("bg-black", "text-white");
+         } catch (writeErr) {
+             console.warn("Direct write failed, falling back to download:", writeErr);
+             
+             // Fallback: Trigger a download of the modified data.js
+             const blob = new Blob([out], { type: "text/javascript" });
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement("a");
+             a.href = url;
+             a.download = "data.js";
+             document.body.appendChild(a);
+             a.click();
+             document.body.removeChild(a);
+             URL.revokeObjectURL(url);
+         
+             btn.innerText = "DOWNLOADED FILE!";
+             btn.classList.add("bg-yellow-500", "text-black");
+         }
+         
+         } catch (err) {
+         console.error("Critical string generation error:", err);
+         btn.innerText = "SAVE FAILED!";
+         btn.classList.add("bg-red-500", "text-white");
+         }
+         
+         setTimeout(() => {
+         btn.innerText = originalText;
+         btn.classList.remove("bg-black", "text-white", "bg-red-500", "bg-yellow-500", "text-black");
+         }, 2500);
+         }
+         
+         setTimeout(resize, 100);
+         
+      </script>
+   </body>
 </html>
