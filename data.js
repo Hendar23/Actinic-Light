@@ -1,4 +1,54 @@
 // ==========================================
+// SHIPS & EQUIPMENT DATA
+// ==========================================
+
+const shipHulls = {
+    "Weescow": {
+        name: "Weescow",
+        size: "Tiny",
+        description: "A tiny two-seater runabout",
+        multipliers: {
+            jumpRange: 1.0,
+            hull: 1.0,
+            cargo: 1.0,
+            handling: 1.0,
+            offensive: 0.8
+        },
+        coreSlots: {
+            warpDrive: 1,
+            hullArmour: 1,
+            cargoBay: 1,
+            thrusters: 1,
+            weapons: 1
+        },
+        modularSlots: 1
+    }
+};
+
+const equipment = {
+    warpDrive: {
+        "Civilian Drive T1": { name: "Civilian Drive T1", size: "Tiny", type: "warpDrive", baseValue: 50, description: "Standard issue civilian warp drive." },
+        "Civilian Drive T2": { name: "Civilian Drive T2", size: "Tiny", type: "warpDrive", baseValue: 75, description: "Upgraded civilian warp drive." }
+    },
+    hullArmour: {
+        "Light Plating": { name: "Light Plating", size: "Tiny", type: "hullArmour", baseValue: 10, description: "Basic hull protection." }
+    },
+    cargoBay: {
+        "Tiny Hold": { name: "Tiny Hold", size: "Tiny", type: "cargoBay", baseValue: 20, description: "Just slightly bigger than the glove compartment." }
+    },
+    thrusters: {
+        "Basic Maneuvering Jets": { name: "Basic Maneuvering Jets", size: "Tiny", type: "thrusters", baseValue: 10, description: "Standard thrusters." }
+    },
+    weapons: {
+        "Pea Shooter": { name: "Pea Shooter", size: "Tiny", type: "weapons", baseValue: 5, description: "Better than nothing." }
+    },
+    modules: {
+        "Cargo Expander I": { name: "Cargo Expander I", size: "Tiny", type: "module", stat: "cargo", flatBonus: 5, description: "Adds a little extra space." },
+        "Jump Booster I": { name: "Jump Booster I", size: "Tiny", type: "module", stat: "jumpRange", flatBonus: 10, description: "Overclocks the warp drive slightly." }
+    }
+};
+
+// ==========================================
 // PROCEDURAL GENERATION DATA
 // ==========================================
 
@@ -127,7 +177,7 @@ const interactions = {
         }
     },
     "Dispatcher Varlo": {
-        image: "default.png",
+        image: "random_alien_002.png",
         dialogue: {
             "start": {
                 text: "Greetings. May I be of assistance?",
@@ -269,7 +319,7 @@ const galaxy = [
         ]
     },
     {
-        id: 1, name: "Alpha Centauri", x: 520, y: 480,
+        id: 1, name: "Alpha Centauri", x: 516, y: 517,
         pois: [
             { name: "Centauri Pastures", type: "Livestock Farm" },
             { name: "Alpha Meats", type: "Meat Processing Plant" }
@@ -297,7 +347,7 @@ const galaxy = [
         ]
     },
     {
-        id: 5, name: "Betelgeuse", x: 455, y: 585,
+        id: 5, name: "Betelgeuse", x: 473, y: 572,
         pois: [
             { name: "Red Supergiant Wafers", type: "Silicon Refinery" },
             { name: "Betelgeuse Exchange", type: "Trade Hub" }
@@ -338,11 +388,11 @@ const galaxy = [
         ]
     },
     {
-        id: 11, name: "Obvious Test", x: 427, y: 506,
+        id: 11, name: "Obvious Test", x: 448, y: 538,
         pois: [
             { name: "Testhub", type: "Trade Hub" },
             { name: "This is also a test", type: "Ice Mine", encounters: ["Brother Moo"], description: "Testing the ICE!" },
-            { name: "Obvious Taxis", type: "Outpost", encounters: ["Dispatcher Varlo"], description: "" }
+            { name: "Obvious Taxis", type: "Outpost", encounters: ["Dispatcher Varlo"], description: "Obvious Taxis HQ is a cheaply refurbished outpost." }
         ]
     }
 ];
