@@ -724,42 +724,53 @@
          // ==========================================
          
          function updateUI() {
-             // Calculate current ship stats
-         const stats = getShipStats(player.ship);
-         jumpRange = stats.jumpRange; 
-         player.cargoMax = stats.cargoMax;
-         
-         // 1. Update persistent top-bar stats
-         const totalCargo = Object.values(player.cargo).reduce((a, b) => a + b, 0);
-         document.getElementById('status-credits').innerText = player.credits;
-         document.getElementById('status-cargo').innerText = totalCargo;
-         document.getElementById('status-cargo-max').innerText = player.cargoMax;
-         document.getElementById('map-range-val').innerText = jumpRange;
-         
-             const localTab = document.getElementById('tab-local');
-             if (!currentSystem) return;
-         
-             // 2. Delegate rendering based on current state
-             if (!currentPoi) {
-                 localTab.innerHTML = renderPoiList();
-             } else {
-                 let html = renderPoiHeader();
-                 
-                 if (localView === 'menu') {
-                     html += renderStationMenu();
-                 } else if (localView === 'encounter') {
-                     html += renderEncounter();
-                 } else {
-                     html += renderMarket(totalCargo);
-                 }
-                 
-                 localTab.innerHTML = html;
-             }
-             
-             // 3. Update Ship and Player Tabs
-             updateShipCargoUI(totalCargo);
-         updateTasksUI();
-         }
+            // Calculate current ship stats
+            const stats = getShipStats(player.ship);
+            jumpRange = stats.jumpRange; 
+            player.cargoMax = stats.cargoMax;
+            
+            // 1. Update persistent top-bar stats
+            const totalCargo = Object.values(player.cargo).reduce((a, b) => a + b, 0);
+            document.getElementById('status-credits').innerText = player.credits;
+            document.getElementById('status-cargo').innerText = totalCargo;
+            document.getElementById('status-cargo-max').innerText = player.cargoMax;
+            document.getElementById('map-range-val').innerText = jumpRange;
+            
+            const localTab = document.getElementById('tab-local');
+            
+            // --- NEW: Save scroll positions before redrawing the UI ---
+            const localScroll = localTab.scrollTop;
+            const marketContainer = document.getElementById('market-container');
+            const marketScroll = marketContainer ? marketContainer.scrollTop : 0;
+
+            if (!currentSystem) return;
+        
+            // 2. Delegate rendering based on current state
+            if (!currentPoi) {
+                localTab.innerHTML = renderPoiList();
+            } else {
+                let html = renderPoiHeader();
+                
+                if (localView === 'menu') {
+                    html += renderStationMenu();
+                } else if (localView === 'encounter') {
+                    html += renderEncounter();
+                } else {
+                    html += renderMarket(totalCargo);
+                }
+                
+                localTab.innerHTML = html;
+            }
+            
+            // --- NEW: Restore the scroll positions immediately after redrawing ---
+            localTab.scrollTop = localScroll;
+            const newMarketContainer = document.getElementById('market-container');
+            if (newMarketContainer) newMarketContainer.scrollTop = marketScroll;
+
+            // 3. Update Ship and Player Tabs
+            updateShipCargoUI(totalCargo);
+            updateTasksUI();
+        }
          
          function renderPoiList() {
              let html = `<h2 class="text-4xl font-bold uppercase">${currentSystem.name}</h2>`;
@@ -1001,13 +1012,13 @@
          }
          
          function renderMarket(totalCargo) {
-             let html = `<div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
-                 <h3 class="text-3xl font-bold uppercase">${localView}ING</h3>
-                 <button class="btn !w-auto !mb-0 !py-2 !px-4 !text-xl" onclick="setLocalView('menu')">◀ BACK</button>
-             </div><div class="overflow-y-auto pb-8">`;
-             
-             const marketData = getStationMarket(currentPoi.type);
-             const activeMarket = localView === 'buy' ? marketData.selling : marketData.buying;
+            let html = `<div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
+                <h3 class="text-3xl font-bold uppercase">${localView}ING</h3>
+                <button class="btn !w-auto !mb-0 !py-2 !px-4 !text-xl" onclick="setLocalView('menu')">◀ BACK</button>
+            </div><div id="market-container" class="overflow-y-auto pb-8">`;
+            
+            const marketData = getStationMarket(currentPoi.type);
+            const activeMarket = localView === 'buy' ? marketData.selling : marketData.buying;
              
              // --- UPDATED: Removed the "Avg" header ---
              html += `<div class="market-list-header"><span>Item</span><span class="text-center">Price</span><span class="text-center">Hold</span><span class="text-center">Action</span></div>`;
