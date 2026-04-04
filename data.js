@@ -305,7 +305,7 @@ const interactions = {
             "teach_me_the_way": {
                 text: "Oh I am sorry. There has been a misunderstanding. I exist only to test dialogue triggers. Would you like some money instead?",
                 options: [
-                    { text: "No thank you", nextNode: "leave" },
+                    { text: "No, thank you. [LEAVE]", nextNode: "leave" },
                     { text: "Yes please, that would be delightful.", nextNode: "give_money", credits: 1000000 }
                 ]
             },
