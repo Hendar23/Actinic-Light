@@ -162,7 +162,7 @@ const taxiPickupLines = [
     // The Grumpy / Veteran
     "This bucket still holds air? Impressive. Just get me there in one piece.",
     "I've flown through supernova remnants more stable than this old crate. Move it, kid.",
-    "Less talk, more thrust. My credits are burning a hole in my environmental suit."
+    "Less talk, more thrust. My credits are burning a hole in my environmental suit.",
 
 	//The Metaphorist (Poetic / Abstract)
     "The silver needle seeks the fabric of the far reaches. Thread me through, pilot.",
@@ -202,7 +202,7 @@ const taxiDropoffLines = [
     // The Hard-to-Please
     "My internal compass confirms we are at the correct co-ordinates. Acceptable work.",
     "You missed the shortcut through the asteroid belt, but I suppose this will do.",
-    "I've had smoother rides in a cargo crate, but at least I'm not dead. Credits sent."
+    "I've had smoother rides in a cargo crate, but at least I'm not dead. Credits sent.",
 
 	// The Metaphorist (Poetic / Abstract)
     "The anchor finds the silt. The storm has passed into a quiet harbor.",
