@@ -26,9 +26,9 @@ const newGameDefaults = {
 const shipHulls = {
     "Weescow": {
         name: "Weescow",
-	image: "ship_weescow.png",
+        image: "ship_weescow.png",
         size: "Tiny",
-        description: "A tiny two-seater runabout",
+        description: "A two-seater runabout",
         multipliers: {
             jumpRange: 1,
             hull: 0.8,
