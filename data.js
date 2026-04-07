@@ -270,7 +270,7 @@ const interactions = {
         }
     },
     "Dispatcher Frank": {
-        image: "portrait002.png",
+        image: "portrait003.png",
         dialogue: {
             "start": {
                 text: "<i>\"Yeah what?\"</i>",
