@@ -136,6 +136,9 @@
                 const s = shipHullsData[k];
                 out += `    "${escapeJS(k)}": {\n`;
                 out += `        name: "${escapeJS(s.name)}",\n`;
+		if (s.image) {
+                    out += `        image: "${escapeJS(s.image)}",\n`;
+                }
                 out += `        size: "${escapeJS(s.size)}",\n`;
                 out += `        description: "${escapeJS(s.description)}",\n`;
                 out += `        multipliers: {\n`;
@@ -261,12 +264,19 @@
             if (selCat === 'shipHulls') {
                 const hull = shipHullsData[selItem];
                 html += `
-                    <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-2 gap-4 mb-2">
                         <div><label class="block text-xs font-bold uppercase mb-1">Display Name</label><input type="text" value="${escapeHTML(hull.name)}" oninput="setHull('name', this.value)"></div>
                         <div><label class="block text-xs font-bold uppercase mb-1">Size Class</label>
                             <select onchange="setHull('size', this.value)">${sizes.map(s => `<option value="${s}" ${hull.size === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
                         </div>
                     </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold uppercase mb-1">Ship Image (Optional)</label>
+                        <input type="text" placeholder="ship_weescow.png" value="${escapeHTML(hull.image || '')}" oninput="setHull('image', this.value)">
+                    </div>
+
+                    <label class="block text-xs font-bold uppercase mb-1">Description</label>
                     <label class="block text-xs font-bold uppercase mb-1">Description</label>
                     <textarea class="h-16 mb-4" oninput="setHull('description', this.value)">${escapeHTML(hull.description)}</textarea>
 
