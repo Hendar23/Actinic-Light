@@ -34,6 +34,7 @@ const shipHulls = {
         image: "ship_weescow.png",
         size: "Tiny",
         description: "A two-seater runabout",
+	baseHull: 10,
         multipliers: {
             jumpRange: 1,
             armour: 0.8,
@@ -54,6 +55,7 @@ const shipHulls = {
         name: "Midgeito",
         size: "Tiny",
         description: "A microfighter designed to be deployed in swarms.",
+	baseHull: 12,
         multipliers: {
             jumpRange: 0.7,
             armour: 1.3,
@@ -72,8 +74,10 @@ const shipHulls = {
     },
     "Keiship": {
         name: "Keiship",
+	image: "ship_keiship.png",
         size: "Tiny",
         description: "A tiny delivery ship",
+	baseHull: 10,
         multipliers: {
             jumpRange: 1,
             armour: 0.8,
@@ -94,6 +98,7 @@ const shipHulls = {
         name: "Rooster",
         size: "Small",
         description: "Small patrol craft popular with law enforcement",
+	baseHull: 20,
         multipliers: {
             jumpRange: 0.8,
             armour: 1.4,

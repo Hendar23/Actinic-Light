@@ -141,6 +141,7 @@
                 }
                 out += `        size: "${escapeJS(s.size)}",\n`;
                 out += `        description: "${escapeJS(s.description)}",\n`;
+                out += `        baseHull: ${s.baseHull || 10},\n`;
                 out += `        multipliers: {\n`;
                 out += `            jumpRange: ${s.multipliers.jumpRange},\n`;
                 out += `            armour: ${s.multipliers.armour},\n`; // <-- FIXED
@@ -219,7 +220,7 @@
             if (selCat === 'shipHulls') {
                 if (shipHullsData[name]) return alert("ID already exists.");
                 shipHullsData[name] = { 
-                    name: name, size: "Tiny", description: "New Ship", 
+                    name: name, size: "Tiny", description: "New Ship", baseHull: 10, 
                     multipliers: { jumpRange: 1, armour: 1, cargo: 1, handling: 1, offensive: 1 },
                     coreSlots: { warpDrive: 1, armour: 1, cargoBay: 1, thrusters: 1, weapons: 1 },
                     modularSlots: 1 
@@ -276,6 +277,11 @@
 
                     <label class="block text-xs font-bold uppercase mb-1">Description</label>
                     <textarea class="h-16 mb-4" oninput="setHull('description', this.value)">${escapeHTML(hull.description)}</textarea>
+
+		    <div class="mb-4 bg-red-50 p-2 border border-red-300 w-1/2">
+                        <label class="block text-xs font-bold uppercase mb-1 text-red-800">Base Hull (Integrity)</label>
+                        <input type="number" value="${hull.baseHull || 10}" oninput="setHull('baseHull', parseInt(this.value) || 0)">
+                    </div>
 
                     <h3 class="font-bold text-lg uppercase bg-black text-white p-2 mb-2">Stat Multipliers</h3>
                     <div class="grid grid-cols-3 gap-2 mb-6 bg-gray-200 p-2 border border-gray-400">

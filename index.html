@@ -60,7 +60,8 @@
          </div>
       </div>
       <div class="bg-black text-white p-3 text-xl font-bold uppercase flex justify-between items-center shrink-0">
-         <div>Cr: <span id="status-credits">1000</span></div>
+         <div>Credits: <span id="status-credits">1000</span></div>
+         <div>Hull: <span id="status-hull" class="text-white">0</span>/<span id="status-hull-max" class="text-white">0</span></div>
          <div>Cargo: <span id="status-cargo">0</span>/<span id="status-cargo-max">20</span></div>
       </div>
       <div id="main-content" class="flex-grow relative overflow-hidden flex flex-col p-4">
@@ -86,12 +87,15 @@
                           <p class="text-lg italic text-gray-600" id="ui-ship-desc"></p>
                       </div>
                   </div>
-                  <div class="grid grid-cols-2 gap-4 text-xl font-bold uppercase bg-gray-50 p-4 border-2 border-black">
+                  <div class="flex flex-col gap-3 text-xl font-bold uppercase bg-gray-50 p-4 border-2 border-black">
+                     <div class="border-b border-gray-300 pb-2">
+                         Integrity: <span id="ui-stat-hull">0 / 0</span>
+                     </div>
                      <div>Jump Range: <span id="ui-stat-jump">0</span>ly</div>
                      <div>Armour: <span id="ui-stat-armour">0</span></div>
                      <div>Handling: <span id="ui-stat-handling">0</span></div>
                      <div>Offense: <span id="ui-stat-offense">0</span></div>
-                     <div class="col-span-2 mt-2 pt-2 border-t border-gray-300">
+                     <div class="pt-2 border-t border-gray-300">
                         Cargo: <span id="ship-cargo-current">0</span> / <span id="ship-cargo-total">0</span>
                      </div>
                   </div>
@@ -221,19 +225,17 @@
          }
          
          function getShipStats(shipData) {
-             const chassis = shipHulls[shipData.hull]; // Renamed to 'chassis' so it doesn't conflict!
+             const chassis = shipHulls[shipData.hull]; 
              if (!chassis) return null;
              
-             // 1. Gather Base Stats from Core Equipment
              let base = {
                  jumpRange: equipment.warpDrive[shipData.core.warpDrive]?.baseValue || 0,
-                 armour: equipment.armour[shipData.core.armour]?.baseValue || 0, // Purged hullArmour
+                 armour: equipment.armour[shipData.core.armour]?.baseValue || 0, 
                  cargo: equipment.cargoBay[shipData.core.cargoBay]?.baseValue || 0,
                  handling: equipment.thrusters[shipData.core.thrusters]?.baseValue || 0,
                  offensive: equipment.weapons[shipData.core.weapons]?.baseValue || 0,
              };
              
-             // 2. Add flat bonuses from Modules
              shipData.modules.forEach(modName => {
                  const mod = equipment.modules[modName];
                  if (mod && mod.stat && base[mod.stat] !== undefined) {
@@ -241,13 +243,16 @@
                  }
              });
              
-             // 3. Apply Multipliers
+             const engSkill = player.skills ? player.skills.engineer : 0;
+             const maxHull = (chassis.baseHull || 10) + Math.floor(engSkill / 10);
+             
              return {
                  jumpRange: Math.floor(base.jumpRange * chassis.multipliers.jumpRange),
-                 armour: Math.floor(base.armour * chassis.multipliers.armour), // Purged hullMax
+                 armour: Math.floor(base.armour * chassis.multipliers.armour), 
                  cargoMax: Math.floor(base.cargo * chassis.multipliers.cargo),
                  handling: Math.floor(base.handling * chassis.multipliers.handling),
-                 offensive: Math.floor(base.offensive * chassis.multipliers.offensive)
+                 offensive: Math.floor(base.offensive * chassis.multipliers.offensive),
+                 maxHull: maxHull // <-- Return the calculated Integrity
              };
          }
          
@@ -400,6 +405,9 @@
                  skills: JSON.parse(JSON.stringify(newGameDefaults.startingSkills)),
                  ship: startingShipClone
              }; 
+
+	     const initialStats = getShipStats(player.ship);
+             player.ship.currentHull = initialStats.maxHull;
              
              // Find the system matching the starting ID, fallback to the first system if not found
              currentSystem = galaxy.find(s => s.id === newGameDefaults.startingSystemId) || galaxy[0];
@@ -770,9 +778,17 @@
             jumpRange = stats.jumpRange; 
             player.cargoMax = stats.cargoMax;
             
+            // --- NEW: Ensure health exists before drawing the Top Bar ---
+            if (player.ship.currentHull === undefined) player.ship.currentHull = stats.maxHull;
+            
             // 1. Update persistent top-bar stats
             const totalCargo = Object.values(player.cargo).reduce((a, b) => a + b, 0);
             document.getElementById('status-credits').innerText = player.credits.toLocaleString(); 
+            
+            // --- NEW: Feed health to the Top Bar ---
+            document.getElementById('status-hull').innerText = player.ship.currentHull;
+            document.getElementById('status-hull-max').innerText = stats.maxHull;
+            
             document.getElementById('status-cargo').innerText = totalCargo;
             document.getElementById('status-cargo-max').innerText = player.cargoMax;
             document.getElementById('map-range-val').innerText = jumpRange;
@@ -1129,8 +1145,15 @@
             document.getElementById('ui-stat-size').innerText = hullData.size;
             
             // --- Update ship stats ---
+            
+            // Safety fallback just in case currentHull isn't set yet
+            if (player.ship.currentHull === undefined) player.ship.currentHull = stats.maxHull;
+
+            // --- NEW: Inject the formatted Integrity string ---
+            document.getElementById('ui-stat-hull').innerText = `${player.ship.currentHull} / ${stats.maxHull}`;
+            
             document.getElementById('ui-stat-jump').innerText = stats.jumpRange;
-            document.getElementById('ui-stat-armour').innerText = stats.armour; // Purged ui-stat-hull
+            document.getElementById('ui-stat-armour').innerText = stats.armour;
             document.getElementById('ui-stat-handling').innerText = stats.handling;
             document.getElementById('ui-stat-offense').innerText = stats.offensive;
             document.getElementById('ship-cargo-total').innerText = stats.cargoMax;
