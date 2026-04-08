@@ -256,10 +256,45 @@
                      <label class="block text-xs font-bold uppercase">System Description (Optional)</label>
                      <textarea class="text-sm h-16 resize-y" placeholder="A brief description of this star system..." oninput="updateSystemData('description', this.value)">${selectedSystem.description || ''}</textarea>
                  </div>
+
                  <div class="mt-4 border-t-2 border-black pt-4">
                      <div class="flex justify-between items-center mb-2">
-                         <h3 class="font-bold text-lg uppercase">Points of Interest</h3>
+                         <h3 class="font-bold text-lg uppercase text-blue-800">Ambient Traffic</h3>
+                         <button class="btn text-xs !p-1 bg-blue-100" onclick="addSpawn()">+ Add Ship</button>
+                     </div>
+                     <div class="space-y-2" id="spawn-list">
+             `;
          
+             (selectedSystem.npcSpawns || []).forEach((spawn, index) => {
+                 html += `
+                     <div class="border border-blue-400 p-2 bg-blue-50 relative flex flex-col gap-1">
+                         <button class="absolute top-1 right-2 text-red-500 font-bold text-xs" onclick="deleteSpawn(${index})">X</button>
+                         
+                         <div class="flex gap-2">
+                             <div class="flex-1">
+                                 <label class="block text-[10px] font-bold uppercase mt-1">Display Name</label>
+                                 <input type="text" class="text-xs" value="${spawn.name || ''}" oninput="updateSpawnData(${index}, 'name', this.value)">
+                             </div>
+                             <div class="flex-1">
+                                 <label class="block text-[10px] font-bold uppercase mt-1">Ship Class</label>
+                                 <input type="text" class="text-xs" placeholder="e.g. Weescow" value="${spawn.shipType || ''}" oninput="updateSpawnData(${index}, 'shipType', this.value)">
+                             </div>
+                         </div>
+                         <div class="flex gap-2">
+                             <div class="flex-[2]">
+                                 <label class="block text-[10px] font-bold uppercase mt-1">Encounter ID</label>
+                                 <input type="text" class="text-xs" placeholder="e.g. Police Patrol" value="${spawn.encounter || ''}" oninput="updateSpawnData(${index}, 'encounter', this.value)">
+                             </div>
+                             <div class="flex-1">
+                                 <label class="block text-[10px] font-bold uppercase mt-1">Spawn %</label>
+                                 <input type="number" step="0.1" max="1.0" min="0" class="text-xs" value="${spawn.chance || 0}" oninput="updateSpawnData(${index}, 'chance', this.value)">
+                             </div>
+                         </div>
+                     </div>
+                 `;
+             });
+
+             html += `</div></div>
                  <div class="mt-4 border-t-2 border-black pt-4">
                      <div class="flex justify-between items-center mb-2">
                          <h3 class="font-bold text-lg uppercase">Points of Interest</h3>
@@ -377,6 +412,22 @@
              selectedSystem.pois.splice(index, 1);
              buildInspector();
          }
+
+	function addSpawn() {
+             if(!selectedSystem.npcSpawns) selectedSystem.npcSpawns = [];
+             selectedSystem.npcSpawns.push({ name: "Unknown Pilot", shipType: "Weescow", encounter: "Scrap Trader", chance: 0.5 });
+             buildInspector();
+         }
+         
+         function deleteSpawn(index) {
+             selectedSystem.npcSpawns.splice(index, 1);
+             buildInspector();
+         }
+         
+         function updateSpawnData(index, key, value) {
+             if (key === 'chance') value = parseFloat(value) || 0;
+             selectedSystem.npcSpawns[index][key] = value;
+         }
          
          async function connectFile() {
              try {
@@ -463,15 +514,19 @@
              out += `    {\n`;
              out += `        id: ${sys.id}, name: "${sys.name}", x: ${sys.x}, y: ${sys.y},\n`;
              
-             // --- NEW: Save the system image and description if they exist ---
              if (sys.image) {
                  out += `        image: "${sys.image.trim()}",\n`;
              }
              if (sys.description) {
                  out += `        description: "${sys.description.replace(/"/g, '\\"')}",\n`;
              }
-             // ----------------------------------------------------------------
-
+	     if (sys.npcSpawns && sys.npcSpawns.length > 0) {
+                 out += `        npcSpawns: [\n`;
+                 out += sys.npcSpawns.map(s => 
+                     `            { name: "${s.name.replace(/"/g, '\\"')}", shipType: "${s.shipType}", encounter: "${s.encounter.replace(/"/g, '\\"')}", chance: ${s.chance} }`
+                 ).join(",\n") + "\n";
+                 out += `        ],\n`;
+             }
              out += `        pois: [\n`;
          
              let poisStr = (sys.pois || []).map(p => {
