@@ -142,27 +142,44 @@
          let localView = 'menu';
          let currentEncounterName = null;
          let currentDialogueNode = null; 
-         let currentMarketPrices = {}; // Tracks volatile system prices
-         
+         let currentMarketPrices = {}; 
+         let spawnedNPCs = []; // Tracks ambient traffic in the current location
+
          const canvas = document.getElementById('star-map');
          const ctx = canvas.getContext('2d');
          
          function randomizeMarket() {
-         for (let item in commodities) {
-         const comm = commodities[item];
-         // Creates a random volatility modifier between 85% and 115%
-         const volatility = 0.85 + (Math.random() * 0.30);
+         	for (let item in commodities) {
+         		const comm = commodities[item];
+         		// Creates a random volatility modifier between 85% and 115%
+         		const volatility = 0.85 + (Math.random() * 0.30);
+         	
+         		let volatilePrice = Math.floor(comm.basePrice * volatility);
          
-         let volatilePrice = Math.floor(comm.basePrice * volatility);
+         		// Clamp the price strictly within the min and max bounds
+         		if (comm.min !== undefined && volatilePrice < comm.min) volatilePrice = comm.min;
+         		if (comm.max !== undefined && volatilePrice > comm.max) volatilePrice = comm.max;
          
-         // Clamp the price strictly within the min and max bounds
-         if (comm.min !== undefined && volatilePrice < comm.min) volatilePrice = comm.min;
-         if (comm.max !== undefined && volatilePrice > comm.max) volatilePrice = comm.max;
-         
-         currentMarketPrices[item] = volatilePrice;
+         		currentMarketPrices[item] = volatilePrice;
+         	}
          }
-         }
          
+	function generateNPCs() {
+             spawnedNPCs = [];
+             if (currentSystem.npcSpawns) {
+                 currentSystem.npcSpawns.forEach(spawn => {
+                     // Roll a random decimal between 0 and 1. If it's less than the chance, they spawn!
+                     if (Math.random() < spawn.chance) {
+                         spawnedNPCs.push({
+                             name: spawn.name,
+                             shipType: spawn.shipType,
+                             encounter: spawn.encounter
+                         });
+                     }
+                 });
+             }
+         }
+
          function getPoiDescription(poi) {
              // 1. Check if the specific station in the galaxy array has a custom description override
              if (poi.description) return poi.description;
@@ -387,7 +404,8 @@
              // Find the system matching the starting ID, fallback to the first system if not found
              currentSystem = galaxy.find(s => s.id === newGameDefaults.startingSystemId) || galaxy[0];
              
-             randomizeMarket(); 
+             randomizeMarket();
+	     generateNPCs(); 
              document.getElementById('start-screen').style.display = 'none';
              switchTab('map'); 
              
@@ -410,7 +428,7 @@
          
          function saveGame() {
              localStorage.setItem('spaceTraderSaveV4', JSON.stringify({
-                 player, systemId: currentSystem.id, poiName: currentPoi?.name, jumpRange, currentMarketPrices
+                 player, systemId: currentSystem.id, poiName: currentPoi?.name, jumpRange, currentMarketPrices, spawnedNPCs
              }));
          }
          
@@ -455,6 +473,7 @@
                      currentPoi = currentSystem.pois.find(p => p.name === data.poiName) || null;
                      jumpRange = data.jumpRange || 100;
                      currentMarketPrices = data.currentMarketPrices || {};
+                     spawnedNPCs = data.spawnedNPCs || [];
                      
                      if(Object.keys(currentMarketPrices).length === 0) randomizeMarket(); 
          
@@ -757,7 +776,7 @@
             
             // 1. Update persistent top-bar stats
             const totalCargo = Object.values(player.cargo).reduce((a, b) => a + b, 0);
-            document.getElementById('status-credits').innerText = player.credits.toLocaleString(); // <-- Updated
+            document.getElementById('status-credits').innerText = player.credits.toLocaleString(); 
             document.getElementById('status-cargo').innerText = totalCargo;
             document.getElementById('status-cargo-max').innerText = player.cargoMax;
             document.getElementById('map-range-val').innerText = jumpRange;
@@ -772,19 +791,25 @@
             if (!currentSystem) return;
         
             // 2. Delegate rendering based on current state
-            if (!currentPoi) {
-                localTab.innerHTML = renderPoiList();
-            } else {
-                let html = renderPoiHeader();
+            if (localView === 'encounter') {
+                let html = '';
+                // If they are at a POI, draw the header. If they are in deep space, skip it!
+                if (currentPoi) html += renderPoiHeader();
+                html += renderEncounter();
+                localTab.innerHTML = html;
                 
+            } else if (!currentPoi) {
+                // If we aren't in an encounter and aren't at a POI, draw the system view
+                localTab.innerHTML = renderPoiList();
+                
+            } else {
+                // Otherwise, draw the standard station menus
+                let html = renderPoiHeader();
                 if (localView === 'menu') {
                     html += renderStationMenu();
-                } else if (localView === 'encounter') {
-                    html += renderEncounter();
                 } else {
                     html += renderMarket(totalCargo);
                 }
-                
                 localTab.innerHTML = html;
             }
             
@@ -856,6 +881,10 @@
                      </div>
                  </button>`;
              });
+
+		html += renderNPCButtons();
+
+             html += `</div>`;
              return html;
          }
          
@@ -1176,7 +1205,9 @@
                  if (pc >= 100) { 
                      clearInterval(t); 
                      currentPoi = dest; 
-                     ov.style.display = 'none'; 
+                     ov.style.display = 'none';
+			
+		     generateNPCs(); 
                      
                      // --- Check if we arrived at a standalone encounter ---
                      if (currentPoi && currentPoi.type === 'Encounter') {
@@ -1189,6 +1220,29 @@
          saveGame(); // <--- AUTOSAVE
                  }
              }, 30);
+         }
+
+	function renderNPCButtons() {
+             let html = '';
+             spawnedNPCs.forEach(npc => {
+                 const hullConfig = shipHulls[npc.shipType] || {};
+                 const imageFile = hullConfig.image || 'default.png';
+                 const imagePath = `assets/${imageFile}`;
+     
+                 html += `
+                 <button class="btn !p-2" onclick="startEncounter('${npc.encounter}')">
+                     <div class="flex items-center gap-4 text-left">
+                         <div class="w-16 h-16 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
+                             <img src="${imagePath}" alt="${npc.shipType}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                         </div>
+                         <div>
+                             <div class="text-2xl leading-none mb-1">${npc.name.toUpperCase()}</div>
+                             <div class="text-lg text-gray-600">${npc.shipType.toUpperCase()}</div>
+                         </div>
+                     </div>
+                 </button>`;
+             });
+             return html;
          }
          
          function handleDown(x, y) { isDragging = true; dragThreshold = false; lastMouse = { x, y }; }

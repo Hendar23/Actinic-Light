@@ -278,6 +278,28 @@ const quests = {
 // INTERACTIONS & ENCOUNTERS
 // ==========================================
 const interactions = {
+     "Police Patrol": {
+        image: "random_alien_008.png",
+        dialogue: {
+            "start": {
+                text: "<i>\"Attention pilot. Maintain current trajectory. We are scanning your cargo hold for contraband.\"</i>",
+                options: [
+                    { text: "Understood. [Leave]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
+    "Scrap Trader": {
+        image: "random_alien_004.png",
+        dialogue: {
+            "start": {
+                text: "<i>\"Hey there! Need any scrap? Just kidding, I only sell in bulk. Fly safe!\"</i>",
+                options: [
+                    { text: "You too. [Leave]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
     "Bartender Milo": {
         image: "portrait001.png",
         dialogue: {
@@ -506,7 +528,11 @@ const galaxy = [
         id: 0, name: "Sol", x: 492, y: 535,
         image: "star_system_001.png",
         description: "The home of humanity, an obscure species of mammal. It is a run-down polluted backwater.",
-        pois: [
+        npcSpawns: [
+            { name: "System Security", shipType: "Weescow", encounter: "Police Patrol", chance: 0.6 },
+            { name: "Independent Hauler", shipType: "Keiship", encounter: "Scrap Trader", chance: 0.4 }
+        ],
+	pois: [
             { name: "Earth Spaceport 01", type: "Trade Hub", image: "port001.png", encounters: ["Bartender Milo", "Brother Moo"], description: "A massive central trading hub for the planet Earth" },
             { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" },
             { name: "Martian Farm Hub", type: "Plant Farm" },
