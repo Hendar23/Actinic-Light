@@ -156,6 +156,8 @@
                 out += `            thrusters: ${s.coreSlots.thrusters},\n`;
                 out += `            weapons: ${s.coreSlots.weapons}\n`;
                 out += `        },\n`;
+                out += `        modularSlots: ${s.modularSlots}\n`;
+                out += `    }`;
                 if (i < hullKeys.length - 1) out += ",";
                 out += "\n";
             });
