@@ -34,7 +34,7 @@ const shipHulls = {
         image: "ship_weescow.png",
         size: "Tiny",
         description: "A two-seater runabout",
-	baseHull: 10,
+        baseHull: 10,
         multipliers: {
             jumpRange: 1,
             armour: 0.8,
@@ -55,7 +55,7 @@ const shipHulls = {
         name: "Midgeito",
         size: "Tiny",
         description: "A microfighter designed to be deployed in swarms.",
-	baseHull: 12,
+        baseHull: 12,
         multipliers: {
             jumpRange: 0.7,
             armour: 1.3,
@@ -74,10 +74,10 @@ const shipHulls = {
     },
     "Keiship": {
         name: "Keiship",
-	image: "ship_keiship.png",
+        image: "ship_keiship.png",
         size: "Tiny",
         description: "A tiny delivery ship",
-	baseHull: 10,
+        baseHull: 10,
         multipliers: {
             jumpRange: 1,
             armour: 0.8,
@@ -98,7 +98,7 @@ const shipHulls = {
         name: "Rooster",
         size: "Small",
         description: "Small patrol craft popular with law enforcement",
-	baseHull: 20,
+        baseHull: 18,
         multipliers: {
             jumpRange: 0.8,
             armour: 1.4,
@@ -146,7 +146,6 @@ const equipment = {
         "Cargo Exp T1": { name: "Cargo Exp T1", size: "Tiny", type: "module", stat: "cargo", flatBonus: 5, description: "A little extra storage space" }
     }
 };
-
 
 // ==========================================
 // PROCEDURAL GENERATION DATA
@@ -289,11 +288,11 @@ const quests = {
 // INTERACTIONS & ENCOUNTERS
 // ==========================================
 const interactions = {
-     "Police Patrol": {
+    "Police Patrol": {
         image: "random_alien_008.png",
         dialogue: {
             "start": {
-                text: "<i>\"Attention pilot. Maintain current trajectory. We are scanning your cargo hold for contraband.\"</i>",
+                text: "<i>\"We have our eye on you citizen. You had better behave.\"</i>",
                 options: [
                     { text: "Understood. [Leave]", nextNode: "leave" }
                 ]
@@ -543,7 +542,7 @@ const galaxy = [
             { name: "System Security", shipType: "Weescow", encounter: "Police Patrol", chance: 0.6 },
             { name: "Independent Hauler", shipType: "Keiship", encounter: "Scrap Trader", chance: 0.4 }
         ],
-	pois: [
+        pois: [
             { name: "Earth Spaceport 01", type: "Trade Hub", image: "port001.png", encounters: ["Bartender Milo", "Brother Moo"], description: "A massive central trading hub for the planet Earth" },
             { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" },
             { name: "Martian Farm Hub", type: "Plant Farm" },
@@ -620,13 +619,13 @@ const galaxy = [
         ]
     },
     {
-        id: 11, name: "Obvious Test", x: 448, y: 538,
-        description: "Just a test really.",
+        id: 11, name: "Obviously", x: 450, y: 545,
+        description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
         pois: [
-            { name: "Testhub", type: "Trade Hub" },
-            { name: "This is also a test", type: "Ice Mine", encounters: ["Brother Moo"], description: "Testing the ICE!" },
+            { name: "The Obvious Trade Station", type: "Trade Hub" },
+            { name: "Asteroid Belt Ice Mine", type: "Ice Mine", description: "Testing the ICE!" },
             { name: "Roid Chewer 023", type: "Iron Mine" },
-            { name: "Obvious Taxis", type: "Outpost", encounters: ["Dispatcher Varlo"], description: "Obvious Taxis HQ is a cheaply refurbished outpost." }
+            { name: "Obvious Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Varlo"], description: "Obvious Taxis HQ is a cheaply refurbished outpost." }
         ]
     }
 ];
