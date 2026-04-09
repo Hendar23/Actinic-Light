@@ -612,6 +612,9 @@ const galaxy = [
     },
     {
         id: 5, name: "Betelgeuse", x: 473, y: 572,
+        npcSpawns: [
+            { name: "Cop", shipType: "Weescow", encounter: "Police Patrol", chance: 0.9, isHostile: true }
+        ],
         pois: [
             { name: "Red Supergiant Wafers", type: "Silicon Refinery" },
             { name: "Betelgeuse Exchange", type: "Trade Hub" }

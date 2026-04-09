@@ -869,7 +869,8 @@
                  const nextHostileIndex = spawnedNPCs.findIndex(npc => npc.isHostile);
                  
                  if (nextHostileIndex !== -1) {
-                     const nextHostile = spawnedNPCs.splice(nextHostileIndex, 1)[0];
+                     const nextHostile = spawnedNPCs[nextHostileIndex];
+                     nextHostile.isHostile = false; // <--- Mark as pacified!
                      startEncounter(nextHostile.encounter, nextHostile.name, nextHostile.image); 
                      
                  } else if (currentPoi && currentPoi.type === 'Encounter') {
@@ -1406,8 +1407,8 @@
                      if (hostileIndex !== -1) {
                          switchTab('local');
                          
-                         const hostileNPC = spawnedNPCs.splice(hostileIndex, 1)[0]; 
-                         // --- Pass the NPC's custom name ---
+                         const hostileNPC = spawnedNPCs[hostileIndex]; 
+                         hostileNPC.isHostile = false; // <--- Mark as pacified so they stay in the system!
                          startEncounter(hostileNPC.encounter, hostileNPC.name, hostileNPC.image);
                          
                      } else if (currentPoi && currentPoi.type === 'Encounter') {
