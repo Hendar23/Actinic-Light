@@ -90,14 +90,35 @@
                   <div class="flex flex-col gap-3 text-xl font-bold uppercase bg-gray-50 p-4 border-2 border-black">
                      <div>
                          Integrity: <span id="ui-stat-hull">0 / 0</span>
+                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-hull-base">0</span> + Eng <span id="ui-break-hull-eng">0</span>)</span>
                      </div>
-                     <div>Jump Range: <span id="ui-stat-jump">0</span>ly</div>
-                     <div>Armour: <span id="ui-stat-armour">0</span></div>
-                     <div>Handling: <span id="ui-stat-handling">0</span></div>
-                     <div>Firepower: <span id="ui-stat-firepower">0</span></div>
-                     <div>Accuracy: <span id="ui-stat-accuracy">0</span></div>
+                     <div>
+                         Jump Range: <span id="ui-stat-jump">0</span>ly
+                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-jump-base">0</span> × <span id="ui-break-jump-mult">0</span>x)</span>
+                     </div>
+                     <div>
+                         Armour: <span id="ui-stat-armour">0</span>
+                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-armour-base">0</span> × <span id="ui-break-armour-mult">0</span>x)</span>
+                     </div>
+                     <div>
+                         Handling: <span id="ui-stat-handling">0</span>
+                         <span class="text-sm text-gray-500 italic normal-case ml-1">((Thrust <span id="ui-break-handling-base">0</span> - Mass) × <span id="ui-break-handling-mult">0</span>x)</span>
+                     </div>
+                     <div>
+                         Firepower: <span id="ui-stat-firepower">0</span>
+                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-firepower-base">0</span> × <span id="ui-break-firepower-mult">0</span>x)</span>
+                     </div>
+                     <div>
+                         Accuracy: <span id="ui-stat-accuracy">0</span>
+                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-accuracy-base">0</span> × <span id="ui-break-accuracy-mult">0</span>x)</span>
+                     </div>
+                     <div>
+                        Total Mass: <span id="ui-stat-weight-total">0</span> 
+                        <span class="text-sm text-gray-500 italic normal-case ml-1">(Chassis <span id="ui-stat-weight-chassis">0</span> + Eqp <span id="ui-stat-weight-eqp">0</span>)</span>
+                     </div>
                      <div>
                         Cargo: <span id="ship-cargo-current">0</span> / <span id="ship-cargo-total">0</span>
+                        <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-cargo-base">0</span> × <span id="ui-break-cargo-mult">0</span>x)</span>
                      </div>
                   </div>
                </div>
@@ -262,14 +283,23 @@
              const engSkill = player.skills ? player.skills.engineer : 0;
              
              return {
-                 jumpRange: Math.floor(base.jumpRange * chassis.multipliers.jumpRange),
-                 armour: Math.floor(base.armour * chassis.multipliers.armour), 
-                 cargoMax: Math.floor(base.cargo * chassis.multipliers.cargo),
-                 // Calculate penalty: (Engines - Chassis Weight - Equipment Weight) * Multiplier
-                 handling: Math.floor((base.handling - (chassis.weight || 0) - base.weight) * chassis.multipliers.handling),
-                 firepower: Math.floor(base.firepower * (chassis.multipliers.firepower || 1)),
-                 accuracy: Math.floor(base.accuracy * (chassis.multipliers.accuracy || 1)),
-                 maxHull: (chassis.baseHull || 10) + Math.floor(engSkill / 10)
+                 jumpRange: Math.round(base.jumpRange * chassis.multipliers.jumpRange),
+                 armour: Math.round(base.armour * chassis.multipliers.armour), 
+                 cargoMax: Math.round(base.cargo * chassis.multipliers.cargo),
+                 handling: Math.round((base.handling - (chassis.weight || 0) - base.weight) * chassis.multipliers.handling),
+                 firepower: Math.round(base.firepower * (chassis.multipliers.firepower || 1)),
+                 accuracy: Math.round(base.accuracy * (chassis.multipliers.accuracy || 1)),
+                 maxHull: (chassis.baseHull || 10) + Math.floor(engSkill / 10),
+                 chassisWeight: chassis.weight || 5, 
+                 equipmentWeight: base.weight,
+
+                 baseJump: base.jumpRange, multJump: chassis.multipliers.jumpRange,
+                 baseArmour: base.armour, multArmour: chassis.multipliers.armour,
+                 baseCargo: base.cargo, multCargo: chassis.multipliers.cargo,
+                 baseHandling: base.handling, multHandling: chassis.multipliers.handling,
+                 baseFirepower: base.firepower, multFirepower: chassis.multipliers.firepower || 1,
+                 baseAccuracy: base.accuracy, multAccuracy: chassis.multipliers.accuracy || 1,
+                 baseHull: chassis.baseHull || 10, bonusHull: Math.floor(engSkill / 10)
              };
          }
          
@@ -1166,7 +1196,6 @@
             // Safety fallback just in case currentHull isn't set yet
             if (player.ship.currentHull === undefined) player.ship.currentHull = stats.maxHull;
          
-            // --- NEW: Inject the formatted Integrity string ---
             document.getElementById('ui-stat-hull').innerText = `${player.ship.currentHull} / ${stats.maxHull}`;
             
             document.getElementById('ui-stat-jump').innerText = stats.jumpRange;
@@ -1174,8 +1203,29 @@
             document.getElementById('ui-stat-handling').innerText = stats.handling;
             document.getElementById('ui-stat-firepower').innerText = stats.firepower;
             document.getElementById('ui-stat-accuracy').innerText = stats.accuracy;
+            
+            // --- Inject the weights ---
+            document.getElementById('ui-stat-weight-total').innerText = stats.chassisWeight + stats.equipmentWeight;
+            document.getElementById('ui-stat-weight-chassis').innerText = stats.chassisWeight;
+            document.getElementById('ui-stat-weight-eqp').innerText = stats.equipmentWeight;
+            
+            // --- NEW: Inject the Stat Breakdowns ---
+            document.getElementById('ui-break-hull-base').innerText = stats.baseHull;
+            document.getElementById('ui-break-hull-eng').innerText = stats.bonusHull;
+            document.getElementById('ui-break-jump-base').innerText = stats.baseJump;
+            document.getElementById('ui-break-jump-mult').innerText = stats.multJump;
+            document.getElementById('ui-break-armour-base').innerText = stats.baseArmour;
+            document.getElementById('ui-break-armour-mult').innerText = stats.multArmour;
+            document.getElementById('ui-break-handling-base').innerText = stats.baseHandling;
+            document.getElementById('ui-break-handling-mult').innerText = stats.multHandling;
+            document.getElementById('ui-break-firepower-base').innerText = stats.baseFirepower;
+            document.getElementById('ui-break-firepower-mult').innerText = stats.multFirepower;
+            document.getElementById('ui-break-accuracy-base').innerText = stats.baseAccuracy;
+            document.getElementById('ui-break-accuracy-mult').innerText = stats.multAccuracy;
+            document.getElementById('ui-break-cargo-base').innerText = stats.baseCargo;
+            document.getElementById('ui-break-cargo-mult').innerText = stats.multCargo;
+            
             document.getElementById('ship-cargo-total').innerText = stats.cargoMax;
-            document.getElementById('ship-cargo-current').innerText = totalCargo;
             
             // --- Render Core Slots ---
             let coreHtml = '';
@@ -1185,7 +1235,12 @@
                 const itemName = player.ship.core[key];
                 const itemData = itemName ? equipment[key][itemName] : null;
                 
-                const displayValue = itemData ? `${itemData.name} (${itemData.baseValue})` : `<span class="italic text-gray-500">EMPTY</span>`;
+                let displayValue = `<span class="italic text-gray-500">EMPTY</span>`;
+                if (itemData) {
+                    // Fixes the weapon bug by checking for firepower if baseValue is missing
+                    const primaryStat = itemData.baseValue !== undefined ? itemData.baseValue : (itemData.firepower || 0);
+                    displayValue = `${itemData.name} (${primaryStat}) <span class="text-sm text-gray-500 font-normal ml-1">[Wt:${itemData.weight || 1}]</span>`;
+                }
                 
                 coreHtml += `
                 <div class="flex justify-between border-b-2 border-gray-200 py-2">
@@ -1194,7 +1249,7 @@
                 </div>`;
             }
             document.getElementById('ui-core-slots').innerHTML = coreHtml;
-            
+
             // --- Render Modular Slots ---
             let modHtml = '';
             for (let i = 0; i < hullData.modularSlots; i++) {
@@ -1203,7 +1258,7 @@
                 
                 let displayValue = `<span class="italic text-gray-500">EMPTY SLOT</span>`;
                 if (itemData) {
-                    displayValue = `${itemData.name} (+${itemData.flatBonus} ${itemData.stat})`;
+                    displayValue = `${itemData.name} (+${itemData.flatBonus} ${itemData.stat}) <span class="text-sm text-gray-500 font-normal ml-1">[Wt:${itemData.weight || 1}]</span>`;
                 }
                 
                 modHtml += `
