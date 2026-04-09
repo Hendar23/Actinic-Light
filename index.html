@@ -94,7 +94,8 @@
                      <div>Jump Range: <span id="ui-stat-jump">0</span>ly</div>
                      <div>Armour: <span id="ui-stat-armour">0</span></div>
                      <div>Handling: <span id="ui-stat-handling">0</span></div>
-                     <div>Offense: <span id="ui-stat-offense">0</span></div>
+                     <div>Firepower: <span id="ui-stat-firepower">0</span></div>
+                     <div>Accuracy: <span id="ui-stat-accuracy">0</span></div>
                      <div>
                         Cargo: <span id="ship-cargo-current">0</span> / <span id="ship-cargo-total">0</span>
                      </div>
@@ -228,31 +229,47 @@
              const chassis = shipHulls[shipData.hull]; 
              if (!chassis) return null;
              
-             let base = {
-                 jumpRange: equipment.warpDrive[shipData.core.warpDrive]?.baseValue || 0,
-                 armour: equipment.armour[shipData.core.armour]?.baseValue || 0, 
-                 cargo: equipment.cargoBay[shipData.core.cargoBay]?.baseValue || 0,
-                 handling: equipment.thrusters[shipData.core.thrusters]?.baseValue || 0,
-                 offensive: equipment.weapons[shipData.core.weapons]?.baseValue || 0,
-             };
+             let base = { jumpRange: 0, armour: 0, cargo: 0, handling: 0, firepower: 0, accuracy: 0, weight: 0 };
+             
+             const wp = equipment.warpDrive[shipData.core.warpDrive];
+             if(wp) { base.jumpRange += wp.baseValue || 0; base.weight += wp.weight || 0; }
+             
+             const am = equipment.armour[shipData.core.armour];
+             if(am) { base.armour += am.baseValue || 0; base.weight += am.weight || 0; }
+             
+             const cb = equipment.cargoBay[shipData.core.cargoBay];
+             if(cb) { base.cargo += cb.baseValue || 0; base.weight += cb.weight || 0; }
+             
+             const th = equipment.thrusters[shipData.core.thrusters];
+             if(th) { base.handling += th.baseValue || 0; base.weight += th.weight || 0; }
+             
+             const we = equipment.weapons[shipData.core.weapons];
+             if(we) { base.firepower += we.firepower || 0; base.accuracy += we.accuracy || 0; base.weight += we.weight || 0; }
              
              shipData.modules.forEach(modName => {
                  const mod = equipment.modules[modName];
-                 if (mod && mod.stat && base[mod.stat] !== undefined) {
-                     base[mod.stat] += mod.flatBonus;
+                 if (mod) {
+                     if (mod.stat && base[mod.stat] !== undefined) {
+                         base[mod.stat] += mod.flatBonus;
+                     }
+                     // --- NEW: Add the module's weight to the total! ---
+                     if (mod.weight !== undefined) {
+                         base.weight += mod.weight;
+                     }
                  }
              });
              
              const engSkill = player.skills ? player.skills.engineer : 0;
-             const maxHull = (chassis.baseHull || 10) + Math.floor(engSkill / 10);
              
              return {
                  jumpRange: Math.floor(base.jumpRange * chassis.multipliers.jumpRange),
                  armour: Math.floor(base.armour * chassis.multipliers.armour), 
                  cargoMax: Math.floor(base.cargo * chassis.multipliers.cargo),
-                 handling: Math.floor(base.handling * chassis.multipliers.handling),
-                 offensive: Math.floor(base.offensive * chassis.multipliers.offensive),
-                 maxHull: maxHull // <-- Return the calculated Integrity
+                 // Calculate penalty: (Engines - Chassis Weight - Equipment Weight) * Multiplier
+                 handling: Math.floor((base.handling - (chassis.weight || 0) - base.weight) * chassis.multipliers.handling),
+                 firepower: Math.floor(base.firepower * (chassis.multipliers.firepower || 1)),
+                 accuracy: Math.floor(base.accuracy * (chassis.multipliers.accuracy || 1)),
+                 maxHull: (chassis.baseHull || 10) + Math.floor(engSkill / 10)
              };
          }
          
@@ -1155,7 +1172,8 @@
             document.getElementById('ui-stat-jump').innerText = stats.jumpRange;
             document.getElementById('ui-stat-armour').innerText = stats.armour;
             document.getElementById('ui-stat-handling').innerText = stats.handling;
-            document.getElementById('ui-stat-offense').innerText = stats.offensive;
+            document.getElementById('ui-stat-firepower').innerText = stats.firepower;
+            document.getElementById('ui-stat-accuracy').innerText = stats.accuracy;
             document.getElementById('ship-cargo-total').innerText = stats.cargoMax;
             document.getElementById('ship-cargo-current').innerText = totalCargo;
             

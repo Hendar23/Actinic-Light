@@ -142,12 +142,14 @@
                 out += `        size: "${escapeJS(s.size)}",\n`;
                 out += `        description: "${escapeJS(s.description)}",\n`;
                 out += `        baseHull: ${s.baseHull || 10},\n`;
+                out += `        weight: ${s.weight || 5},\n`; // <-- NEW
                 out += `        multipliers: {\n`;
                 out += `            jumpRange: ${s.multipliers.jumpRange},\n`;
-                out += `            armour: ${s.multipliers.armour},\n`; // <-- FIXED
+                out += `            armour: ${s.multipliers.armour},\n`;
                 out += `            cargo: ${s.multipliers.cargo},\n`;
                 out += `            handling: ${s.multipliers.handling},\n`;
-                out += `            offensive: ${s.multipliers.offensive}\n`;
+                out += `            firepower: ${s.multipliers.firepower || 1},\n`; // <-- NEW
+                out += `            accuracy: ${s.multipliers.accuracy || 1}\n`;   // <-- NEW
                 out += `        },\n`;
                 out += `        coreSlots: {\n`;
                 out += `            warpDrive: ${s.coreSlots.warpDrive},\n`;
@@ -170,9 +172,14 @@
                 items.forEach((k, i) => {
                     const eq = equipmentData[cat][k];
                     if (cat === "modules") {
-                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "module", stat: "${escapeJS(eq.stat)}", flatBonus: ${eq.flatBonus}, description: "${escapeJS(eq.description)}" }`;
+                        // --- NEW: Added weight output ---
+                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "module", weight: ${eq.weight || 1}, stat: "${escapeJS(eq.stat)}", flatBonus: ${eq.flatBonus}, description: "${escapeJS(eq.description)}" }`;
+                    } else if (cat === "weapons") {
+                        // Weapons get Firepower and Accuracy
+                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "weapons", weight: ${eq.weight || 1}, firepower: ${eq.firepower || 0}, accuracy: ${eq.accuracy || 0}, description: "${escapeJS(eq.description)}" }`;
                     } else {
-                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "${escapeJS(eq.type)}", baseValue: ${eq.baseValue}, description: "${escapeJS(eq.description)}" }`;
+                        // Everything else gets baseValue
+                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "${escapeJS(eq.type)}", weight: ${eq.weight || 1}, baseValue: ${eq.baseValue || 0}, description: "${escapeJS(eq.description)}" }`;
                     }
                     if (i < items.length - 1) out += ",";
                     out += "\n";
@@ -222,18 +229,24 @@
             if (selCat === 'shipHulls') {
                 if (shipHullsData[name]) return alert("ID already exists.");
                 shipHullsData[name] = { 
-                    name: name, size: "Tiny", description: "New Ship", baseHull: 10, 
-                    multipliers: { jumpRange: 1, armour: 1, cargo: 1, handling: 1, offensive: 1 },
+                    name: name, size: "Tiny", description: "New Ship", baseHull: 10, weight: 5, 
+                    multipliers: { jumpRange: 1, armour: 1, cargo: 1, handling: 1, firepower: 1, accuracy: 1 },
                     coreSlots: { warpDrive: 1, armour: 1, cargoBay: 1, thrusters: 1, weapons: 1 },
                     modularSlots: 1 
                 };
             } else if (selCat === 'modules') {
                 if (equipmentData.modules[name]) return alert("ID already exists.");
-                equipmentData.modules[name] = { name: name, size: "Tiny", type: "module", stat: "cargo", flatBonus: 5, description: "New Module" };
+                // --- NEW: Added weight: 1 ---
+                equipmentData.modules[name] = { name: name, size: "Tiny", type: "module", weight: 1, stat: "cargo", flatBonus: 5, description: "New Module" };
             } else {
                 if (!equipmentData[selCat]) equipmentData[selCat] = {};
                 if (equipmentData[selCat][name]) return alert("ID already exists.");
-                equipmentData[selCat][name] = { name: name, size: "Tiny", type: selCat, baseValue: 10, description: "New Item" };
+                
+                if (selCat === 'weapons') {
+                    equipmentData[selCat][name] = { name: name, size: "Tiny", type: selCat, weight: 1, firepower: 10, accuracy: 0, description: "New Weapon" };
+                } else {
+                    equipmentData[selCat][name] = { name: name, size: "Tiny", type: selCat, weight: 1, baseValue: 10, description: "New Item" };
+                }
             }
             selectItem(name);
         }
@@ -280,9 +293,15 @@
                     <label class="block text-xs font-bold uppercase mb-1">Description</label>
                     <textarea class="h-16 mb-4" oninput="setHull('description', this.value)">${escapeHTML(hull.description)}</textarea>
 
-		    <div class="mb-4 bg-red-50 p-2 border border-red-300 w-1/2">
-                        <label class="block text-xs font-bold uppercase mb-1 text-red-800">Base Hull (Integrity)</label>
-                        <input type="number" value="${hull.baseHull || 10}" oninput="setHull('baseHull', parseInt(this.value) || 0)">
+		    <div class="flex gap-4 mb-4">
+                        <div class="bg-red-50 p-2 border border-red-300 flex-1">
+                            <label class="block text-xs font-bold uppercase mb-1 text-red-800">Base Hull (Integrity)</label>
+                            <input type="number" value="${hull.baseHull || 10}" oninput="setHull('baseHull', parseInt(this.value) || 0)">
+                        </div>
+                        <div class="bg-gray-200 p-2 border border-gray-400 flex-1">
+                            <label class="block text-xs font-bold uppercase mb-1 text-gray-800">Chassis Weight</label>
+                            <input type="number" value="${hull.weight || 5}" oninput="setHull('weight', parseInt(this.value) || 0)">
+                        </div>
                     </div>
 
                     <h3 class="font-bold text-lg uppercase bg-black text-white p-2 mb-2">Stat Multipliers</h3>
@@ -313,11 +332,12 @@
                             <select onchange="setEq('size', this.value)">${sizes.map(s => `<option value="${s}" ${mod.size === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mb-4 bg-green-50 p-3 border border-green-300">
-                        <div><label class="block text-xs font-bold uppercase mb-1 text-green-800">Target Stat</label>
-                            <select onchange="setEq('stat', this.value)">${moduleStats.map(s => `<option value="${s}" ${mod.stat === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+                    <div class="grid grid-cols-3 gap-4 mb-4 bg-green-50 p-3 border border-green-300">
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Weight</label><input type="number" value="${mod.weight || 1}" oninput="setEqNum('weight', this.value)"></div>
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Target Stat</label>
+                            <select class="text-sm" onchange="setEq('stat', this.value)">${moduleStats.map(s => `<option value="${s}" ${mod.stat === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
                         </div>
-                        <div><label class="block text-xs font-bold uppercase mb-1 text-green-800">Flat Bonus</label><input type="number" value="${mod.flatBonus}" oninput="setEqNum('flatBonus', this.value)"></div>
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Flat Bonus</label><input type="number" value="${mod.flatBonus}" oninput="setEqNum('flatBonus', this.value)"></div>
                     </div>
                     <label class="block text-xs font-bold uppercase mb-1">Description</label>
                     <textarea class="h-16" oninput="setEq('description', this.value)">${escapeHTML(mod.description)}</textarea>
@@ -331,10 +351,26 @@
                             <select onchange="setEq('size', this.value)">${sizes.map(s => `<option value="${s}" ${eq.size === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
                         </div>
                     </div>
-                    <div class="w-1/2 mb-4 bg-yellow-50 p-3 border border-yellow-300">
-                        <label class="block text-xs font-bold uppercase mb-1 text-yellow-800">Base Value (Stat)</label>
-                        <input type="number" value="${eq.baseValue}" oninput="setEqNum('baseValue', this.value)">
+                `;
+                
+                if (selCat === 'weapons') {
+                    html += `
+                    <div class="grid grid-cols-3 gap-4 mb-4 bg-orange-50 p-3 border border-orange-300">
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-orange-800">Weight</label><input type="number" value="${eq.weight || 1}" oninput="setEqNum('weight', this.value)"></div>
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-orange-800">Firepower</label><input type="number" value="${eq.firepower || 0}" oninput="setEqNum('firepower', this.value)"></div>
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-orange-800">Accuracy</label><input type="number" value="${eq.accuracy || 0}" oninput="setEqNum('accuracy', this.value)"></div>
                     </div>
+                    `;
+                } else {
+                    html += `
+                    <div class="grid grid-cols-2 gap-4 mb-4 bg-yellow-50 p-3 border border-yellow-300">
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-yellow-800">Item Weight</label><input type="number" value="${eq.weight || 1}" oninput="setEqNum('weight', this.value)"></div>
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-yellow-800">Base Value (Stat)</label><input type="number" value="${eq.baseValue || 0}" oninput="setEqNum('baseValue', this.value)"></div>
+                    </div>
+                    `;
+                }
+
+                html += `
                     <label class="block text-xs font-bold uppercase mb-1">Description</label>
                     <textarea class="h-16" oninput="setEq('description', this.value)">${escapeHTML(eq.description)}</textarea>
                 `;
