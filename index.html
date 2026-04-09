@@ -1368,7 +1368,7 @@
                  const imagePath = `assets/${imageFile}`;
          
                  html += `
-                 <button class="btn !p-2" onclick="startEncounter('${npc.encounter}')">
+                 <button class="btn !p-2" onclick="startEncounter('${npc.encounter}', '${npc.name.replace(/'/g, "\\'")}')">
                      <div class="flex items-center gap-4 text-left">
                          <div class="w-16 h-16 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
                              <img src="${imagePath}" alt="${npc.shipType}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
