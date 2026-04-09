@@ -237,17 +237,6 @@
                      <input type="text" value="${selectedSystem.name}" oninput="updateSystemData('name', this.value)">
                  </div>
          
-                 <div class="flex gap-2">
-                     <div class="flex-1">
-                         <label class="block text-xs font-bold uppercase mt-2">X Coordinate</label>
-                         <input type="number" id="insp-x" value="${selectedSystem.x}" oninput="updateSystemData('x', this.value)">
-                     </div>
-                     <div class="flex-1">
-                         <label class="block text-xs font-bold uppercase mt-2">Y Coordinate</label>
-                         <input type="number" id="insp-y" value="${selectedSystem.y}" oninput="updateSystemData('y', this.value)">
-                     </div>
-                 </div>
-
                  <div class="space-y-2 mt-3 pt-3 border-t border-gray-300">
                      <label class="block text-xs font-bold uppercase">System Image (Optional)</label>
                      <input type="text" placeholder="e.g. star_system_001.png" value="${selectedSystem.image || ''}" oninput="updateSystemData('image', this.value)">
@@ -280,14 +269,18 @@
                                  <input type="text" class="text-xs" placeholder="e.g. Weescow" value="${spawn.shipType || ''}" oninput="updateSpawnData(${index}, 'shipType', this.value)">
                              </div>
                          </div>
-                         <div class="flex gap-2">
+                         <div class="flex gap-2 items-end">
                              <div class="flex-[2]">
                                  <label class="block text-[10px] font-bold uppercase mt-1">Encounter ID</label>
-                                 <input type="text" class="text-xs" placeholder="e.g. Police Patrol" value="${spawn.encounter || ''}" oninput="updateSpawnData(${index}, 'encounter', this.value)">
+                                 <input type="text" class="text-xs w-full" placeholder="e.g. Police Patrol" value="${spawn.encounter || ''}" oninput="updateSpawnData(${index}, 'encounter', this.value)">
                              </div>
                              <div class="flex-1">
                                  <label class="block text-[10px] font-bold uppercase mt-1">Spawn %</label>
-                                 <input type="number" step="0.1" max="1.0" min="0" class="text-xs" value="${spawn.chance || 0}" oninput="updateSpawnData(${index}, 'chance', this.value)">
+                                 <input type="number" step="0.1" max="1.0" min="0" class="text-xs w-full" value="${spawn.chance || 0}" oninput="updateSpawnData(${index}, 'chance', this.value)">
+                             </div>
+                             <div class="flex-1 flex flex-col items-center justify-center mb-1">
+                                 <label class="block text-[10px] font-bold uppercase text-red-600 mb-1">Hostile</label>
+                                 <input type="checkbox" class="w-4 h-4 cursor-pointer" ${spawn.isHostile ? 'checked' : ''} onchange="updateSpawnData(${index}, 'isHostile', this.checked)">
                              </div>
                          </div>
                      </div>
@@ -415,7 +408,7 @@
 
 	function addSpawn() {
              if(!selectedSystem.npcSpawns) selectedSystem.npcSpawns = [];
-             selectedSystem.npcSpawns.push({ name: "Unknown Pilot", shipType: "Weescow", encounter: "Scrap Trader", chance: 0.5 });
+             selectedSystem.npcSpawns.push({ name: "Unknown Pilot", shipType: "Weescow", encounter: "Scrap Trader", chance: 0.5, isHostile: false });
              buildInspector();
          }
          
@@ -522,9 +515,13 @@
              }
 	     if (sys.npcSpawns && sys.npcSpawns.length > 0) {
                  out += `        npcSpawns: [\n`;
-                 out += sys.npcSpawns.map(s => 
-                     `            { name: "${s.name.replace(/"/g, '\\"')}", shipType: "${s.shipType}", encounter: "${s.encounter.replace(/"/g, '\\"')}", chance: ${s.chance} }`
-                 ).join(",\n") + "\n";
+                 out += sys.npcSpawns.map(s => {
+                     let spawnStr = `            { name: "${s.name.replace(/"/g, '\\"')}", shipType: "${s.shipType}", encounter: "${s.encounter.replace(/"/g, '\\"')}", chance: ${s.chance}`;
+                     // --- NEW: Append the flag if it's checked ---
+                     if (s.isHostile) spawnStr += `, isHostile: true`;
+                     spawnStr += ` }`;
+                     return spawnStr;
+                 }).join(",\n") + "\n";
                  out += `        ],\n`;
              }
              out += `        pois: [\n`;

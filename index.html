@@ -198,7 +198,8 @@
                          spawnedNPCs.push({
                              name: spawn.name,
                              shipType: spawn.shipType,
-                             encounter: spawn.encounter
+                             encounter: spawn.encounter,
+                             isHostile: spawn.isHostile // <--- FIXED: Now the engine knows they are hostile!
                          });
                      }
                  });
@@ -804,10 +805,19 @@
              }
          
              if (nextNode === 'leave') {
-         window.currentTaxiOffers = null; // Clear the taxi board
+                 window.currentTaxiOffers = null; // Clear the taxi board
                  currentEncounterName = null;
                  currentDialogueNode = null;
-                 if (currentPoi && currentPoi.type === 'Encounter') {
+                 
+                 // --- NEW: Check if there are MORE hostiles waiting in line! ---
+                 const nextHostileIndex = spawnedNPCs.findIndex(npc => npc.isHostile);
+                 
+                 if (nextHostileIndex !== -1) {
+                     // Pull the next one from the array and start the fight
+                     const nextHostile = spawnedNPCs.splice(nextHostileIndex, 1)[0];
+                     startEncounter(nextHostile.encounter);
+                     
+                 } else if (currentPoi && currentPoi.type === 'Encounter') {
                      triggerLocalTravel(-1); 
                  } else {
                      setLocalView('menu'); 
@@ -1322,17 +1332,26 @@
                      currentPoi = dest; 
                      ov.style.display = 'none';
          
-         generateNPCs(); 
+                     generateNPCs(); 
                      
-                     // --- Check if we arrived at a standalone encounter ---
-                     if (currentPoi && currentPoi.type === 'Encounter') {
-                         startEncounter(currentPoi.name);
-                     } else {
-                         setLocalView('menu'); // Normal station
-                     }
+                    // Find the index of the first hostile
+                    const hostileIndex = spawnedNPCs.findIndex(npc => npc.isHostile);
+                    
+                    if (hostileIndex !== -1) {
+                        switchTab('local');
+                        
+                        // Pull them OUT of the array so we don't fight the same ship twice
+                        const hostileNPC = spawnedNPCs.splice(hostileIndex, 1)[0]; 
+                        startEncounter(hostileNPC.encounter);
+                        
+                    } else if (currentPoi && currentPoi.type === 'Encounter') {
+                        startEncounter(currentPoi.name);
+                    } else {
+                        setLocalView('menu'); 
+                    }
                      
                      if (activeTab === 'map') renderMap();
-         saveGame(); // <--- AUTOSAVE
+                     saveGame(); 
                  }
              }, 30);
          }

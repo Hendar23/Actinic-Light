@@ -230,6 +230,19 @@ const quests = {
 // INTERACTIONS & ENCOUNTERS
 // ==========================================
 const interactions = {
+    "Obvious Pirate Ambush": {
+        image: "portrait002.png",
+        dialogue: {
+            "start": {
+                text: "<i>\"Stand and deliver, spacer!\"</i>",
+                options: [
+                    // For now this just leaves the encounter, but soon it will trigger the battle!
+                    { text: "Never! [FIGHT]", nextNode: "leave" },
+                    { text: "Take my money!", nextNode: "leave", credits: -500 }
+                ]
+            }
+        }
+    },
     "Police Patrol": {
         image: "random_alien_008.png",
         dialogue: {
@@ -563,6 +576,10 @@ const galaxy = [
     {
         id: 11, name: "Obviously", x: 450, y: 545,
         description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
+        npcSpawns: [
+            { name: "Blood Corsair", shipType: "Midgeito", encounter: "Obvious Pirate Ambush", chance: 0.8, isHostile: true },
+	    { name: "Blood Corsair", shipType: "Weescow", encounter: "Obvious Pirate Ambush", chance: 0.8, isHostile: true }
+        ],
         pois: [
             { name: "The Obvious Trade Station", type: "Trade Hub" },
             { name: "Asteroid Belt Ice Mine", type: "Ice Mine", description: "Testing the ICE!" },
