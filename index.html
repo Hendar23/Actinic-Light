@@ -147,7 +147,17 @@
          <div class="tab-btn" onclick="switchTab('tasks')" id="btn-tasks">Tasks</div>
       </div>
       <div id="travel-overlay">
-         <h2 id="travel-text" class="animate-pulse text-5xl font-bold uppercase text-center px-4">WARP ACTIVE</h2>
+         <h2 id="travel-text" class="animate-pulse text-5xl font-bold uppercase text-center px-4 mb-6">WARP ACTIVE</h2>
+         
+         <div id="interdiction-warning" class="hidden flex-col items-center gap-2 mb-4 bg-red-100 border-4 border-red-600 p-4 shadow-[0_0_30px_rgba(220,38,38,0.5)]">
+             <div class="w-32 h-32 border-2 border-black bg-white flex items-center justify-center overflow-hidden">
+                 <img id="interdiction-image" src="assets/default.png" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+             </div>
+             <div id="interdiction-name" class="text-2xl font-bold uppercase text-red-800 text-center leading-tight">
+                 UNKNOWN HOSTILE
+             </div>
+         </div>
+
          <div class="progress-container">
             <div id="progress-bar"></div>
          </div>
@@ -1385,32 +1395,58 @@
          }
          
          function triggerTravel(dest, msg, dur) {
-             localEncounterMemory = {}; // NEW
+             localEncounterMemory = {}; 
+             
+             // --- NEW: Generate NPCs FIRST so we can check for ambushes! ---
+             generateNPCs(); 
+             
+             const hostileIndex = spawnedNPCs.findIndex(npc => npc.isHostile);
+             let interceptor = null;
+             
              const ov = document.getElementById('travel-overlay');
              const bar = document.getElementById('progress-bar');
-             document.getElementById('travel-text').innerText = msg;
+             const travelText = document.getElementById('travel-text');
+             const warnBox = document.getElementById('interdiction-warning');
+             const warnImg = document.getElementById('interdiction-image');
+             const warnName = document.getElementById('interdiction-name');
+             
+             if (hostileIndex !== -1) {
+                 interceptor = spawnedNPCs[hostileIndex];
+                 msg = "INTERDICTION DETECTED!";
+                 travelText.classList.add('text-red-600');
+                 
+                 // Show the hull of the ship that is intercepting them
+                 const hullData = shipHulls[interceptor.shipType] || {};
+                 warnImg.src = `assets/${hullData.image || 'default.png'}`;
+                 warnName.innerHTML = `${interceptor.name}<br><span class="text-base text-black">Class: ${interceptor.shipType}</span>`;
+		 
+		 dur = 3000                
+
+                 warnBox.classList.remove('hidden');
+                 warnBox.classList.add('flex');
+             } else {
+                 travelText.classList.remove('text-red-600');
+                 warnBox.classList.add('hidden');
+                 warnBox.classList.remove('flex');
+             }
+             
+             travelText.innerText = msg;
              ov.style.display = 'flex';
+             
              let start = Date.now();
              let t = setInterval(() => {
                  let pc = ((Date.now() - start) / dur) * 100;
                  bar.style.width = pc + "%";
+                 
                  if (pc >= 100) { 
                      clearInterval(t); 
                      currentPoi = dest; 
                      ov.style.display = 'none';
-         
-                     generateNPCs(); 
                      
-                    // Find the index of the first hostile
-                    const hostileIndex = spawnedNPCs.findIndex(npc => npc.isHostile);
-                     
-                     if (hostileIndex !== -1) {
+                     if (interceptor) {
                          switchTab('local');
-                         
-                         const hostileNPC = spawnedNPCs[hostileIndex]; 
-                         hostileNPC.isHostile = false; // <--- Mark as pacified so they stay in the system!
-                         startEncounter(hostileNPC.encounter, hostileNPC.name, hostileNPC.image);
-                         
+                         interceptor.isHostile = false; 
+                         startEncounter(interceptor.encounter, interceptor.name, interceptor.image);
                      } else if (currentPoi && currentPoi.type === 'Encounter') {
                          startEncounter(currentPoi.name);
                      } else {
