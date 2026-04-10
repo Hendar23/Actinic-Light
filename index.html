@@ -180,7 +180,7 @@
             </div>
          </div>
       </div>
-      <div class="flex shrink-0 w-full">
+      <div id="bottom-nav-bar" class="flex shrink-0 w-full">
          <div class="tab-btn tab-active" onclick="switchTab('map')" id="btn-map">Map</div>
          <div class="tab-btn" onclick="switchTab('local')" id="btn-local">Local</div>
          <div class="tab-btn" onclick="switchTab('ship')" id="btn-ship">Ship</div>
@@ -655,6 +655,13 @@
                  if (el) el.style.display = (id === tabId) ? 'flex' : 'none';
                  if (btn) btn.classList.toggle('tab-active', id === tabId);
              });
+             
+             // --- Hide the bottom nav if we are in battle! ---
+             const bottomNav = document.getElementById('bottom-nav-bar');
+             if (bottomNav) {
+                 bottomNav.style.display = (tabId === 'battle') ? 'none' : 'flex';
+             }
+             
              if (tabId === 'map') renderMap();
              updateUI();
          }
