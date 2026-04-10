@@ -296,17 +296,6 @@ const quests = {
 // INTERACTIONS & ENCOUNTERS
 // ==========================================
 const interactions = {
-    "Obviously belligerent": {
-        image: "portrait002.png",
-        dialogue: {
-            "start": {
-                text: "<i>\"FEEL MY WRATH!\"</i>",
-                options: [
-                    { text: "Bring it fool! [FIGHT]", startCombat: true }, // <--- CHANGED
-                ]
-            }
-        }
-    },
     "Obvious Pirate Ambush": {
         image: "portrait002.png",
         dialogue: {
@@ -657,10 +646,8 @@ const galaxy = [
         id: 11, name: "Obviously", x: 454, y: 547,
         description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
         npcSpawns: [
-            { name: "Blood Corsair 1", shipType: "Midgeito", encounter: "Obvious Pirate Ambush", chance: 0.8, isHostile: true,
-                stats: { hull: 12, armour: 15, handling: 45, firepower: 18, accuracy: 5, piloting: 40, weapon: 35 } },
-            { name: "Blood Corsair 2", shipType: "Weescow", encounter: "Obviously belligerent", chance: 0.8, isHostile: true,
-                stats: { hull: 15, armour: 10, handling: 30, firepower: 12, accuracy: 0, piloting: 30, weapon: 30 } }
+            { name: "Amateur Pirate", shipType: "Weescow", encounter: "Obvious Pirate Ambush", chance: 0.5, isHostile: true,
+                stats: { hull: 12, armour: 8, handling: 20, firepower: 8, accuracy: 5, piloting: 30, weapon: 30 } }
         ],
         pois: [
             { name: "The Obvious Trade Station", type: "Trade Hub" },
