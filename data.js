@@ -302,8 +302,7 @@ const interactions = {
             "start": {
                 text: "<i>\"FEEL MY WRATH!\"</i>",
                 options: [
-                    // For now this just leaves the encounter, but soon it will trigger the battle!
-                    { text: "Bring it fool! [FIGHT]", nextNode: "leave" },
+                    { text: "Bring it fool! [FIGHT]", startCombat: true }, // <--- CHANGED
                 ]
             }
         }
@@ -314,8 +313,7 @@ const interactions = {
             "start": {
                 text: "<i>\"Stand and deliver, spacer!\"</i>",
                 options: [
-                    // For now this just leaves the encounter, but soon it will trigger the battle!
-                    { text: "Never! [FIGHT]", nextNode: "leave" },
+                    { text: "Never! [FIGHT]", startCombat: true }, // <--- CHANGED
                     { text: "Take my money!", nextNode: "leave", credits: -500 }
                 ]
             }
@@ -659,9 +657,9 @@ const galaxy = [
         id: 11, name: "Obviously", x: 454, y: 547,
         description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
         npcSpawns: [
-            { name: "Blood Corsair", shipType: "Midgeito", encounter: "Obvious Pirate Ambush", chance: 0.8, isHostile: true,
+            { name: "Blood Corsair 1", shipType: "Midgeito", encounter: "Obvious Pirate Ambush", chance: 0.8, isHostile: true,
                 stats: { hull: 12, armour: 15, handling: 45, firepower: 18, accuracy: 5, piloting: 40, weapon: 35 } },
-            { name: "Blood Corsair", shipType: "Weescow", encounter: "Obviously belligerent", chance: 0.8, isHostile: true,
+            { name: "Blood Corsair 2", shipType: "Weescow", encounter: "Obviously belligerent", chance: 0.8, isHostile: true,
                 stats: { hull: 15, armour: 10, handling: 30, firepower: 12, accuracy: 0, piloting: 30, weapon: 30 } }
         ],
         pois: [

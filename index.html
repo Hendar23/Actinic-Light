@@ -224,6 +224,9 @@
          let currentMarketPrices = {}; 
          let spawnedNPCs = []; 
          let localEncounterMemory = {};
+         let currentEnemy = null;
+         let playerAdvantage = 0;
+         let enemyAdvantage = 0;
          
          const canvas = document.getElementById('star-map');
          const ctx = canvas.getContext('2d');
@@ -901,7 +904,7 @@
              setLocalView('encounter');
          }
          
-         function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = '', startTask = '', completeTask = '') {
+         function selectDialogue(nextNode, creditChange = 0, setFlag = '', clearFlag = '', startTask = '', completeTask = '', initiateCombat = false) {
              player.credits += creditChange;
              if (setFlag) player.flags[setFlag] = true;
              if (clearFlag) player.flags[clearFlag] = false;
@@ -913,6 +916,12 @@
              if (completeTask) {
                  player.tasks[completeTask] = "completed";
                  showTaskPopup("TASK COMPLETE", quests[completeTask]);
+             }
+         
+             // --- NEW: If the dialogue option triggers a fight, go to the arena! ---
+             if (initiateCombat) {
+                 startCombat();
+                 return; // Stop processing dialogue, we are in a dogfight now!
              }
          
              if (nextNode === 'leave') {
@@ -939,6 +948,69 @@
                  updateUI();
              }
              saveGame(); 
+         }
+
+	function startCombat() {
+             // 1. Find the specific NPC you are currently talking to using the DISPLAY name!
+             const enemyIndex = spawnedNPCs.findIndex(npc => npc.name === currentEncounterDisplayName);
+             
+             if (enemyIndex === -1) {
+                 console.log("Failsafe triggered: Enemy not found in ambient traffic.");
+                 return; 
+             }
+             
+             // 2. Lock them into the combat variable and give them full health
+             currentEnemy = spawnedNPCs[enemyIndex];
+             currentEnemy.currentHull = currentEnemy.stats.hull;
+             
+             // 3. Reset the Advantage meters
+             playerAdvantage = 0;
+             enemyAdvantage = 0;
+             document.getElementById('battle-adv-player').style.height = '0%';
+             document.getElementById('battle-adv-enemy').style.height = '0%';
+             
+             // 4. Inject the enemy's visual data into the arena
+             const hullData = shipHulls[currentEnemy.shipType] || {};
+             document.getElementById('battle-img-enemy').src = `assets/${hullData.image || 'default.png'}`;
+             document.getElementById('battle-name-enemy').innerText = currentEnemy.name;
+             
+             // 5. Clear the combat log and write the intro
+             document.getElementById('battle-log').innerHTML = `
+                <div class="text-gray-400">> SCANNERS LOCKED.</div>
+                <div class="text-red-400">> ENGAGING: ${currentEnemy.name.toUpperCase()} (${currentEnemy.shipType.toUpperCase()})</div>
+                <div class="text-yellow-400">> AWAITING PILOT INPUT...</div>
+             `;
+             
+             // 6. Update the hull numbers and flip the screen!
+             updateBattleUI();
+             switchTab('battle');
+         }
+
+         function doCombatRound(action) {
+             const log = document.getElementById('battle-log');
+             
+             if (action === 'attack') {
+                 log.innerHTML += `<div class="text-blue-400">> YOU INITIATED AN ATTACK RUN.</div>`;
+             } else if (action === 'manoeuvre') {
+                 log.innerHTML += `<div class="text-green-400">> YOU BEGAN EVASIVE MANOEUVRES.</div>`;
+             } else if (action === 'flee') {
+                 log.innerHTML += `<div class="text-yellow-400">> SPOOLING WARP DRIVE...</div>`;
+                 // Temporary flee logic to let you escape the fight screen:
+                 currentEnemy = null;
+                 switchTab('local');
+                 return;
+             }
+             
+             // Auto-scroll the log to the bottom
+             log.scrollTop = log.scrollHeight;
+         }
+         
+         function updateBattleUI() {
+             if (!currentEnemy || !player.ship) return;
+             const pStats = getShipStats(player.ship);
+             
+             document.getElementById('battle-hull-player').innerText = `Hull: ${player.ship.currentHull}/${pStats.maxHull}`;
+             document.getElementById('battle-hull-enemy').innerText = `Hull: ${currentEnemy.currentHull}/${currentEnemy.stats.hull}`;
          }
          
          function updateUI() {
@@ -1268,7 +1340,8 @@
                 const pickupAction = opt.completePickup ? "completeTaxiPickup();" : "";
                 const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
          
-                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}')" ${disabledAttr}>
+                // Pass the startCombat flag as the 7th parameter ---
+                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}', ${opt.startCombat ? 'true' : 'false'})" ${disabledAttr}>
                     <span>${opt.text}${creditTag}</span>
                 </button>`;
             });
