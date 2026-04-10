@@ -402,7 +402,15 @@
              // 1. Pick a pickup location within maxDist of the CURRENT SYSTEM
              do {
                  pickupSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-                 if (pickupSys.pois.length > 0) pickupPoi = pickupSys.pois[Math.floor(Math.random() * pickupSys.pois.length)];
+                 
+                 // NEW: Filter out Outposts and Encounters
+                 const validPois = pickupSys.pois.filter(p => p.type !== 'Outpost' && p.type !== 'Encounter');
+                 if (validPois.length > 0) {
+                     pickupPoi = validPois[Math.floor(Math.random() * validPois.length)];
+                 } else {
+                     pickupPoi = null; // Force loop to retry if system only has invalid locations
+                 }
+                 
                  distToPickup = Math.sqrt((currentSystem.x - pickupSys.x)**2 + (currentSystem.y - pickupSys.y)**2);
                  attempts++;
              } while ((!pickupPoi || distToPickup > maxDist) && attempts < 100);
@@ -411,7 +419,15 @@
              attempts = 0;
              do {
                  dropoffSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-                 if (dropoffSys.pois.length > 0) dropoffPoi = dropoffSys.pois[Math.floor(Math.random() * dropoffSys.pois.length)];
+                 
+                 // NEW: Filter out Outposts and Encounters
+                 const validPois = dropoffSys.pois.filter(p => p.type !== 'Outpost' && p.type !== 'Encounter');
+                 if (validPois.length > 0) {
+                     dropoffPoi = validPois[Math.floor(Math.random() * validPois.length)];
+                 } else {
+                     dropoffPoi = null;
+                 }
+                 
                  distToDropoff = Math.sqrt((currentSystem.x - dropoffSys.x)**2 + (currentSystem.y - dropoffSys.y)**2);
                  
                  // Calculate the actual trip distance for the reward payout
@@ -421,13 +437,13 @@
          
              // Fallbacks in case the system is totally isolated
              if (!pickupPoi) { 
-         pickupSys = currentSystem.pois.length > 0 ? currentSystem : galaxy[0]; 
-         pickupPoi = pickupSys.pois[0]; 
-         }
-         if (!dropoffPoi) { 
-         dropoffSys = currentSystem.pois.length > 0 ? currentSystem : galaxy[0]; 
-         dropoffPoi = dropoffSys.pois[0]; 
-         }
+                 pickupSys = currentSystem; 
+                 pickupPoi = currentSystem.pois.find(p => p.type !== 'Outpost' && p.type !== 'Encounter') || galaxy[0].pois[0]; 
+             }
+             if (!dropoffPoi) { 
+                 dropoffSys = currentSystem; 
+                 dropoffPoi = currentSystem.pois.find(p => p.type !== 'Outpost' && p.type !== 'Encounter') || galaxy[0].pois[0]; 
+             }
          
              // --- UPDATED REWARD LOGIC ---
              // Combine both the "deadhead" flight to the pickup and the actual trip distance.
