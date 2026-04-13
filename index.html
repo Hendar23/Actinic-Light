@@ -908,11 +908,14 @@
              if (damage <= 0) return;
              
              const rate = (currentPoi && currentPoi.repairCost !== undefined) ? currentPoi.repairCost : 10;
-             const cost = damage * rate;
              
-             if (player.credits >= cost) {
-                 player.credits -= cost;
-                 player.ship.currentHull = stats.maxHull;
+             // Calculate how many hull points the player can actually afford
+             const affordablePoints = Math.floor(player.credits / rate);
+             const pointsToRepair = Math.min(damage, affordablePoints);
+             
+             if (pointsToRepair > 0) {
+                 player.credits -= (pointsToRepair * rate);
+                 player.ship.currentHull += pointsToRepair;
                  updateUI();
                  saveGame();
              }
@@ -1355,14 +1358,16 @@
                  const stats = getShipStats(player.ship);
                  const damage = stats.maxHull - player.ship.currentHull;
                  const rate = currentPoi.repairCost !== undefined ? currentPoi.repairCost : 10;
-                 const repairCost = damage * rate;
-                 const canAfford = player.credits >= repairCost;
+                 
+                 // Check if they can afford at least 1 point of repair
+                 const canAffordSomething = player.credits >= rate;
                  const isDamaged = damage > 0;
                  
-                 let btnText = isDamaged ? `REPAIR SHIP [${repairCost} CR]` : "HULL AT MAXIMUM";
+                 // Show the rate on the button no matter what
+                 let btnText = isDamaged ? `REPAIR SHIP [${rate} CR/PT]` : `HULL AT MAX [${rate} CR/PT]`;
                  
                  html += `<div class="space-y-4 max-w-md mx-auto mt-4">
-                     <button class="btn !border-blue-600 !text-blue-800 bg-blue-50" onclick="repairShip()" ${(!isDamaged || !canAfford) ? 'disabled' : ''}>
+                     <button class="btn !border-blue-600 !text-blue-800 bg-blue-50" onclick="repairShip()" ${(!isDamaged || !canAffordSomething) ? 'disabled' : ''}>
                          ${btnText}
                      </button>
                  </div>`;
@@ -1384,6 +1389,8 @@
                      } else {
                          if (Array.isArray(encImageFile)) {
                              encImageFile = encImageFile[Math.floor(Math.random() * encImageFile.length)];
+                         } else if (encImageFile === 'random') {
+                             encImageFile = generateRandomCharacter().image;
                          }
                          localEncounterMemory[encName] = encImageFile;
                      }
