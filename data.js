@@ -567,7 +567,7 @@ const stationTypes = {
         consumes: { "Silicon Wafers": "High", "Gold Bars": "High", "Machine Parts": "Low", "Packaged Food": "Low" }
     },
     "Repair Station": {
-        defaultImage: "station004.png",
+        defaultImage: "station005.png",
         description: "A sprawling orbital drydock surrounded by welding drones."
     }
 };
@@ -596,9 +596,9 @@ const galaxy = [
     {
         id: 1, name: "Alpha Centauri", x: 516, y: 517,
         npcSpawns: [
-            { name: "Poovy bird", shipType: "<AVIAN>", shipImage: "brother_moo.png", chance: 0.5, isHostile: true,
+            { name: "Poovy bird", shipType: "<AVIAN>", shipImage: "ship_bird1.png", chance: 0.5, isHostile: true,
                 stats: { hull: 20, armour: 10, handling: 40, firepower: 6, accuracy: 10, piloting: 30, weapon: 30 } },
-            { name: "Unknown Pilot", shipType: "Weescow", shipImage: "ship_weescow.png", chance: 0.5,
+            { name: "Unknown Pilot", shipType: "Weescow", shipImage: "ship_weescow.png", chance: 0.3,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } }
         ],
         pois: [
@@ -630,7 +630,7 @@ const galaxy = [
     {
         id: 5, name: "Betelgeuse", x: 473, y: 572,
         npcSpawns: [
-            { name: "Cop", shipType: "Weescow", encounter: "Police Patrol", chance: 0.9, isHostile: true }
+            { name: "Cop", shipType: "Weescow", encounter: "Police Patrol", chance: 0.1, isHostile: true }
         ],
         pois: [
             { name: "Red Supergiant Wafers", type: "Silicon Refinery" },
@@ -675,7 +675,7 @@ const galaxy = [
         id: 11, name: "Obviously", x: 454, y: 547,
         description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
         npcSpawns: [
-            { name: "Amateur Pirate", shipType: "Raider Scout", shipImage: "ship_weescow.png", encounter: "Obvious Pirate Ambush", chance: 0.5, isHostile: true,
+            { name: "Amateur Pirate", shipType: "Raider Scout", shipImage: "ship_weescow.png", encounter: "Obvious Pirate Ambush", chance: 0.3, isHostile: true,
                 stats: { hull: 12, armour: 8, handling: 20, firepower: 8, accuracy: 5, piloting: 30, weapon: 30 } }
         ],
         pois: [
