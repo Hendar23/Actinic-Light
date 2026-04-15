@@ -66,7 +66,7 @@
         let selItem = null;
 
         const sizes = ["Tiny", "Small", "Medium", "Large", "Huge"];
-        const moduleStats = ["jumpRange", "armour", "cargo", "handling", "offensive"];
+        const moduleStats = ["jumpRange", "armour", "cargo", "handling", "firepower", "accuracy"];
 
         function escapeJS(str) { return (str || "").toString().replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, ''); }
         function escapeHTML(str) { return (str || "").toString().replace(/"/g, '&quot;'); }
@@ -143,6 +143,7 @@
                 out += `        description: "${escapeJS(s.description)}",\n`;
                 out += `        baseHull: ${s.baseHull || 10},\n`;
                 out += `        weight: ${s.weight || 5},\n`; // <-- NEW
+                out += `        price: ${s.price || 1000},\n`;
                 out += `        multipliers: {\n`;
                 out += `            jumpRange: ${s.multipliers.jumpRange},\n`;
                 out += `            armour: ${s.multipliers.armour},\n`;
@@ -172,14 +173,13 @@
                 items.forEach((k, i) => {
                     const eq = equipmentData[cat][k];
                     if (cat === "modules") {
-                        // --- NEW: Added weight output ---
-                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "module", weight: ${eq.weight || 1}, stat: "${escapeJS(eq.stat)}", flatBonus: ${eq.flatBonus}, description: "${escapeJS(eq.description)}" }`;
+                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "module", price: ${eq.price || 100}, weight: ${eq.weight || 1}, stat: "${escapeJS(eq.stat)}", flatBonus: ${eq.flatBonus}, description: "${escapeJS(eq.description)}" }`;
                     } else if (cat === "weapons") {
                         // Weapons get Firepower and Accuracy
-                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "weapons", weight: ${eq.weight || 1}, firepower: ${eq.firepower || 0}, accuracy: ${eq.accuracy || 0}, description: "${escapeJS(eq.description)}" }`;
+                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "weapons", price: ${eq.price || 100}, weight: ${eq.weight || 1}, firepower: ${eq.firepower || 0}, accuracy: ${eq.accuracy || 0}, description: "${escapeJS(eq.description)}" }`;
                     } else {
                         // Everything else gets baseValue
-                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "${escapeJS(eq.type)}", weight: ${eq.weight || 1}, baseValue: ${eq.baseValue || 0}, description: "${escapeJS(eq.description)}" }`;
+                        out += `        "${escapeJS(k)}": { name: "${escapeJS(eq.name)}", size: "${escapeJS(eq.size)}", type: "${escapeJS(eq.type)}", price: ${eq.price || 100}, weight: ${eq.weight || 1}, baseValue: ${eq.baseValue || 0}, description: "${escapeJS(eq.description)}" }`;
                     }
                     if (i < items.length - 1) out += ",";
                     out += "\n";
@@ -229,23 +229,22 @@
             if (selCat === 'shipHulls') {
                 if (shipHullsData[name]) return alert("ID already exists.");
                 shipHullsData[name] = { 
-                    name: name, size: "Tiny", description: "New Ship", baseHull: 10, weight: 5, 
+                    name: name, size: "Tiny", description: "New Ship", baseHull: 10, weight: 5, price: 1000,
                     multipliers: { jumpRange: 1, armour: 1, cargo: 1, handling: 1, firepower: 1, accuracy: 1 },
                     coreSlots: { warpDrive: 1, armour: 1, cargoBay: 1, thrusters: 1, weapons: 1 },
                     modularSlots: 1 
                 };
             } else if (selCat === 'modules') {
                 if (equipmentData.modules[name]) return alert("ID already exists.");
-                // --- NEW: Added weight: 1 ---
-                equipmentData.modules[name] = { name: name, size: "Tiny", type: "module", weight: 1, stat: "cargo", flatBonus: 5, description: "New Module" };
+                equipmentData.modules[name] = { name: name, size: "Tiny", type: "module", price: 100, weight: 1, stat: "cargo", flatBonus: 5, description: "New Module" };
             } else {
                 if (!equipmentData[selCat]) equipmentData[selCat] = {};
                 if (equipmentData[selCat][name]) return alert("ID already exists.");
                 
                 if (selCat === 'weapons') {
-                    equipmentData[selCat][name] = { name: name, size: "Tiny", type: selCat, weight: 1, firepower: 10, accuracy: 0, description: "New Weapon" };
+                    equipmentData[selCat][name] = { name: name, size: "Tiny", type: selCat, price: 100, weight: 1, firepower: 10, accuracy: 0, description: "New Weapon" };
                 } else {
-                    equipmentData[selCat][name] = { name: name, size: "Tiny", type: selCat, weight: 1, baseValue: 10, description: "New Item" };
+                    equipmentData[selCat][name] = { name: name, size: "Tiny", type: selCat, price: 100, weight: 1, baseValue: 10, description: "New Item" };
                 }
             }
             selectItem(name);
@@ -293,14 +292,18 @@
                     <label class="block text-xs font-bold uppercase mb-1">Description</label>
                     <textarea class="h-16 mb-4" oninput="setHull('description', this.value)">${escapeHTML(hull.description)}</textarea>
 
-		    <div class="flex gap-4 mb-4">
-                        <div class="bg-red-50 p-2 border border-red-300 flex-1">
-                            <label class="block text-xs font-bold uppercase mb-1 text-red-800">Base Hull (Integrity)</label>
+		    <div class="grid grid-cols-3 gap-4 mb-4">
+                        <div class="bg-red-50 p-2 border border-red-300">
+                            <label class="block text-[10px] font-bold uppercase mb-1 text-red-800">Base Hull</label>
                             <input type="number" value="${hull.baseHull || 10}" oninput="setHull('baseHull', parseInt(this.value) || 0)">
                         </div>
-                        <div class="bg-gray-200 p-2 border border-gray-400 flex-1">
-                            <label class="block text-xs font-bold uppercase mb-1 text-gray-800">Chassis Weight</label>
+                        <div class="bg-gray-200 p-2 border border-gray-400">
+                            <label class="block text-[10px] font-bold uppercase mb-1 text-gray-800">Chassis Weight</label>
                             <input type="number" value="${hull.weight || 5}" oninput="setHull('weight', parseInt(this.value) || 0)">
+                        </div>
+                        <div class="bg-green-50 p-2 border border-green-300">
+                            <label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Base Price (CR)</label>
+                            <input type="number" value="${hull.price || 1000}" oninput="setHull('price', parseInt(this.value) || 0)">
                         </div>
                     </div>
 
@@ -332,10 +335,11 @@
                             <select onchange="setEq('size', this.value)">${sizes.map(s => `<option value="${s}" ${mod.size === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-4 mb-4 bg-green-50 p-3 border border-green-300">
+                    <div class="grid grid-cols-4 gap-4 mb-4 bg-green-50 p-3 border border-green-300">
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Price</label><input type="number" value="${mod.price || 100}" oninput="setEqNum('price', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Weight</label><input type="number" value="${mod.weight || 1}" oninput="setEqNum('weight', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Target Stat</label>
-                            <select class="text-sm" onchange="setEq('stat', this.value)">${moduleStats.map(s => `<option value="${s}" ${mod.stat === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
+                            <select class="text-xs" onchange="setEq('stat', this.value)">${moduleStats.map(s => `<option value="${s}" ${mod.stat === s ? 'selected' : ''}>${s}</option>`).join('')}</select>
                         </div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-green-800">Flat Bonus</label><input type="number" value="${mod.flatBonus}" oninput="setEqNum('flatBonus', this.value)"></div>
                     </div>
@@ -355,7 +359,8 @@
                 
                 if (selCat === 'weapons') {
                     html += `
-                    <div class="grid grid-cols-3 gap-4 mb-4 bg-orange-50 p-3 border border-orange-300">
+                    <div class="grid grid-cols-4 gap-4 mb-4 bg-orange-50 p-3 border border-orange-300">
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-orange-800">Price</label><input type="number" value="${eq.price || 100}" oninput="setEqNum('price', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-orange-800">Weight</label><input type="number" value="${eq.weight || 1}" oninput="setEqNum('weight', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-orange-800">Firepower</label><input type="number" value="${eq.firepower || 0}" oninput="setEqNum('firepower', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-orange-800">Accuracy</label><input type="number" value="${eq.accuracy || 0}" oninput="setEqNum('accuracy', this.value)"></div>
@@ -363,7 +368,8 @@
                     `;
                 } else {
                     html += `
-                    <div class="grid grid-cols-2 gap-4 mb-4 bg-yellow-50 p-3 border border-yellow-300">
+                    <div class="grid grid-cols-3 gap-4 mb-4 bg-yellow-50 p-3 border border-yellow-300">
+                        <div><label class="block text-[10px] font-bold uppercase mb-1 text-yellow-800">Price</label><input type="number" value="${eq.price || 100}" oninput="setEqNum('price', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-yellow-800">Item Weight</label><input type="number" value="${eq.weight || 1}" oninput="setEqNum('weight', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mb-1 text-yellow-800">Base Value (Stat)</label><input type="number" value="${eq.baseValue || 0}" oninput="setEqNum('baseValue', this.value)"></div>
                     </div>
