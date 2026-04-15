@@ -1688,9 +1688,48 @@
             document.getElementById('cargo-list').innerHTML = cl || '<p class="text-gray-500 italic">Empty.</p>';
          }
          
+         function calculateNetWorth() {
+             let total = player.credits || 0;
+
+             // 1. Ship Hull Value
+             const hullData = shipHulls[player.ship.hull];
+             if (hullData) total += (hullData.price || 1000); 
+
+             // 2. Core Equipment Value
+             const coreTypes = { warpDrive: "warpDrive", armour: "armour", cargoBay: "cargoBay", thrusters: "thrusters", weapons: "weapons" };
+             for (const [key, cat] of Object.entries(coreTypes)) {
+                 const itemName = player.ship.core[key];
+                 if (itemName && equipment[cat] && equipment[cat][itemName]) {
+                     total += (equipment[cat][itemName].price || 100);
+                 }
+             }
+
+             // 3. Modular Equipment Value
+             if (player.ship.modules) {
+                 player.ship.modules.forEach(modName => {
+                     if (modName && equipment.modules && equipment.modules[modName]) {
+                         total += (equipment.modules[modName].price || 100);
+                     }
+                 });
+             }
+
+             // 4. Cargo Value (Using baseline commodity prices)
+             for (const [itemName, qty] of Object.entries(player.cargo)) {
+                 if (qty > 0 && commodities[itemName]) {
+                     total += (commodities[itemName].basePrice * qty);
+                 }
+             }
+
+             return total;
+         }
+
          function renderPlayerTab() {
+             const netWorth = calculateNetWorth();
              let html = `
-                 <h2 class="text-4xl font-bold uppercase mb-6 border-b-4 border-black pb-2">Player Status</h2>
+                 <div class="mb-8 border-b-4 border-black pb-4">
+                     <div class="text-xl italic text-gray-500 uppercase mb-1">Estimated Net Worth</div>
+                     <div class="text-6xl font-bold">${netWorth.toLocaleString()} CR</div>
+                 </div>
                  
                  <div class="max-w-md">
                      <h3 class="text-2xl font-bold uppercase bg-black text-white p-2 mb-4">Pilot Skills</h3>
