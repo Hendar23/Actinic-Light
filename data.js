@@ -337,6 +337,17 @@ const interactions = {
             }
         }
     },
+    "civilian001": {
+        image: "random",
+        dialogue: {
+            "start": {
+                text: "<i>\"Fly safe friend!\"</i>",
+                options: [
+                    { text: "You too. [Leave]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
     "Bartender Milo": {
         image: "portrait001.png",
         dialogue: {
@@ -450,7 +461,7 @@ const interactions = {
             "start": {
                 text: "<i> Don't worry, we can patch 'er up for ya.</i>",
                 options: [
-                    { text: "Thanks", nextNode: "leave" }
+                    { text: "Thanks [Leave]", nextNode: "leave" }
                 ]
             }
         }
@@ -461,8 +472,8 @@ const interactions = {
             "start": {
                 text: "Hey kid, how you doin'?",
                 options: [
-                    { text: "Sorry Uncle Bob, I gotta go.", nextNode: "leave" },
-                    { text: "I did it Bob, I got my first ship", nextNode: "got_ship", hidesOnFlag: "told_bob_ship" }
+                    { text: "Sorry Uncle Bob, I gotta go. [Leave]", nextNode: "leave" },
+                    { text: "I did it Bob, I got my first ship.", nextNode: "got_ship", hidesOnFlag: "told_bob_ship" }
                 ]
             },
             "got_ship": {
@@ -595,14 +606,17 @@ const stationTypes = {
 // ==========================================
 
 
+
+
+
+
 const mapBackgrounds = [
-    { image: "bak_neb001.png", x: 600, y: 450, width: 200, height: 200, alpha: 1 },
     { image: "test_area.png", x: 440, y: 500, width: 80, height: 80, alpha: 1 }
 ];
 
 const galaxy = [
     {
-        id: 0, name: "Sol", x: 495, y: 538,
+        id: 1, name: "Sol", x: 495, y: 538,
         image: "star_system_001.png",
         description: "The home of humanity, an obscure species of mammal. It is a run-down polluted backwater.",
         npcSpawns: [
@@ -619,7 +633,7 @@ const galaxy = [
         ]
     },
     {
-        id: 98, name: "Alpha Centauri", x: 467, y: 524,
+        id: 2, name: "Alpha Centauri", x: 467, y: 524,
         npcSpawns: [
             { name: "Poovy bird", shipType: "<AVIAN>", shipImage: "ship_bird1.png", chance: 0.5, isHostile: true,
                 stats: { hull: 20, armour: 10, handling: 40, firepower: 6, accuracy: 10, piloting: 10, weapon: 5 } }
@@ -630,7 +644,7 @@ const galaxy = [
         ]
     },
     {
-        id: 97, name: "Betelgeuse", x: 474, y: 567,
+        id: 3, name: "Betelgeuse", x: 474, y: 567,
         npcSpawns: [
             { name: "Cop", shipType: "Weescow", encounter: "Police Patrol", chance: 0.1, isHostile: true }
         ],
@@ -640,7 +654,7 @@ const galaxy = [
         ]
     },
     {
-        id: 96, name: "Obviously", x: 452, y: 550,
+        id: 4, name: "Obviously", x: 452, y: 550,
         description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
         npcSpawns: [
             { name: "Amateur Pirate", shipType: "Raider Scout", shipImage: "ship_weescow.png", encounter: "Obvious Pirate Ambush", chance: 0.3, isHostile: true,
@@ -655,8 +669,22 @@ const galaxy = [
         ]
     },
     {
-        id: 101, name: "Herbies Star", x: 540, y: 547,
+        id: 0, name: "Herbies Star", x: 540, y: 547,
         description: "The only habitable planet, Leonton is known for it's large predators, petty crime, and poverty.",
+        npcSpawns: [
+            { name: "Leonton Traffic", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Leonton Traffic", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Leonton Traffic", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Leonton Traffic", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Leonton Traffic", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Leonton Traffic", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } }
+        ],
         pois: [
             { name: "Leonton Spaceport", type: "Trade Hub", image: "port003.png", description: "Smells like starship fuel, cheap narcotics, and desperation." },
             { name: "The Full Burn Bar", type: "Outpost", image: "bar001.png", encounters: ["Uncle Bob"], description: "Leontons go to bar for visiting spacers. Uncle bob has run it as long as anyone can remember. " }
