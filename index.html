@@ -373,15 +373,16 @@
              });
              
              const engSkill = player.skills ? player.skills.engineer : 0;
+             const engBonus = Math.floor(engSkill / 10);
              
              return {
                  jumpRange: Math.round(base.jumpRange * chassis.multipliers.jumpRange),
                  armour: Math.round(base.armour * chassis.multipliers.armour), 
                  cargoMax: Math.round(base.cargo * chassis.multipliers.cargo),
-                 handling: Math.round((base.handling - (chassis.weight || 0) - base.weight) * chassis.multipliers.handling),
-                 firepower: Math.round(base.firepower * (chassis.multipliers.firepower || 1)),
-                 accuracy: Math.round(base.accuracy * (chassis.multipliers.accuracy || 1)),
-                 maxHull: (chassis.baseHull || 10) + Math.floor(engSkill / 10),
+                 handling: Math.round((base.handling + engBonus - (chassis.weight || 0) - base.weight) * chassis.multipliers.handling),
+                 firepower: Math.round((base.firepower + engBonus) * (chassis.multipliers.firepower || 1)),
+                 accuracy: Math.round((base.accuracy + engBonus) * (chassis.multipliers.accuracy || 1)),
+                 maxHull: (chassis.baseHull || 10) + engBonus,
                  chassisWeight: chassis.weight || 5, 
                  equipmentWeight: base.weight,
 
@@ -391,7 +392,8 @@
                  baseHandling: base.handling, multHandling: chassis.multipliers.handling,
                  baseFirepower: base.firepower, multFirepower: chassis.multipliers.firepower || 1,
                  baseAccuracy: base.accuracy, multAccuracy: chassis.multipliers.accuracy || 1,
-                 baseHull: chassis.baseHull || 10, bonusHull: Math.floor(engSkill / 10)
+                 baseHull: chassis.baseHull || 10, bonusHull: engBonus,
+                 bonusEng: engBonus
              };
          }
          
@@ -1145,31 +1147,37 @@
              const successMargin = Math.abs(pSuccesses - eSuccesses);
              
              if (winner === 'player') {
-                 // Player Wins (Cap Advantage at 3)
-                 playerAdvantage = Math.min(3, playerAdvantage + 1);
-                 enemyAdvantage = 0;
-                 log.innerHTML += `<div class="text-green-400">> YOU WON THE EXCHANGE! (+Advantage)</div>`;
+                 enemyAdvantage = 0; // The loser always loses their positional advantage
                  
                  if (playerAction === 'attack') {
+                     // Winning an Attack deals damage and RETAINS advantage, but does not grant a new point
+                     log.innerHTML += `<div class="text-green-400">> YOU WON THE EXCHANGE! (Advantage Retained)</div>`;
+                     
                      // Damage = Firepower + (WeaponSkill / 10) + Margin - Enemy Armour
                      const grossDamage = pStats.firepower + Math.floor(player.skills.weapon / 10) + successMargin;
                      damageToEnemy = Math.max(1, Math.ceil(grossDamage - eStats.armour));
                      log.innerHTML += `<div class="text-blue-400">> DIRECT HIT! Dealt ${damageToEnemy} damage.</div>`;
                  } else {
+                     // Winning a Manoeuvre builds your positional advantage (Cap at 3)
+                     playerAdvantage = Math.min(3, playerAdvantage + 1);
+                     log.innerHTML += `<div class="text-green-400">> YOU WON THE EXCHANGE! (+Advantage)</div>`;
                      log.innerHTML += `<div class="text-blue-400">> PERFECT MANOEUVRE. Superior positioning secured.</div>`;
                  }
              } else {
-                 // Enemy Wins (Cap Advantage at 3)
-                 enemyAdvantage = Math.min(3, enemyAdvantage + 1);
-                 playerAdvantage = 0;
-                 log.innerHTML += `<div class="text-red-400">> ENEMY WON THE EXCHANGE! (Lost Advantage)</div>`;
+                 playerAdvantage = 0; // The loser always loses their positional advantage
                  
                  if (enemyAction === 'attack') {
+                     // Enemy wins an Attack (retains advantage, deals damage)
+                     log.innerHTML += `<div class="text-red-400">> ENEMY WON THE EXCHANGE! (Lost Advantage)</div>`;
+                     
                      // Damage = Firepower + (WeaponSkill / 10) + Margin - Player Armour
                      const grossDamage = eStats.firepower + Math.floor(eStats.weapon / 10) + successMargin;
                      damageToPlayer = Math.max(1, Math.ceil(grossDamage - pStats.armour));
                      log.innerHTML += `<div class="text-red-500 font-bold bg-red-900 bg-opacity-30">> WARNING: HULL HIT! Took ${damageToPlayer} damage.</div>`;
                  } else {
+                     // Enemy wins a Manoeuvre (+1 Advantage)
+                     enemyAdvantage = Math.min(3, enemyAdvantage + 1);
+                     log.innerHTML += `<div class="text-red-400">> ENEMY WON THE EXCHANGE! (Lost Advantage)</div>`;
                      log.innerHTML += `<div class="text-red-400">> ENEMY OUT-MANOEUVRED YOU.</div>`;
                  }
              }
@@ -2005,7 +2013,8 @@
                      const m = equipment.modules[mName];
                      if (m && m.stat === 'handling') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
                  });
-                 const netThrust = stats.baseHandling - totalMass;
+                 htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>Engineering Skill:</span><span>+${stats.bonusEng}</span></div>`;
+                 const netThrust = stats.baseHandling + stats.bonusEng - totalMass;
                  html = `${htmlBreakdown}
                          <div class="flex justify-between text-red-600"><span>Ship Mass:</span><span>-${totalMass}</span></div>
                          <div class="flex justify-between text-gray-600"><span>Net Thrust:</span><span>${netThrust}</span></div>
@@ -2019,6 +2028,7 @@
                      const m = equipment.modules[mName];
                      if (m && m.stat === 'firepower') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
                  });
+                 htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>Engineering Skill:</span><span>+${stats.bonusEng}</span></div>`;
                  html = `${htmlBreakdown}
                          <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multFirepower}</span></div>
                          <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Firepower:</span><span>${stats.firepower}</span></div>`;
@@ -2030,6 +2040,7 @@
                      const m = equipment.modules[mName];
                      if (m && m.stat === 'accuracy') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
                  });
+                 htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>Engineering Skill:</span><span>+${stats.bonusEng}</span></div>`;
                  html = `${htmlBreakdown}
                          <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multAccuracy}</span></div>
                          <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Accuracy:</span><span>${stats.accuracy}</span></div>`;
