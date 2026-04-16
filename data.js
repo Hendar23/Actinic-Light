@@ -19,7 +19,7 @@ const newGameDefaults = {
             weapons: "Weap T1"
         },
         modules: [
-            "Cargo Exp T1" 
+            "T2 FP" 
         ]
     }
 };
@@ -166,7 +166,7 @@ const equipment = {
 // PROCEDURAL GENERATION DATA
 // ==========================================
 
-const TOTAL_ALIEN_PORTRAITS = 13; // Total number of random_alien_XXX.png images
+const TOTAL_ALIEN_PORTRAITS = 14; // Total number of random_alien_XXX.png images
 
 const firstNames = [
     "Frank", "Bobby", "Aaron", "Jason", "Aria", "Jaxon", "Kael", "Lyra", "Zane", "Nova", 
@@ -605,14 +605,9 @@ const stationTypes = {
 // GALAXY MAP
 // ==========================================
 
-
-
-
-
-
-const mapBackgrounds = [
-    { image: "test_area.png", x: 440, y: 500, width: 80, height: 80, alpha: 1 }
-];
+//const mapBackgrounds = [
+//    { image: "test_area.png", x: 440, y: 500, width: 80, height: 80, alpha: 1 }
+//];
 
 const galaxy = [
     {
