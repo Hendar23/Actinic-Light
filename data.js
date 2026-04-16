@@ -19,7 +19,7 @@ const newGameDefaults = {
             weapons: "Weap T1"
         },
         modules: [
-            "T2 FP" 
+            "Cargo Exp T1" 
         ]
     }
 };

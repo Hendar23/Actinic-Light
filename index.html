@@ -87,38 +87,38 @@
                         <p class="text-lg italic text-gray-600" id="ui-ship-desc"></p>
                      </div>
                   </div>
-                  <div class="flex flex-col gap-3 text-xl font-bold uppercase bg-gray-50 p-4 border-2 border-black">
-                     <div>
-                         Integrity: <span id="ui-stat-hull">0 / 0</span>
-                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-hull-base">0</span> + Eng <span id="ui-break-hull-eng">0</span>)</span>
+                  <div class="flex flex-col text-xl font-bold uppercase bg-gray-50 border-2 border-black divide-y-2 divide-gray-300">
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('hull')">
+                         <span class="text-gray-600">Integrity</span> 
+                         <span id="ui-stat-hull">0 / 0</span>
                      </div>
-                     <div>
-                         Jump Range: <span id="ui-stat-jump">0</span>ly
-                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-jump-base">0</span> × <span id="ui-break-jump-mult">0</span>x)</span>
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('jump')">
+                         <span class="text-gray-600">Jump Range</span> 
+                         <span><span id="ui-stat-jump">0</span>ly</span>
                      </div>
-                     <div>
-                         Armour: <span id="ui-stat-armour">0</span>
-                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-armour-base">0</span> × <span id="ui-break-armour-mult">0</span>x)</span>
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('armour')">
+                         <span class="text-gray-600">Armour</span> 
+                         <span id="ui-stat-armour">0</span>
                      </div>
-                     <div>
-                         Handling: <span id="ui-stat-handling">0</span>
-                         <span class="text-sm text-gray-500 italic normal-case ml-1">((Thrust <span id="ui-break-handling-base">0</span> - Mass) × <span id="ui-break-handling-mult">0</span>x)</span>
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('handling')">
+                         <span class="text-gray-600">Handling</span> 
+                         <span id="ui-stat-handling">0</span>
                      </div>
-                     <div>
-                         Firepower: <span id="ui-stat-firepower">0</span>
-                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-firepower-base">0</span> × <span id="ui-break-firepower-mult">0</span>x)</span>
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('firepower')">
+                         <span class="text-gray-600">Firepower</span> 
+                         <span id="ui-stat-firepower">0</span>
                      </div>
-                     <div>
-                         Accuracy: <span id="ui-stat-accuracy">0</span>
-                         <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-accuracy-base">0</span> × <span id="ui-break-accuracy-mult">0</span>x)</span>
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('accuracy')">
+                         <span class="text-gray-600">Accuracy</span> 
+                         <span id="ui-stat-accuracy">0</span>
                      </div>
-                     <div>
-                        Total Mass: <span id="ui-stat-weight-total">0</span> 
-                        <span class="text-sm text-gray-500 italic normal-case ml-1">(Chassis <span id="ui-stat-weight-chassis">0</span> + Eqp <span id="ui-stat-weight-eqp">0</span>)</span>
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('weight')">
+                         <span class="text-gray-600">Total Mass</span> 
+                         <span id="ui-stat-weight-total">0</span>
                      </div>
-                     <div>
-                        Cargo: <span id="ship-cargo-current">0</span> / <span id="ship-cargo-total">0</span>
-                        <span class="text-sm text-gray-500 italic normal-case ml-1">(Base <span id="ui-break-cargo-base">0</span> × <span id="ui-break-cargo-mult">0</span>x)</span>
+                     <div class="flex justify-between items-center p-3 cursor-pointer hover:bg-gray-200 transition-colors" onclick="showStatDetails('cargo')">
+                         <span class="text-gray-600">Cargo</span> 
+                         <span><span id="ship-cargo-current">0</span> / <span id="ship-cargo-total">0</span></span>
                      </div>
                   </div>
                </div>
@@ -1642,24 +1642,9 @@
             
             // --- Inject the weights ---
             document.getElementById('ui-stat-weight-total').innerText = stats.chassisWeight + stats.equipmentWeight;
-            document.getElementById('ui-stat-weight-chassis').innerText = stats.chassisWeight;
-            document.getElementById('ui-stat-weight-eqp').innerText = stats.equipmentWeight;
             
-            // --- NEW: Inject the Stat Breakdowns ---
-            document.getElementById('ui-break-hull-base').innerText = stats.baseHull;
-            document.getElementById('ui-break-hull-eng').innerText = stats.bonusHull;
-            document.getElementById('ui-break-jump-base').innerText = stats.baseJump;
-            document.getElementById('ui-break-jump-mult').innerText = stats.multJump;
-            document.getElementById('ui-break-armour-base').innerText = stats.baseArmour;
-            document.getElementById('ui-break-armour-mult').innerText = stats.multArmour;
-            document.getElementById('ui-break-handling-base').innerText = stats.baseHandling;
-            document.getElementById('ui-break-handling-mult').innerText = stats.multHandling;
-            document.getElementById('ui-break-firepower-base').innerText = stats.baseFirepower;
-            document.getElementById('ui-break-firepower-mult').innerText = stats.multFirepower;
-            document.getElementById('ui-break-accuracy-base').innerText = stats.baseAccuracy;
-            document.getElementById('ui-break-accuracy-mult').innerText = stats.multAccuracy;
-            document.getElementById('ui-break-cargo-base').innerText = stats.baseCargo;
-            document.getElementById('ui-break-cargo-mult').innerText = stats.multCargo;
+            document.getElementById('ship-cargo-current').innerText = totalCargo;
+            document.getElementById('ship-cargo-total').innerText = stats.cargoMax;
             
             document.getElementById('ship-cargo-total').innerText = stats.cargoMax;
             
@@ -1673,9 +1658,13 @@
                 
                 let displayValue = `<span class="italic text-gray-500">EMPTY</span>`;
                 if (itemData) {
-                    // Fixes the weapon bug by checking for firepower if baseValue is missing
-                    const primaryStat = itemData.baseValue !== undefined ? itemData.baseValue : (itemData.firepower || 0);
-                    displayValue = `${itemData.name} (${primaryStat}) <span class="text-sm text-gray-500 font-normal ml-1">[Wt:${itemData.weight || 1}]</span>`;
+                    let statText = "";
+                    if (key === 'weapons') {
+                        statText = `${itemData.firepower || 0}/${itemData.accuracy || 0}`;
+                    } else {
+                        statText = itemData.baseValue !== undefined ? itemData.baseValue : 0;
+                    }
+                    displayValue = `${itemData.name} (${statText}) <span class="text-sm text-gray-500 font-normal ml-1">[Wt:${itemData.weight || 1}]</span>`;
                 }
                 
                 coreHtml += `
@@ -1974,9 +1963,120 @@
              initialPinchDistance = null; 
              if (e.changedTouches.length) handleUp(e.changedTouches[0].clientX, e.changedTouches[0].clientY); 
          }, { passive: false });
+
+         function showStatDetails(statName) {
+             const stats = getShipStats(player.ship);
+             let title = "";
+             let html = "";
+             
+             if (statName === 'hull') {
+                 title = "Integrity";
+                 html = `<div class="flex justify-between text-gray-600"><span>Base Chassis:</span><span>${stats.baseHull}</span></div>
+                         <div class="flex justify-between text-gray-600"><span>Engineering Skill:</span><span>+${stats.bonusHull}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Max Integrity:</span><span>${stats.maxHull}</span></div>`;
+             } else if (statName === 'jump') {
+                 title = "Jump Range";
+                 const eq = equipment.warpDrive[player.ship.core.warpDrive];
+                 let htmlBreakdown = eq ? `<div class="flex justify-between text-gray-600"><span>${eq.name}:</span><span>${eq.baseValue} ly</span></div>` : `<div class="flex justify-between text-gray-600"><span>No Warp Drive:</span><span>0 ly</span></div>`;
+                 player.ship.modules.forEach(mName => {
+                     const m = equipment.modules[mName];
+                     if (m && m.stat === 'jumpRange') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus} ly</span></div>`;
+                 });
+                 html = `${htmlBreakdown}
+                         <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multJump}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Range:</span><span>${stats.jumpRange} ly</span></div>`;
+             } else if (statName === 'armour') {
+                 title = "Armour";
+                 const eq = equipment.armour[player.ship.core.armour];
+                 let htmlBreakdown = eq ? `<div class="flex justify-between text-gray-600"><span>${eq.name}:</span><span>${eq.baseValue}</span></div>` : `<div class="flex justify-between text-gray-600"><span>No Armour:</span><span>0</span></div>`;
+                 player.ship.modules.forEach(mName => {
+                     const m = equipment.modules[mName];
+                     if (m && m.stat === 'armour') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
+                 });
+                 html = `${htmlBreakdown}
+                         <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multArmour}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Armour:</span><span>${stats.armour}</span></div>`;
+             } else if (statName === 'handling') {
+                 title = "Handling";
+                 const totalMass = stats.chassisWeight + stats.equipmentWeight;
+                 const eq = equipment.thrusters[player.ship.core.thrusters];
+                 let htmlBreakdown = eq ? `<div class="flex justify-between text-gray-600"><span>${eq.name}:</span><span>${eq.baseValue}</span></div>` : `<div class="flex justify-between text-gray-600"><span>No Thrusters:</span><span>0</span></div>`;
+                 player.ship.modules.forEach(mName => {
+                     const m = equipment.modules[mName];
+                     if (m && m.stat === 'handling') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
+                 });
+                 const netThrust = stats.baseHandling - totalMass;
+                 html = `${htmlBreakdown}
+                         <div class="flex justify-between text-red-600"><span>Ship Mass:</span><span>-${totalMass}</span></div>
+                         <div class="flex justify-between text-gray-600"><span>Net Thrust:</span><span>${netThrust}</span></div>
+                         <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multHandling}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Handling:</span><span>${stats.handling}</span></div>`;
+             } else if (statName === 'firepower') {
+                 title = "Firepower";
+                 const eq = equipment.weapons[player.ship.core.weapons];
+                 let htmlBreakdown = eq ? `<div class="flex justify-between text-gray-600"><span>${eq.name}:</span><span>${eq.firepower}</span></div>` : `<div class="flex justify-between text-gray-600"><span>No Weapon:</span><span>0</span></div>`;
+                 player.ship.modules.forEach(mName => {
+                     const m = equipment.modules[mName];
+                     if (m && m.stat === 'firepower') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
+                 });
+                 html = `${htmlBreakdown}
+                         <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multFirepower}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Firepower:</span><span>${stats.firepower}</span></div>`;
+             } else if (statName === 'accuracy') {
+                 title = "Accuracy";
+                 const eq = equipment.weapons[player.ship.core.weapons];
+                 let htmlBreakdown = eq ? `<div class="flex justify-between text-gray-600"><span>${eq.name}:</span><span>${eq.accuracy}</span></div>` : `<div class="flex justify-between text-gray-600"><span>No Weapon:</span><span>0</span></div>`;
+                 player.ship.modules.forEach(mName => {
+                     const m = equipment.modules[mName];
+                     if (m && m.stat === 'accuracy') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
+                 });
+                 html = `${htmlBreakdown}
+                         <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multAccuracy}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Accuracy:</span><span>${stats.accuracy}</span></div>`;
+             } else if (statName === 'weight') {
+                 title = "Total Mass";
+                 html = `<div class="flex justify-between text-gray-600"><span>Chassis Weight:</span><span>${stats.chassisWeight}</span></div>
+                         <div class="flex justify-between text-gray-600"><span>Equipment Weight:</span><span>+${stats.equipmentWeight}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Total Mass:</span><span>${stats.chassisWeight + stats.equipmentWeight}</span></div>`;
+             } else if (statName === 'cargo') {
+                 title = "Cargo Capacity";
+                 const eq = equipment.cargoBay[player.ship.core.cargoBay];
+                 let htmlBreakdown = eq ? `<div class="flex justify-between text-gray-600"><span>${eq.name}:</span><span>${eq.baseValue}</span></div>` : `<div class="flex justify-between text-gray-600"><span>No Cargo Bay:</span><span>0</span></div>`;
+                 player.ship.modules.forEach(mName => {
+                     const m = equipment.modules[mName];
+                     if (m && m.stat === 'cargo') htmlBreakdown += `<div class="flex justify-between text-gray-600"><span>${m.name}:</span><span>+${m.flatBonus}</span></div>`;
+                 });
+                 html = `${htmlBreakdown}
+                         <div class="flex justify-between text-gray-600"><span>Chassis Multiplier:</span><span>x${stats.multCargo}</span></div>
+                         <div class="flex justify-between font-bold border-t-2 border-black mt-2 pt-2"><span>Max Capacity:</span><span>${stats.cargoMax}</span></div>`;
+             }
+
+             document.getElementById('stat-modal-title').innerText = title;
+             document.getElementById('stat-modal-desc').innerHTML = html;
+             
+             const modal = document.getElementById('stat-modal');
+             modal.classList.remove('hidden');
+             modal.classList.add('flex');
+         }
+         
+         function closeStatModal() {
+             const modal = document.getElementById('stat-modal');
+             modal.classList.add('hidden');
+             modal.classList.remove('flex');
+         }
+
          window.addEventListener('resize', renderMap);
          checkExistingSave();
       </script> 
+
+      <div id="stat-modal" class="fixed inset-0 bg-white/90 z-[150] hidden flex-col justify-center items-center p-4">
+         <div class="bg-gray-50 border-4 border-black p-6 max-w-sm w-full shadow-2xl">
+            <h3 id="stat-modal-title" class="text-3xl font-bold uppercase mb-4 border-b-4 border-black pb-2">Title</h3>
+            <div id="stat-modal-desc" class="text-lg uppercase mb-6 space-y-2">Desc</div>
+            <button class="btn !mb-0" onclick="closeStatModal()">CLOSE</button>
+         </div>
+      </div>
+
       <div id="toast-notification" class="fixed top-0 left-1/2 transform -translate-x-1/2 -translate-y-full transition-transform duration-300 ease-in-out z-[200] p-4 w-full max-w-md pointer-events-none">
          <div class="bg-black text-white border-4 border-white p-4 shadow-2xl text-center pointer-events-auto">
             <h3 id="toast-title" class="text-2xl font-bold uppercase mb-1"></h3>
