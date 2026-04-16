@@ -287,6 +287,10 @@
                          // --- Fallback stats just in case you forget to add them in data.js ---
                          const defaultStats = { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 };
                          
+                         let finalStats = spawn.stats ? JSON.parse(JSON.stringify(spawn.stats)) : defaultStats;
+                         // Calculate an XP bounty based on their combat stats
+                         let shipXp = Math.floor((finalStats.hull + finalStats.firepower + finalStats.piloting) / 2);
+                         
                          spawnedNPCs.push({
                              name: finalName,
                              shipType: spawn.shipType,
@@ -294,7 +298,8 @@
                              encounter: spawn.encounter,
                              isHostile: spawn.isHostile,
                              image: finalImage,
-                             stats: spawn.stats ? JSON.parse(JSON.stringify(spawn.stats)) : defaultStats
+                             stats: finalStats,
+                             xpValue: shipXp
                          });
                      }
                  });
@@ -457,6 +462,7 @@
              // Reduced the base fee from 100 to 10, and the distance multiplier from 5 to 0.5 (1/10th the old payout scale).
              const totalDistance = distToPickup + totalTripDist;
              const reward = Math.round(10 + (totalDistance * 0.5));
+             const xpReward = Math.round(5 + (totalDistance * 0.25)); // XP scales with distance too
              
              const client = generateRandomCharacter();
              
@@ -467,7 +473,7 @@
                  status: 'pickup', 
                  pickupSysId: pickupSys.id, pickupSysName: pickupSys.name, pickupPoiName: pickupPoi.name,
                  dropoffSysId: dropoffSys.id, dropoffSysName: dropoffSys.name, dropoffPoiName: dropoffPoi.name,
-                 client: client, reward: reward, pickupText: pickLines[Math.floor(Math.random() * pickLines.length)], dropoffText: dropLines[Math.floor(Math.random() * dropLines.length)]
+                 client: client, reward: reward, xpReward: xpReward, pickupText: pickLines[Math.floor(Math.random() * pickLines.length)], dropoffText: dropLines[Math.floor(Math.random() * dropLines.length)]
              };
          }
          
@@ -550,6 +556,8 @@
          
          function completeTaxiDropoff() {
               player.credits += player.activeTaxi.reward;
+              player.xp += player.activeTaxi.xpReward;
+              showXpPopup(player.activeTaxi.xpReward, "Fare Complete");
               player.tasks['taxi_mission'] = 'completed';
               showTaskPopup("TASK COMPLETE", quests['taxi_mission']);
               player.activeTaxi = null;
@@ -564,12 +572,13 @@
          
              player = { 
                  credits: newGameDefaults.startingCredits, 
+                 xp: 0,
                  cargo: {}, 
                  flags: {}, 
                  tasks: {},
                  skills: JSON.parse(JSON.stringify(newGameDefaults.startingSkills)),
                  ship: startingShipClone
-             }; 
+             };
          
          const initialStats = getShipStats(player.ship);
              player.ship.currentHull = initialStats.maxHull;
@@ -698,7 +707,25 @@
          }
          
          let toastTimeout; // Keeps track of the timer so multiple popups don't glitch
+         let xpToastTimeout; 
          
+         function showXpPopup(xpAmount, sourceText) {
+             const toast = document.getElementById('xp-toast');
+             const descEl = document.getElementById('xp-toast-desc');
+             
+             descEl.innerText = `+${xpAmount} XP (${sourceText})`;
+             
+             toast.classList.remove('-translate-y-[200%]');
+             toast.classList.add('translate-y-0'); 
+             
+             if (xpToastTimeout) clearTimeout(xpToastTimeout);
+             
+             xpToastTimeout = setTimeout(() => {
+                 toast.classList.remove('translate-y-0');
+                 toast.classList.add('-translate-y-[200%]');
+             }, 3000);
+         }
+
          function showTaskPopup(headerText, questData) {
              if (!questData) return;
          
@@ -991,8 +1018,16 @@
                  showTaskPopup("NEW TASK ALERTS", quests[startTask]);
              }
              if (completeTask) {
+                 const q = quests[completeTask];
                  player.tasks[completeTask] = "completed";
-                 showTaskPopup("TASK COMPLETE", quests[completeTask]);
+                 
+                 // If the quest has a defined XP reward, award it and show the popup
+                 if (q && q.xpReward) {
+                     player.xp += q.xpReward;
+                     showXpPopup(q.xpReward, "Quest Complete");
+                 }
+                 
+                 showTaskPopup("TASK COMPLETE", q);
              }
          
              // --- NEW: If the dialogue option triggers a fight, go to the arena! ---
@@ -1200,7 +1235,9 @@
              
              // 8. Check for Destruction
              if (currentEnemy.currentHull <= 0) {
-                 log.innerHTML += `<div class="text-yellow-400 font-bold text-xl mt-2">> TARGET DESTROYED.</div>`;
+                 player.xp += currentEnemy.xpValue; // Award the XP
+                 showXpPopup(currentEnemy.xpValue, "Ship Destroyed");
+                 log.innerHTML += `<div class="text-yellow-400 font-bold text-xl mt-2">> TARGET DESTROYED. [+${currentEnemy.xpValue} XP]</div>`;
                  const idx = spawnedNPCs.findIndex(n => n === currentEnemy);
                  if (idx > -1) spawnedNPCs.splice(idx, 1);
                  
@@ -1752,13 +1789,18 @@
 
              return total;
          }
-
-         function renderPlayerTab() {
+	function renderPlayerTab() {
              const netWorth = calculateNetWorth();
              let html = `
-                 <div class="mb-8 border-b-4 border-black pb-4 flex items-baseline gap-3">
-                     <div class="text-xl italic text-gray-500 uppercase">Net Worth:</div>
-                     <div class="text-2xl font-bold">${netWorth.toLocaleString()} CR</div>
+                 <div class="mb-8 border-b-4 border-black pb-4 flex flex-col gap-2">
+                     <div class="flex items-baseline gap-3">
+                         <div class="text-xl italic text-gray-500 uppercase">Net Worth:</div>
+                         <div class="text-2xl font-bold">${netWorth.toLocaleString()} CR</div>
+                     </div>
+                     <div class="flex items-baseline gap-3">
+                         <div class="text-xl italic text-gray-500 uppercase">Total XP:</div>
+                         <div class="text-2xl font-bold text-blue-600">${player.xp ? player.xp.toLocaleString() : 0}</div>
+                     </div>
                  </div>
                  
                  <div class="max-w-md">
@@ -2099,6 +2141,13 @@
          <div class="bg-black text-white border-4 border-white p-4 shadow-2xl text-center pointer-events-auto">
             <h3 id="toast-title" class="text-2xl font-bold uppercase mb-1"></h3>
             <p id="toast-desc" class="text-lg italic text-gray-300"></p>
+         </div>
+      </div>
+
+      <div id="xp-toast" class="fixed top-24 left-1/2 transform -translate-x-1/2 -translate-y-[200%] transition-transform duration-300 ease-in-out z-[190] p-4 w-full max-w-sm pointer-events-none">
+         <div class="bg-blue-600 text-white border-4 border-black p-3 shadow-2xl text-center pointer-events-auto">
+            <h3 class="text-xl font-bold uppercase mb-1">XP GAINED</h3>
+            <p id="xp-toast-desc" class="text-lg font-bold text-blue-100"></p>
          </div>
       </div>
    </body>
