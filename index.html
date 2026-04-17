@@ -1270,7 +1270,7 @@
                  document.getElementById('battle-img-enemy').src = 'assets/kaboom.png';
                  
                  player.xp += currentEnemy.xpValue; // Award the XP
-                 showXpPopup(currentEnemy.xpValue, "Ship Destroyed");
+                 showXpPopup(currentEnemy.xpValue, "Enemy Destroyed");
                  log.innerHTML += `<div class="text-yellow-400 font-bold text-xl mt-2">> TARGET DESTROYED. [+${currentEnemy.xpValue} XP]</div>`;
                  const idx = spawnedNPCs.findIndex(n => n === currentEnemy);
                  if (idx > -1) spawnedNPCs.splice(idx, 1);
@@ -2076,7 +2076,7 @@
                              <span class="text-gray-600">Piloting</span>
                              <div class="flex items-center gap-4">
                                  <span>${player.skills.piloting}</span>
-                                 <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('piloting')" ${pilDisabled}>+1 [${pilCost} XP]</button>
+                                 <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('piloting')" ${pilDisabled}>[${pilCost} XP]</button>
                              </div>
                          </div>
                          
@@ -2084,7 +2084,7 @@
                              <span class="text-gray-600">Weaponry</span>
                              <div class="flex items-center gap-4">
                                  <span>${player.skills.weapon}</span>
-                                 <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('weapon')" ${wepDisabled}>+1 [${wepCost} XP]</button>
+                                 <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('weapon')" ${wepDisabled}>[${wepCost} XP]</button>
                              </div>
                          </div>
                          
@@ -2092,7 +2092,7 @@
                              <span class="text-gray-600">Engineering</span>
                              <div class="flex items-center gap-4">
                                  <span>${player.skills.engineer}</span>
-                                 <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('engineer')" ${engDisabled}>+1 [${engCost} XP]</button>
+                                 <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('engineer')" ${engDisabled}>[${engCost} XP]</button>
                              </div>
                          </div>
                          
