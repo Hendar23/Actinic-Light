@@ -537,6 +537,7 @@ const stationTypes = {
         consumes: {"Packaged Food": "Low", "Machine Parts": "Low" }
     },
     "Plant Processing Facility": {
+	defaultImage: "station006.png",
         description: "Sterile corridors hum with food packaging machinery.",
         produces: ["Packaged Food"],
         consumes: { "Plants": "High", "Machine Parts": "Low" }
@@ -578,6 +579,7 @@ const stationTypes = {
         consumes: { "Packaged Food": "Low", "Machine Parts": "Low" }
     },
     "Metal Ore Refinery": {
+	defaultImage: "station004.png",
         description: "The deafening roar of smelting arrays reverberates in the decking.",
         produces: ["Copper Bars", "Iron Bars", "Platinum Bars", "Gold Bars"],
         consumes: { "Copper Ore": "High", "Iron Ore": "High", "Platinum Ore": "High", "Gold Ore": "High", "Packaged Food": "Low", "Machine Parts": "Low" }
