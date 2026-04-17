@@ -167,7 +167,7 @@ const equipment = {
 // PROCEDURAL GENERATION DATA
 // ==========================================
 
-const TOTAL_ALIEN_PORTRAITS = 14; // Total number of random_alien_XXX.png images
+const TOTAL_ALIEN_PORTRAITS = 16; // Total number of random_alien_XXX.png images
 
 const firstNames = [
     "Frank", "Bobby", "Aaron", "Jason", "Aria", "Jaxon", "Kael", "Lyra", "Zane", "Nova", 
