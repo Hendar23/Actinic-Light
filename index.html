@@ -243,6 +243,7 @@
          let spawnedNPCs = []; 
          let localEncounterMemory = {};
          let currentEnemy = null;
+	 let pendingEquip = null;
          let playerAdvantage = 0;
          let enemyAdvantage = 0;
          
@@ -1715,21 +1716,206 @@
          }
 
 	function renderOutfitter() {
-		// PLACEHOLDER!!!!
              let html = `
              <div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
                  <h3 class="text-3xl font-bold uppercase">OUTFITTER</h3>
                  <button class="btn !w-auto !mb-0 !py-2 !px-4 !text-xl" onclick="setLocalView('menu')">◀ BACK</button>
              </div>
+             <div id="outfitter-container" class="overflow-y-auto pb-8 space-y-8">`;
+
+             // 1. STORAGE SECTION
+             if (player.storage && player.storage.length > 0) {
+                 html += `<div><h4 class="text-2xl font-bold uppercase bg-black text-white p-2 mb-2">Your Storage</h4><div class="space-y-2">`;
+                 player.storage.forEach((itemName, index) => {
+                     let itemCat = getEquipmentCategory(itemName);
+                     if(itemCat) {
+                         const itemData = equipment[itemCat === 'module' ? 'modules' : itemCat][itemName];
+                         html += `<div class="flex justify-between items-center border-2 border-black bg-gray-50 p-2">
+                             <div>
+                                 <div class="font-bold text-lg">${itemData.name}</div>
+                                 <div class="text-sm text-gray-600">${itemCat.toUpperCase()}</div>
+                             </div>
+                             <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${itemCat}', '${itemName}', 0, true, ${index})">INSTALL</button>
+                         </div>`;
+                     }
+                 });
+                 html += `</div></div>`;
+             }
+
+             // 2. MARKET SECTION
+             html += `<div><h4 class="text-2xl font-bold uppercase bg-black text-white p-2 mb-2">Available Equipment</h4>`;
              
-             <div class="bg-gray-50 border-4 border-black p-8 text-center text-gray-500 italic text-xl">
-                 PLACEHOLDER
-             </div>
-             `;
+             const categories = [
+                 { id: 'warpDrive', name: 'Warp Drives' },
+                 { id: 'armour', name: 'Armour' },
+                 { id: 'cargoBay', name: 'Cargo Bays' },
+                 { id: 'thrusters', name: 'Thrusters' },
+                 { id: 'weapons', name: 'Weapons' },
+                 { id: 'modules', name: 'Modules' }
+             ];
+
+             categories.forEach(cat => {
+                 html += `<h5 class="text-xl font-bold text-gray-700 mt-4 mb-2 border-b border-gray-300">${cat.name.toUpperCase()}</h5><div class="space-y-2">`;
+                 for (const [itemName, itemData] of Object.entries(equipment[cat.id])) {
+                     // Check if player already has this equipped
+                     const isCoreEquipped = player.ship.core[cat.id] === itemName;
+                     const isModEquipped = cat.id === 'modules' && player.ship.modules.includes(itemName);
+                     const isEquipped = isCoreEquipped || isModEquipped;
+                     
+                     const price = itemData.price || 1000;
+                     const canAfford = player.credits >= price;
+                     
+                     html += `<div class="flex justify-between items-center border-2 border-black bg-white p-2 ${isEquipped ? 'opacity-50' : ''}">
+                         <div>
+                             <div class="font-bold text-lg">${itemData.name}</div>
+                             <div class="text-sm italic text-gray-600">${itemData.description}</div>
+                         </div>
+                         <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${cat.id === 'modules' ? 'module' : cat.id}', '${itemName}', ${price}, false)" ${!canAfford || isEquipped ? 'disabled' : ''}>
+                             ${isEquipped ? 'EQUIPPED' : `BUY [${price} CR]`}
+                         </button>
+                     </div>`;
+                 }
+                 html += `</div>`;
+             });
+
+             html += `</div></div>`;
              return html;
          }
+
+	function getEquipmentCategory(itemName) {
+             if(equipment.warpDrive[itemName]) return 'warpDrive';
+             if(equipment.armour[itemName]) return 'armour';
+             if(equipment.cargoBay[itemName]) return 'cargoBay';
+             if(equipment.thrusters[itemName]) return 'thrusters';
+             if(equipment.weapons[itemName]) return 'weapons';
+             if(equipment.modules[itemName]) return 'module';
+             return null;
+         }
+
+         function startEquipProcess(category, itemName, price, fromStorage, storageIndex = -1) {
+             pendingEquip = { category, itemName, price, fromStorage, storageIndex, slotIndex: -1, oldItem: null };
+             
+             if (category === 'module') {
+                 const hullData = shipHulls[player.ship.hull];
+                 const maxModules = hullData.modularSlots;
+                 
+                 // Find an empty slot if one exists
+                 let emptySlotIndex = -1;
+                 for(let i = 0; i < maxModules; i++) {
+                     if (!player.ship.modules[i]) {
+                         emptySlotIndex = i;
+                         break;
+                     }
+                 }
+                 
+                 if (emptySlotIndex !== -1) {
+                     // We have an empty slot, install immediately!
+                     pendingEquip.slotIndex = emptySlotIndex;
+                     executeEquipmentChange(); 
+                 } else {
+                     // All slots full, ask user which to replace
+                     showModuleSwapModal();
+                 }
+             } else {
+                 // It's a Core component, check if we are replacing something
+                 const oldItem = player.ship.core[category];
+                 if (oldItem) {
+                     pendingEquip.oldItem = oldItem;
+                     showTradeInModal();
+                 } else {
+                     executeEquipmentChange();
+                 }
+             }
+         }
+
+         function showModuleSwapModal() {
+             const list = document.getElementById('module-swap-list');
+             let html = '';
+             player.ship.modules.forEach((modName, index) => {
+                 const modData = equipment.modules[modName];
+                 html += `<button class="btn !mb-2 !text-lg" onclick="selectModuleToReplace(${index}, '${modName}')">Replace: ${modData.name}</button>`;
+             });
+             list.innerHTML = html;
+             
+             document.getElementById('module-swap-modal').classList.remove('hidden');
+             document.getElementById('module-swap-modal').classList.add('flex');
+         }
+
+         function closeModuleSwap() {
+             document.getElementById('module-swap-modal').classList.add('hidden');
+             document.getElementById('module-swap-modal').classList.remove('flex');
+             pendingEquip = null;
+         }
+
+         function selectModuleToReplace(index, oldModName) {
+             // Hide the modal visually without triggering the cancel/wipe logic
+             document.getElementById('module-swap-modal').classList.add('hidden');
+             document.getElementById('module-swap-modal').classList.remove('flex');
+             
+             pendingEquip.slotIndex = index;
+             pendingEquip.oldItem = oldModName;
+             showTradeInModal();
+         }
+
+         function showTradeInModal() {
+             const oldItemData = pendingEquip.category === 'module' ? equipment.modules[pendingEquip.oldItem] : equipment[pendingEquip.category][pendingEquip.oldItem];
+             const tradeInValue = Math.floor((oldItemData.price || 1000) / 2);
+             pendingEquip.tradeInValue = tradeInValue;
+             
+             document.getElementById('trade-in-desc').innerHTML = `You are replacing your <strong>${oldItemData.name}</strong>.<br>What would you like to do with it?`;
+             document.getElementById('btn-trade-in').innerText = `TRADE IN [+${tradeInValue} CR]`;
+             
+             document.getElementById('trade-in-modal').classList.remove('hidden');
+             document.getElementById('trade-in-modal').classList.add('flex');
+         }
+
+         function closeTradeIn() {
+             document.getElementById('trade-in-modal').classList.add('hidden');
+             document.getElementById('trade-in-modal').classList.remove('flex');
+             pendingEquip = null;
+         }
+
+         function finalizeEquipmentChange(action) {
+             // Hide the modal visually without triggering the cancel/wipe logic
+             document.getElementById('trade-in-modal').classList.add('hidden');
+             document.getElementById('trade-in-modal').classList.remove('flex');
+             
+             if (action === 'trade') {
+                 player.credits += pendingEquip.tradeInValue;
+             } else if (action === 'store') {
+                 if(!player.storage) player.storage = []; 
+                 player.storage.push(pendingEquip.oldItem);
+             }
+             executeEquipmentChange();
+         }
+
+         function executeEquipmentChange() {
+             // Deduct cost and remove from storage if applicable
+             if (pendingEquip.fromStorage) {
+                 player.storage.splice(pendingEquip.storageIndex, 1);
+             } else {
+                 player.credits -= pendingEquip.price;
+             }
+             
+             // Install the item
+             if (pendingEquip.category === 'module') {
+                 player.ship.modules[pendingEquip.slotIndex] = pendingEquip.itemName;
+             } else {
+                 player.ship.core[pendingEquip.category] = pendingEquip.itemName;
+             }
+             
+             // Ensure ship hull doesn't exceed new max hull if armour changed
+             const newStats = getShipStats(player.ship);
+             if (player.ship.currentHull > newStats.maxHull) {
+                 player.ship.currentHull = newStats.maxHull;
+             }
+             
+             pendingEquip = null;
+             saveGame();
+             updateUI();
+         }
          
-         function updateShipTabUI(totalCargo) { 
+         function updateShipTabUI(totalCargo) {
             const stats = getShipStats(player.ship);
             const hullData = shipHulls[player.ship.hull];
             
@@ -2251,6 +2437,25 @@
       <div id="xp-toast" class="fixed top-40 left-1/2 transform -translate-x-1/2 -translate-y-[400%] transition-transform duration-300 ease-in-out z-[190] p-4 w-full max-w-sm pointer-events-none">
          <div class="bg-blue-600 text-white border-4 border-black p-3 shadow-2xl text-center pointer-events-auto">
             <p id="xp-toast-desc" class="text-lg font-bold text-blue-100"></p>
+         </div>
+      </div>
+	<div id="module-swap-modal" class="fixed inset-0 bg-white/90 z-[160] hidden flex-col justify-center items-center p-4">
+         <div class="bg-gray-50 border-4 border-black p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-2xl font-bold uppercase mb-4 border-b-4 border-black pb-2">Select Module to Replace</h3>
+            <div id="module-swap-list" class="space-y-2 mb-4"></div>
+            <button class="btn !bg-gray-300" onclick="closeModuleSwap()">CANCEL</button>
+         </div>
+      </div>
+
+      <div id="trade-in-modal" class="fixed inset-0 bg-white/90 z-[160] hidden flex-col justify-center items-center p-4">
+         <div class="bg-gray-50 border-4 border-black p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-2xl font-bold uppercase mb-2 text-center border-b-4 border-black pb-2">Equipment Replacement</h3>
+            <p id="trade-in-desc" class="text-lg text-center mb-6 mt-4">You are replacing [OLD].</p>
+            <div class="space-y-4">
+               <button class="btn !bg-green-100 !border-green-600" id="btn-trade-in" onclick="finalizeEquipmentChange('trade')">TRADE IN [+0 CR]</button>
+               <button class="btn !bg-blue-100 !border-blue-600" onclick="finalizeEquipmentChange('store')">SEND TO STORAGE</button>
+               <button class="btn !bg-gray-300" onclick="closeTradeIn()">CANCEL</button>
+            </div>
          </div>
       </div>
    </body>
