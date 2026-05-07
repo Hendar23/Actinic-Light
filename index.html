@@ -687,6 +687,9 @@
          }
          
          function switchTab(tabId) {
+             // --- Prevent escaping encounters! ---
+             if (localView === 'encounter' && tabId !== 'battle') return; 
+             
              activeTab = tabId;
              
              if (currentPoi && currentPoi.type === 'Encounter') {
@@ -1396,6 +1399,21 @@
             updateShipTabUI(totalCargo);
             renderPlayerTab();
             updateTasksUI();
+         
+             // --- Visually disable navigation during encounters ---
+             const inEncounter = (localView === 'encounter');
+             ['btn-map', 'btn-local', 'btn-ship', 'btn-player', 'btn-tasks'].forEach(id => {
+                 const btn = document.getElementById(id);
+                 if (btn) {
+                     if (inEncounter) {
+                         btn.style.pointerEvents = 'none';
+                         btn.style.opacity = '0.3';
+                     } else {
+                         btn.style.pointerEvents = 'auto';
+                         btn.style.opacity = '1';
+                     }
+                 }
+             });
          }
          
          function renderPoiList() {
@@ -1738,7 +1756,71 @@
              return html;
          }
 
-	function renderOutfitter() {
+	
+         function getEquipmentStatString(cat, itemData) {
+             let stats = [];
+             if (itemData.baseValue !== undefined) {
+                 let statName = cat === 'warpDrive' ? 'Jump' : cat === 'armour' ? 'Armour' : cat === 'cargoBay' ? 'Cargo' : cat === 'thrusters' ? 'Thrust' : 'Value';
+                 stats.push(`${itemData.baseValue} ${statName}`);
+             }
+             if (itemData.firepower !== undefined) stats.push(`${itemData.firepower} FP`);
+             if (itemData.accuracy !== undefined) stats.push(`${itemData.accuracy} ACC`);
+             if (itemData.stat !== undefined) {
+                 let sName = itemData.stat === 'jumpRange' ? 'Jump' : itemData.stat === 'cargo' ? 'Cargo' : itemData.stat === 'handling' ? 'Handling' : itemData.stat === 'firepower' ? 'FP' : itemData.stat === 'accuracy' ? 'ACC' : itemData.stat;
+                 stats.push(`+${itemData.flatBonus} ${sName.toUpperCase()}`);
+             }
+             if (itemData.weight !== undefined) stats.push(`${itemData.weight} WT`);
+             return stats.join(' | ');
+         }
+
+         function getEquipmentDiffString(cat, itemName) {
+             let curStats = getShipStats(player.ship);
+             let simShip = JSON.parse(JSON.stringify(player.ship));
+
+             if (cat === 'module' || cat === 'modules') {
+                 let hullData = shipHulls[simShip.hull];
+                 let placed = false;
+                 for (let i = 0; i < hullData.modularSlots; i++) {
+                     if (!simShip.modules[i]) {
+                         simShip.modules[i] = itemName;
+                         placed = true; break;
+                     }
+                 }
+                 if (!placed && hullData.modularSlots > 0) {
+                     simShip.modules[0] = itemName;
+                 } else if (!placed) {
+                     return '<span class="text-red-500">(No slots)</span>';
+                 }
+             } else {
+                 simShip.core[cat] = itemName;
+             }
+
+             let newStats = getShipStats(simShip);
+             let diffs = [];
+
+             const compare = [
+                 { key: 'jumpRange', label: 'JMP' },
+                 { key: 'armour', label: 'ARM' },
+                 { key: 'cargoMax', label: 'CRG' },
+                 { key: 'handling', label: 'HND' },
+                 { key: 'firepower', label: 'FP' },
+                 { key: 'accuracy', label: 'ACC' }
+             ];
+
+             compare.forEach(c => {
+                 let diff = newStats[c.key] - curStats[c.key];
+                 if (diff !== 0) {
+                     let color = diff > 0 ? 'text-green-600' : 'text-red-600';
+                     let sign = diff > 0 ? '+' : '';
+                     diffs.push(`<span class="${color} font-bold">${sign}${diff} ${c.label}</span>`);
+                 }
+             });
+
+             if (diffs.length === 0) return '<span class="text-gray-400 font-bold">(+0)</span>';
+             return `[ ${diffs.join(' | ')} ]`;
+         }
+
+         function renderOutfitter() {
              let html = `
              <div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
                  <h3 class="text-3xl font-bold uppercase">OUTFITTER</h3>
@@ -1756,7 +1838,7 @@
                          html += `<div class="flex justify-between items-center border-2 border-black bg-gray-50 p-2">
                              <div>
                                  <div class="font-bold text-lg">${itemData.name}</div>
-                                 <div class="text-sm text-gray-600">${itemCat.toUpperCase()}</div>
+                                 <div class="text-sm text-gray-800">${getEquipmentStatString(itemCat, itemData)} <span class="ml-2">${getEquipmentDiffString(itemCat, itemName)}</span></div>
                              </div>
                              <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${itemCat}', '${itemName}', 0, true, ${index})">INSTALL</button>
                          </div>`;
@@ -1791,7 +1873,7 @@
                      html += `<div class="flex justify-between items-center border-2 border-black bg-white p-2 ${isEquipped ? 'opacity-50' : ''}">
                          <div>
                              <div class="font-bold text-lg">${itemData.name}</div>
-                             <div class="text-sm italic text-gray-600">${itemData.description}</div>
+                             <div class="text-sm text-gray-800">${getEquipmentStatString(cat.id, itemData)} <span class="ml-2">${isEquipped ? '' : getEquipmentDiffString(cat.id, itemName)}</span></div>
                          </div>
                          <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${cat.id === 'modules' ? 'module' : cat.id}', '${itemName}', ${price}, false)" ${!canAfford || isEquipped ? 'disabled' : ''}>
                              ${isEquipped ? 'EQUIPPED' : `BUY [${price} CR]`}
