@@ -574,10 +574,27 @@
               player.activeTaxi = null;
          }
          
-         function startNewGame() {
+         function closeNewGameModal() {
+             const modal = document.getElementById('new-game-modal');
+             if (modal) {
+                 modal.classList.add('hidden');
+                 modal.classList.remove('flex');
+             }
+         }
+
+         function startNewGame(force = false) {
              if (typeof galaxy === 'undefined' || typeof newGameDefaults === 'undefined') {
                  return alert("data.js missing or incomplete!");
              }
+             
+             // --- Prevent accidental save wipes ---
+             if (!force && localStorage.getItem('spaceTraderSaveV4')) {
+                 document.getElementById('new-game-modal').classList.remove('hidden');
+                 document.getElementById('new-game-modal').classList.add('flex');
+                 return;
+             }
+             
+             closeNewGameModal();
              
              const startingShipClone = JSON.parse(JSON.stringify(newGameDefaults.startingShip));
          
@@ -2604,6 +2621,16 @@
                <button class="btn !bg-green-100 !border-green-600" id="btn-trade-in" onclick="finalizeEquipmentChange('trade')">TRADE IN [+0 CR]</button>
                <button id="btn-store" class="btn !bg-blue-100 !border-blue-600" onclick="finalizeEquipmentChange('store')">SEND TO STORAGE</button>
                <button class="btn !bg-gray-300" onclick="closeTradeIn()">CANCEL</button>
+            </div>
+         </div>
+      </div>
+      <div id="new-game-modal" class="fixed inset-0 bg-white/90 z-[200] hidden flex-col justify-center items-center p-4">
+         <div class="bg-gray-50 border-4 border-black p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-2xl font-bold uppercase mb-2 text-center border-b-4 border-black pb-2 text-red-600">WARNING</h3>
+            <p class="text-lg text-center mb-6 mt-4">Are you sure you want to start a New Game?<br><br>Your existing save file will be <strong>overwritten</strong>.</p>
+            <div class="space-y-4">
+               <button class="btn !bg-red-100 !border-red-600 !text-red-800" onclick="startNewGame(true)">YES, OVERWRITE SAVE</button>
+               <button class="btn !bg-gray-300" onclick="closeNewGameModal()">CANCEL</button>
             </div>
          </div>
       </div>
