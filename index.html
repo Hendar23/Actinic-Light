@@ -1877,8 +1877,12 @@
              ];
 
              categories.forEach(cat => {
-                 html += `<h5 class="text-xl font-bold text-gray-700 mt-4 mb-2 border-b border-gray-300">${cat.name.toUpperCase()}</h5><div class="space-y-2">`;
+                 let itemsHtml = '';
                  for (const [itemName, itemData] of Object.entries(equipment[cat.id])) {
+                     // --- Specific Inventory Check ---
+                     if (currentPoi && currentPoi.inventory && currentPoi.inventory.length > 0) {
+                         if (!currentPoi.inventory.includes(itemName)) continue;
+                     }
                      // Check if player already has this equipped
                      const isCoreEquipped = player.ship.core[cat.id] === itemName;
                      const isModEquipped = cat.id === 'modules' && player.ship.modules.includes(itemName);
@@ -1918,7 +1922,7 @@
                          btnText = `BUY w/ TRADE [${effectiveCost} CR]`;
                      }
 
-                     html += `<div class="flex justify-between items-center border-2 border-black bg-white p-2 ${isEquipped ? 'opacity-50' : ''}">
+                     itemsHtml += `<div class="flex justify-between items-center border-2 border-black bg-white p-2 ${isEquipped ? 'opacity-50' : ''}">
                          <div>
                              <div class="font-bold text-lg">${itemData.name}</div>
                              <div class="text-sm text-gray-800">${getEquipmentStatString(cat.id, itemData)} <span class="ml-2">${isEquipped ? '' : getEquipmentDiffString(cat.id, itemName)}</span></div>
@@ -1928,7 +1932,9 @@
                          </button>
                      </div>`;
                  }
-                 html += `</div>`;
+                 if (itemsHtml !== '') {
+                     html += `<h5 class="text-xl font-bold text-gray-700 mt-4 mb-2 border-b border-gray-300">${cat.name.toUpperCase()}</h5><div class="space-y-2">${itemsHtml}</div>`;
+                 }
              });
 
              html += `</div></div>`;
@@ -2626,7 +2632,6 @@
       </div>
       <div id="new-game-modal" class="fixed inset-0 bg-white/90 z-[200] hidden flex-col justify-center items-center p-4">
          <div class="bg-gray-50 border-4 border-black p-6 max-w-sm w-full shadow-2xl">
-            <h3 class="text-2xl font-bold uppercase mb-2 text-center border-b-4 border-black pb-2 text-red-600">WARNING</h3>
             <p class="text-lg text-center mb-6 mt-4">Are you sure you want to start a New Game?<br><br>Your existing save file will be <strong>overwritten</strong>.</p>
             <div class="space-y-4">
                <button class="btn !bg-red-100 !border-red-600 !text-red-800" onclick="startNewGame(true)">YES, OVERWRITE SAVE</button>

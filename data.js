@@ -653,7 +653,7 @@ const galaxy = [
             { name: "Martian Farm Hub", type: "Plant Farm" },
             { name: "Sol Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Frank"], requiresFlag: "knows_frank", description: "Cheap but not cheerful." },
             { name: "Sol Orbital Mechanics", type: "Repair Station", description: "", repairCost: 10 },
-            { name: "Bits 'N Bobs", type: "Outfitter" }
+            { name: "Bits 'N Bobs", type: "Outfitter", inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC"] }
         ]
     },
     {
@@ -761,6 +761,7 @@ const galaxy = [
         ]
     }
 ];
+
 
 
 
