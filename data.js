@@ -166,7 +166,7 @@ const equipment = {
 // PROCEDURAL GENERATION DATA
 // ==========================================
 
-const TOTAL_ALIEN_PORTRAITS = 20; // Total number of random_alien_XXX.png images
+const TOTAL_ALIEN_PORTRAITS = 21; // Total number of random_alien_XXX.png images
 
 const firstNames = [
     "Frank", "Bobby", "Aaron", "Jason", "Aria", "Jaxon", "Kael", "Lyra", "Zane", "Nova", 
@@ -583,6 +583,7 @@ const stationTypes = {
         consumes: { "Packaged Food": "Low", "Machine Parts": "Low" }
     },
     "Platinum Mine": {
+	defaultImage: "mine004.png",
         description: "Automated drills mine precious platinum.",
         produces: ["Platinum Ore"],
         consumes: { "Packaged Food": "Low", "Machine Parts": "Low" }
@@ -692,23 +693,25 @@ const galaxy = [
         ]
     },
     {
-        id: 0, name: "Herbies Star", x: 537, y: 550,
+        id: 0, name: "Herbies Star", x: 538, y: 550,
         description: "The only habitable planet, Leonton is known for it's large predators, petty crime, and poverty.",
         npcSpawns: [
-            { name: "Leonton Traffic", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+            { name: "Taxi", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Trader", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Leonton Traffic", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Leonton Traffic", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
-            { name: "Leonton Traffic", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
-                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
-            { name: "Leonton Traffic", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
-                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
-            { name: "Leonton Traffic", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+            { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Desperate Pirate", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "herb01", chance: 0.1, isHostile: true,
-                stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 5, weapon: 5 } }
+                stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 5, weapon: 5 } },
+            { name: "Bounty hunter", shipType: "Midgeito", shipImage: "ship_midgeito.png", encounter: "civilian001", chance: 0.5,
+                stats: { hull: 12, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
             { name: "Leonton Spaceport", type: "Trade Hub", image: "port003.png", description: "Smells like starship fuel, cheap narcotics, and desperation." },
@@ -731,8 +734,35 @@ const galaxy = [
             { name: "Roovy Farms", type: "Plant Farm", description: "" },
             { name: "Salty's Hydroponics Inc", type: "Plant Farm", description: "" }
         ]
+    },
+    {
+        id: 6, name: "Stollen", x: 582, y: 564,
+        npcSpawns: [
+            { name: "Taxi", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Trader", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Local Traffic", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Local Traffic", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Desperate Pirate", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "herb01", chance: 0.1, isHostile: true,
+                stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 5, weapon: 5 } },
+            { name: "Bounty hunter", shipType: "Midgeito", shipImage: "ship_midgeito.png", encounter: "civilian001", chance: 0.5,
+                stats: { hull: 12, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
+        ],
+        pois: [
+            { name: "", type: "Iron Mine", description: "" },
+            { name: "", type: "Platinum Mine", description: "" }
+        ]
     }
 ];
+
+
 
 
 
