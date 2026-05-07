@@ -1868,15 +1868,46 @@
                      const isEquipped = isCoreEquipped || isModEquipped;
                      
                      const price = itemData.price || 1000;
-                     const canAfford = player.credits >= price;
                      
+                     // --- Smart Affordability Check (Accounts for Trade-in) ---
+                     let effectiveCost = price;
+                     if (cat.id !== 'modules' && player.ship.core[cat.id]) {
+                         const oldItem = equipment[cat.id][player.ship.core[cat.id]];
+                         if (oldItem) effectiveCost -= Math.floor((oldItem.price || 1000) / 2);
+                     } else if (cat.id === 'modules') {
+                         const hullData = shipHulls[player.ship.hull];
+                         let hasEmptySlot = false;
+                         for (let i = 0; i < hullData.modularSlots; i++) {
+                             if (!player.ship.modules[i]) hasEmptySlot = true;
+                         }
+                         if (!hasEmptySlot && player.ship.modules.length > 0) {
+                             let minTradeIn = Infinity;
+                             player.ship.modules.forEach(m => {
+                                 if (m) {
+                                     const mData = equipment.modules[m];
+                                     if (mData) {
+                                         const tVal = Math.floor((mData.price || 1000) / 2);
+                                         if (tVal < minTradeIn) minTradeIn = tVal;
+                                     }
+                                 }
+                             });
+                             if (minTradeIn !== Infinity) effectiveCost -= minTradeIn;
+                         }
+                     }
+                     const canAfford = player.credits >= effectiveCost;
+                     
+                     let btnText = isEquipped ? 'EQUIPPED' : `BUY [${price} CR]`;
+                     if (!isEquipped && player.credits < price && canAfford) {
+                         btnText = `BUY w/ TRADE [${effectiveCost} CR]`;
+                     }
+
                      html += `<div class="flex justify-between items-center border-2 border-black bg-white p-2 ${isEquipped ? 'opacity-50' : ''}">
                          <div>
                              <div class="font-bold text-lg">${itemData.name}</div>
                              <div class="text-sm text-gray-800">${getEquipmentStatString(cat.id, itemData)} <span class="ml-2">${isEquipped ? '' : getEquipmentDiffString(cat.id, itemName)}</span></div>
                          </div>
                          <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${cat.id === 'modules' ? 'module' : cat.id}', '${itemName}', ${price}, false)" ${!canAfford || isEquipped ? 'disabled' : ''}>
-                             ${isEquipped ? 'EQUIPPED' : `BUY [${price} CR]`}
+                             ${btnText}
                          </button>
                      </div>`;
                  }
@@ -1968,7 +1999,20 @@
              pendingEquip.tradeInValue = tradeInValue;
              
              document.getElementById('trade-in-desc').innerHTML = `You are replacing your <strong>${oldItemData.name}</strong>.<br>What would you like to do with it?`;
-             document.getElementById('btn-trade-in').innerText = `TRADE IN [+${tradeInValue} CR]`;
+             
+             const btnStore = document.getElementById('btn-store');
+             if (btnStore) {
+                 if (player.credits < pendingEquip.price) {
+                     btnStore.disabled = true;
+                     btnStore.innerText = "STORAGE (INSUFFICIENT FUNDS)";
+                 } else {
+                     btnStore.disabled = false;
+                     btnStore.innerText = "SEND TO STORAGE";
+                 }
+             }
+             const netCost = pendingEquip.price - tradeInValue;
+             let tradeText = netCost > 0 ? `TRADE IN [COST: ${netCost} CR]` : (netCost < 0 ? `TRADE IN [GAIN: ${Math.abs(netCost)} CR]` : `TRADE IN [FREE]`);
+             document.getElementById('btn-trade-in').innerText = tradeText;
              
              document.getElementById('trade-in-modal').classList.remove('hidden');
              document.getElementById('trade-in-modal').classList.add('flex');
@@ -2558,7 +2602,7 @@
             <p id="trade-in-desc" class="text-lg text-center mb-6 mt-4">You are replacing [OLD].</p>
             <div class="space-y-4">
                <button class="btn !bg-green-100 !border-green-600" id="btn-trade-in" onclick="finalizeEquipmentChange('trade')">TRADE IN [+0 CR]</button>
-               <button class="btn !bg-blue-100 !border-blue-600" onclick="finalizeEquipmentChange('store')">SEND TO STORAGE</button>
+               <button id="btn-store" class="btn !bg-blue-100 !border-blue-600" onclick="finalizeEquipmentChange('store')">SEND TO STORAGE</button>
                <button class="btn !bg-gray-300" onclick="closeTradeIn()">CANCEL</button>
             </div>
          </div>
