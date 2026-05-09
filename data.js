@@ -135,6 +135,7 @@ const shipHulls = {
     },
     "Rooster": {
         name: "Rooster",
+	image: "ship_rooster.png",
         size: "Small",
         description: "Small patrol craft popular with law enforcement",
         baseHull: 18,
@@ -253,9 +254,16 @@ const lastNames = [
 const taxiPickupLines = [
     // Original / Standard
     "I'm late, let's go!",
+"Geetings. Let us depart",
+"Sup?",
+"Let's go.",
+"Hi. You my ride? Great.",
     "You the pilot? Hurry up, time is credits.",
     "Finally. Get me out of this dump.",
     "Let's get moving, spacer.",
+"Punch it pilot.",
+"My ship broke down at the worst time.",
+"Took you long enough. Just get going!",
     "Dude the gig starts soon! Lets hussle!",
 
     // The Nervous/Paranoid
@@ -294,13 +302,20 @@ const taxiDropoffLines = [
     // Original / Standard
     "Hey man, let's hurry. I got an important meeting to get to... oh, we're here? Thanks!",
     "Thanks for the ride, spacer! Kept the hull in one piece.",
+	"Great, thank.s",
+	"Cool. Here's your money.",
+	"Sweet, thanks bro.",
+"Thanks dude.",
+	"The Dude arrives!",
+"<Mumbled thanks>",
+"Nice flying.",
     "Finally! I thought I'd never get out of that bucket.",
     "Smooth flying dude.",
     "Not the worst flight I've had. Here are your credits.",
     "Praise the stars we made it. Transferring your funds now.",
 
     // The Enthusiastic
-    "Wooo! That was better than the Grav-Coaster on Sector 7! Five stars!",
+    "Wooo! That was better than the Grav-Coaster on Prantus 4! Five stars!",
     "Exhilarating! I haven't felt that many G-forces since the Great Maharvian Dustup!",
     "You've got talent, pilot. If you ever need a wingman, look me up.",
 
