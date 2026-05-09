@@ -19,9 +19,7 @@ const newGameDefaults = {
             thrusters: "Thrust T1",
             weapons: "Weap T1"
         },
-        modules: [
-            "Cargo Exp T1" 
-        ]
+        modules: []
     }
 };
 
@@ -37,7 +35,7 @@ const shipHulls = {
         description: "A two-seater runabout",
         baseHull: 10,
         weight: 5,
-        price: 10000,
+        price: 1000,
         multipliers: {
             jumpRange: 1,
             armour: 0.8,
@@ -53,7 +51,17 @@ const shipHulls = {
             thrusters: 1,
             weapons: 1
         },
-        modularSlots: 1
+        modularSlots: 1,
+        standardLoadout: {
+            core: {
+                warpDrive: "Drive T1",
+                armour: "Armour T1",
+                cargoBay: "Bay T1",
+                thrusters: "Thrust T1",
+                weapons: "Weap T1"
+            },
+            modules: []
+        }
     },
     "Midgeito": {
         name: "Midgeito",
@@ -62,7 +70,7 @@ const shipHulls = {
         description: "A microfighter designed to be deployed in swarms.",
         baseHull: 12,
         weight: 4,
-        price: 13000,
+        price: 1300,
         multipliers: {
             jumpRange: 0.7,
             armour: 1.3,
@@ -78,7 +86,17 @@ const shipHulls = {
             thrusters: 1,
             weapons: 1
         },
-        modularSlots: 1
+        modularSlots: 1,
+        standardLoadout: {
+            core: {
+                warpDrive: "Drive T1",
+                armour: "Armour T1",
+                cargoBay: "Bay T1",
+                thrusters: "Thrust T1",
+                weapons: "Weap T1"
+            },
+            modules: []
+        }
     },
     "Keiship": {
         name: "Keiship",
@@ -87,7 +105,7 @@ const shipHulls = {
         description: "A tiny delivery ship",
         baseHull: 10,
         weight: 6,
-        price: 12000,
+        price: 1200,
         multipliers: {
             jumpRange: 1,
             armour: 0.8,
@@ -103,7 +121,17 @@ const shipHulls = {
             thrusters: 1,
             weapons: 1
         },
-        modularSlots: 1
+        modularSlots: 1,
+        standardLoadout: {
+            core: {
+                warpDrive: "Drive T1",
+                armour: "Armour T1",
+                cargoBay: "Bay T1",
+                thrusters: "Thrust T1",
+                weapons: "Weap T1"
+            },
+            modules: []
+        }
     },
     "Rooster": {
         name: "Rooster",
@@ -111,7 +139,7 @@ const shipHulls = {
         description: "Small patrol craft popular with law enforcement",
         baseHull: 18,
         weight: 8,
-        price: 34000,
+        price: 3400,
         multipliers: {
             jumpRange: 0.8,
             armour: 1.4,
@@ -127,7 +155,17 @@ const shipHulls = {
             thrusters: 1,
             weapons: 1
         },
-        modularSlots: 2
+        modularSlots: 2,
+        standardLoadout: {
+            core: {
+                warpDrive: "Drive S1",
+                armour: "Armour S1",
+                cargoBay: "Bay S1",
+                thrusters: "Thrust S1",
+                weapons: "Weap S1"
+            },
+            modules: []
+        }
     }
 };
 
@@ -135,26 +173,31 @@ const equipment = {
     warpDrive: {
         "Drive T1": { name: "Jumpmaster XS", size: "Tiny", type: "warpDrive", price: 100, weight: 1, baseValue: 50, description: "A budget stock warp drive" },
         "Drive T2": { name: "Jumpmaster Plus", size: "Tiny", type: "warpDrive", price: 150, weight: 1, baseValue: 60, description: "Popular with couriers and taxis" },
-        "Drive T3": { name: "Starhopper T23", size: "Tiny", type: "warpDrive", price: 200, weight: 2, baseValue: 70, description: "Military grade scout drive" }
+        "Drive T3": { name: "Starhopper T23", size: "Tiny", type: "warpDrive", price: 200, weight: 2, baseValue: 70, description: "Military grade scout drive" },
+	"Drive S1": { name: "Gosystems A52", size: "Small", type: "warpDrive", price: 300, weight: 3, baseValue: 55, description: "A budget stock warp drive" }
     },
     armour: {
         "Armour T1": { name: "Stock Armour", size: "Tiny", type: "armour", price: 100, weight: 1, baseValue: 10, description: "The legal minimum level of protection." },
         "Armour T2": { name: "Reinforced Plate", size: "Tiny", type: "armour", price: 200, weight: 2, baseValue: 12, description: "Added reflective layers for increased protection." },
-        "Armour T3": { name: "Military Spec", size: "Tiny", type: "armour", price: 300, weight: 3, baseValue: 14, description: "Military grade fighter armour" }
+        "Armour T3": { name: "Military Spec", size: "Tiny", type: "armour", price: 300, weight: 3, baseValue: 14, description: "Military grade fighter armour" },
+	"Armour S1": { name: "Stock Armour", size: "Small", type: "armour", price: 250, weight: 1, baseValue: 12, description: "The legal minimum level of protection." }
     },
     cargoBay: {
         "Bay T1": { name: "Weekender XS5", size: "Tiny", type: "cargoBay", price: 100, weight: 1, baseValue: 5, description: "Slightly bigger than the glove compartment" },
         "Bay T2": { name: "Bigpocket DLV10", size: "Tiny", type: "cargoBay", price: 200, weight: 2, baseValue: 10, description: "Standard personal haulage bay" },
-        "Bay T3": { name: "BigBag 2000", size: "Tiny", type: "cargoBay", price: 300, weight: 3, baseValue: 15, description: "Light haulage module for small buisnesses" }
+        "Bay T3": { name: "BigBag 2000", size: "Tiny", type: "cargoBay", price: 300, weight: 3, baseValue: 15, description: "Light haulage module for small buisnesses" },
+	"Bay S1": { name: "Tokeybay 01", size: "Small", type: "cargoBay", price: 300, weight: 2, baseValue: 12, description: "Standard storage space" }
     },
     thrusters: {
         "Thrust T1": { name: "380C Windbreakers", size: "Tiny", type: "thrusters", price: 100, weight: 1, baseValue: 30, description: "Stock fighter class thrusters" },
         "Thrust T2": { name: "Darooky 1220s", size: "Tiny", type: "thrusters", price: 200, weight: 1, baseValue: 40, description: "Aftermarket modded thrusters" },
-        "Thrust T3": { name: "ShiftCore Accelerators", size: "Tiny", type: "thrusters", price: 300, weight: 2, baseValue: 50, description: "A common sight in the illegal racing scene" }
+        "Thrust T3": { name: "ShiftCore Accelerators", size: "Tiny", type: "thrusters", price: 300, weight: 2, baseValue: 50, description: "A common sight in the illegal racing scene" },
+	"Thrust S1": { name: "Thrustcore Shifters", size: "Small", type: "thrusters", price: 400, weight: 2, baseValue: 40, description: "Stock thrusters" }
     },
     weapons: {
-        "Weap T1": { name: "Commblaster", size: "Tiny", type: "weapons", price: 100, weight: 1, firepower: 10, accuracy: 5, description: "Illegally overclocked communication laser." },
-        "Weap T2": { name: "Microcannon", size: "Tiny", type: "weapons", price: 200, weight: 2, firepower: 15, accuracy: 5, description: "A low power directed energy weapon." }
+        "Weap T1": { name: "Commblaster", size: "Tiny", type: "weapons", price: 100, weight: 1, firepower: 10, accuracy: 5, description: "Illegally overclocked communication laser" },
+        "Weap T2": { name: "Microcannon", size: "Tiny", type: "weapons", price: 200, weight: 2, firepower: 15, accuracy: 5, description: "A low power directed energy weapon" },
+        "Weap S1": { name: "30mm Rattlegun", size: "Small", type: "weapons", price: 300, weight: 2, firepower: 20, accuracy: 5, description: "Standard railguns" }
     },
     modules: {
         "Cargo Exp T1": { name: "Cargo Exp T1", size: "Tiny", type: "module", price: 100, weight: 1, stat: "cargo", flatBonus: 5, description: "A little extra storage space" },
