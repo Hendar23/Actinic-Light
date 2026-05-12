@@ -1859,6 +1859,8 @@
              </div>
              <div id="outfitter-container" class="overflow-y-auto pb-8 space-y-8">`;
 
+             const currentShipSize = shipHulls[player.ship.hull].size;
+             
              // 1. STORAGE SECTION
              if (player.storage && player.storage.length > 0) {
                  html += `<div><h4 class="text-2xl font-bold uppercase bg-black text-white p-2 mb-2">Your Storage</h4><div class="space-y-2">`;
@@ -1866,12 +1868,13 @@
                      let itemCat = getEquipmentCategory(itemName);
                      if(itemCat) {
                          const itemData = equipment[itemCat === 'module' ? 'modules' : itemCat][itemName];
-                         html += `<div class="flex justify-between items-center border-2 border-black bg-gray-50 p-2">
+                         const isWrongClass = itemData.size !== currentShipSize;
+                         html += `<div class="flex justify-between items-center border-2 border-black bg-gray-50 p-2 ${isWrongClass ? 'opacity-50 grayscale' : ''}">
                              <div>
-                                 <div class="font-bold text-lg">${itemData.name}</div>
-                                 <div class="text-sm text-gray-800">${getEquipmentStatString(itemCat, itemData)} <span class="ml-2">${getEquipmentDiffString(itemCat, itemName)}</span></div>
+                                 <div class="font-bold text-lg">${itemData.name} <span class="text-xs font-normal text-gray-500 ml-2">(${itemData.size})</span></div>
+                                 <div class="text-sm text-gray-800">${getEquipmentStatString(itemCat, itemData)} <span class="ml-2">${isWrongClass ? '' : getEquipmentDiffString(itemCat, itemName)}</span></div>
                              </div>
-                             <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${itemCat}', '${itemName}', 0, true, ${index})">INSTALL</button>
+                             <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${itemCat}', '${itemName}', 0, true, ${index})" ${isWrongClass ? 'disabled' : ''}>${isWrongClass ? 'WRONG CLASS' : 'INSTALL'}</button>
                          </div>`;
                      }
                  });
@@ -1930,18 +1933,21 @@
                          }
                      }
                      const canAfford = player.credits >= effectiveCost;
+                     const isWrongClass = itemData.size !== currentShipSize;
                      
-                     let btnText = isEquipped ? 'EQUIPPED' : `BUY [${price} CR]`;
-                     if (!isEquipped && player.credits < price && canAfford) {
+                     let btnText = isEquipped ? 'EQUIPPED' : (isWrongClass ? 'WRONG CLASS' : `BUY [${price} CR]`);
+                     if (!isEquipped && !isWrongClass && player.credits < price && canAfford) {
                          btnText = `BUY w/ TRADE [${effectiveCost} CR]`;
                      }
 
-                     itemsHtml += `<div class="flex justify-between items-center border-2 border-black bg-white p-2 ${isEquipped ? 'opacity-50' : ''}">
+                     let stylingClasses = isEquipped ? 'opacity-50' : (isWrongClass ? 'opacity-50 grayscale bg-gray-100' : '');
+
+                     itemsHtml += `<div class="flex justify-between items-center border-2 border-black bg-white p-2 ${stylingClasses}">
                          <div>
-                             <div class="font-bold text-lg">${itemData.name}</div>
-                             <div class="text-sm text-gray-800">${getEquipmentStatString(cat.id, itemData)} <span class="ml-2">${isEquipped ? '' : getEquipmentDiffString(cat.id, itemName)}</span></div>
+                             <div class="font-bold text-lg">${itemData.name} <span class="text-xs font-normal text-gray-500 ml-2">(${itemData.size})</span></div>
+                             <div class="text-sm text-gray-800">${getEquipmentStatString(cat.id, itemData)} <span class="ml-2">${isEquipped || isWrongClass ? '' : getEquipmentDiffString(cat.id, itemName)}</span></div>
                          </div>
-                         <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${cat.id === 'modules' ? 'module' : cat.id}', '${itemName}', ${price}, false)" ${!canAfford || isEquipped ? 'disabled' : ''}>
+                         <button class="btn !w-auto !py-1 !px-3 !mb-0" onclick="startEquipProcess('${cat.id === 'modules' ? 'module' : cat.id}', '${itemName}', ${price}, false)" ${!canAfford || isEquipped || isWrongClass ? 'disabled' : ''}>
                              ${btnText}
                          </button>
                      </div>`;
