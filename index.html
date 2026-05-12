@@ -1146,6 +1146,10 @@
              document.getElementById('battle-img-enemy').src = `assets/${enemyImage}`;
              document.getElementById('battle-name-enemy').innerText = currentEnemy.name;
              
+             // --- Update Player Image ---
+             const playerHullData = shipHulls[player.ship.hull] || {};
+             document.getElementById('battle-img-player').src = `assets/${playerHullData.image || 'default.png'}`;
+             
              // 5. Clear the combat log and write the intro
              document.getElementById('battle-log').innerHTML = `
                 <div class="text-red-400">> ENGAGING: ${currentEnemy.name.toUpperCase()} (${currentEnemy.shipType.toUpperCase()})</div>
@@ -1562,7 +1566,7 @@
              // --- NEW: Shipyard Button ---
              if (config.hasShipyard || currentPoi.type === "Ship Vendor") {
                  html += `<div class="space-y-4 max-w-md mx-auto mt-4">
-                     <button class="btn !border-blue-600 !text-blue-800 bg-blue-50" onclick="setLocalView('shipyard')">
+                     <button class="btn" onclick="setLocalView('shipyard')">
                          SHIP SHOWROOM
                      </button>
                  </div>`;
@@ -2109,10 +2113,7 @@
              const currentHullData = shipHulls[player.ship.hull];
              const tradeInValue = Math.floor((currentHullData.price || 1000) / 2);
 
-             html += `<div class="bg-gray-100 border-2 border-gray-400 p-4 mb-4 text-center">
-                 <p class="text-lg font-bold uppercase">Current Ship Trade-in Value: <span class="text-blue-600">${tradeInValue.toLocaleString()} CR</span></p>
-                 <p class="text-sm italic text-gray-600 mt-1">All installed equipment will be safely moved to your storage.</p>
-             </div>`;
+             
 
              for (const [shipName, shipData] of Object.entries(shipHulls)) {
                  if (shipName === player.ship.hull) continue;
@@ -2141,9 +2142,52 @@
                  else if (!canAfford) disableReason = "Insufficient Credits";
                  
                  let btnDisabled = disableReason !== "" ? "disabled" : "";
-                 let btnText = netCost > 0 ? `BUY [COST: ${netCost.toLocaleString()} CR]` : `BUY [GAIN: ${Math.abs(netCost).toLocaleString()} CR]`;
+                 let btnText = netCost > 0 ? `BUY ${netCost.toLocaleString()} CR` : `+${Math.abs(netCost).toLocaleString()} CR`;
                  
                  let errorHtml = disableReason ? `<div class="text-red-500 font-bold text-[10px] uppercase text-right w-full mt-1">${disableReason}</div>` : '';
+
+                 const curHullData = shipHulls[player.ship.hull];
+                 let diffs = [];
+                 
+                 let hullDiff = shipData.baseHull - curHullData.baseHull;
+                 if (hullDiff !== 0) {
+                     let color = hullDiff > 0 ? 'text-green-600' : 'text-red-600';
+                     let sign = hullDiff > 0 ? '+' : '';
+                     diffs.push(`<span class="${color} font-bold">${sign}${hullDiff} HULL</span>`);
+                 }
+                 
+                 let wtDiff = (shipData.weight || 0) - (curHullData.weight || 0);
+                 if (wtDiff !== 0) {
+                     let color = wtDiff < 0 ? 'text-green-600' : 'text-red-600';
+                     let sign = wtDiff > 0 ? '+' : '';
+                     diffs.push(`<span class="${color} font-bold">${sign}${wtDiff} WT</span>`);
+                 }
+
+                 const compareMults = [
+                     { key: 'jumpRange', label: 'JMP' },
+                     { key: 'armour', label: 'ARM' },
+                     { key: 'handling', label: 'HND' },
+                     { key: 'firepower', label: 'FP' },
+                     { key: 'accuracy', label: 'ACC' },
+                     { key: 'cargo', label: 'CRG' }
+                 ];
+
+                 compareMults.forEach(c => {
+                     let val1 = shipData.multipliers[c.key] !== undefined ? shipData.multipliers[c.key] : 1;
+                     let val2 = curHullData.multipliers[c.key] !== undefined ? curHullData.multipliers[c.key] : 1;
+                     let diff = (val1 - val2);
+                     if (Math.abs(diff) > 0.01) {
+                         let color = diff > 0 ? 'text-green-600' : 'text-red-600';
+                         let sign = diff > 0 ? '+' : '';
+                         // Format to 1 decimal place to keep it clean (e.g. +0.2x)
+                         diffs.push(`<span class="${color} font-bold">${sign}${(Math.round(diff * 10) / 10).toFixed(1)}x ${c.label}</span>`);
+                     }
+                 });
+
+                 let diffHtml = diffs.length > 0 ? `[ ${diffs.join(' | ')} ]` : `<span class="text-gray-400 font-bold">(+0)</span>`;
+                 
+                 const getM = (k) => shipData.multipliers[k] !== undefined ? shipData.multipliers[k] : 1;
+                 let statString = `Hull: ${shipData.baseHull} | Wt: ${shipData.weight || 0} | Jmp: x${getM('jumpRange')} | Arm: x${getM('armour')} | Hnd: x${getM('handling')} | FP: x${getM('firepower')} | Acc: x${getM('accuracy')} | Crg: x${getM('cargo')}`;
 
                  html += `<div class="flex justify-between items-center border-2 border-black bg-white p-2">
                      <div class="flex items-center gap-4">
@@ -2153,8 +2197,8 @@
                          <div>
                              <div class="font-bold text-xl uppercase">${shipData.name}</div>
                              <div class="text-sm italic text-gray-600 mb-1">Class: ${shipData.size} | Base Price: ${shipPrice.toLocaleString()} CR</div>
-                             <div class="text-xs font-bold text-gray-800">
-                                 Hull: ${simStats.maxHull} | Jump: ${simStats.jumpRange}ly | Cargo: ${simStats.cargoMax}
+                             <div class="text-xs text-gray-800 mt-1">
+                                 <span class="font-bold">${statString}</span> <br> ${diffHtml}
                              </div>
                          </div>
                      </div>
@@ -2198,7 +2242,7 @@
              saveGame();
              updateUI();
              
-             showTaskPopup("NEW SHIP ACQUIRED", {title: shipName.toUpperCase(), description: "Old equipment safely stored."});
+             showTaskPopup("NEW SHIP ACQUIRED", {title: "NEW SHIP ACQUIRED!", description: "All equipment moved to storage."});
          }
 
          function updateShipTabUI(totalCargo) {

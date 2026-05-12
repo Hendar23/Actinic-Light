@@ -702,7 +702,7 @@ const mapBackgrounds = [
 
 const galaxy = [
     {
-        id: 1, name: "Sol*", x: 495, y: 538,
+        id: 1, name: "Sol*", x: 499, y: 544,
         image: "star_system_001.png",
         description: "The home of humanity, an obscure species of mammal. It is a run-down polluted backwater.",
         npcSpawns: [
@@ -716,11 +716,11 @@ const galaxy = [
             { name: "Martian Farm Hub", type: "Plant Farm" },
             { name: "Sol Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Frank"], requiresFlag: "knows_frank", description: "Cheap but not cheerful." },
             { name: "Sol Orbital Mechanics", type: "Repair Station", description: "", repairCost: 10 },
-            { name: "Bits 'N Bobs", type: "Outfitter", inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC"] }
+            { name: "Bits 'N Bobs", type: "Outfitter", inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive S1", "Drive T3", "Drive T2", "Drive T1"] }
         ]
     },
     {
-        id: 2, name: "Alpha Centauri*", x: 467, y: 524,
+        id: 2, name: "Alpha Centauri*", x: 476, y: 524,
         npcSpawns: [
             { name: "Poovy bird", shipType: "<AVIAN>", shipImage: "ship_bird1.png", chance: 0.5, isHostile: true,
                 stats: { hull: 20, armour: 10, handling: 40, firepower: 6, accuracy: 10, piloting: 10, weapon: 5 } }
@@ -731,7 +731,7 @@ const galaxy = [
         ]
     },
     {
-        id: 3, name: "Betelgeuse*", x: 477, y: 568,
+        id: 3, name: "Betelgeuse*", x: 481, y: 568,
         npcSpawns: [
             { name: "Cop", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "Police Patrol", chance: 0.1, isHostile: true }
         ],
@@ -741,7 +741,7 @@ const galaxy = [
         ]
     },
     {
-        id: 4, name: "Obviously*", x: 452, y: 550,
+        id: 4, name: "Obviously*", x: 459, y: 548,
         description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
         npcSpawns: [
             { name: "Amateur Pirate", shipType: "Raider Scout", shipImage: "ship_weescow.png", encounter: "Obvious Pirate Ambush", chance: 0.3, isHostile: true,
@@ -784,7 +784,7 @@ const galaxy = [
         ]
     },
     {
-        id: 5, name: "Britel", x: 553, y: 584,
+        id: 5, name: "Britel", x: 553, y: 578,
         description: "A sleepy backwater.",
         npcSpawns: [
             { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.5,
@@ -800,7 +800,7 @@ const galaxy = [
         ]
     },
     {
-        id: 6, name: "Stollen", x: 582, y: 564,
+        id: 6, name: "Stollen", x: 578, y: 562,
         image: "star_system_002.png",
         description: "A lonely binary system.",
         npcSpawns: [
@@ -827,7 +827,7 @@ const galaxy = [
         ]
     },
     {
-        id: 7, name: "Barron Locus", x: 560, y: 628,
+        id: 7, name: "Barron Locus", x: 562, y: 612,
         pois: [
             { name: "Raider Base", type: "Outpost", description: "" }
         ]
