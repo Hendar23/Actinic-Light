@@ -135,7 +135,7 @@ const shipHulls = {
     },
     "Rooster": {
         name: "Rooster",
-	image: "ship_rooster.png",
+        image: "ship_rooster.png",
         size: "Small",
         description: "Small patrol craft popular with law enforcement",
         baseHull: 18,
@@ -175,25 +175,25 @@ const equipment = {
         "Drive T1": { name: "Jumpmaster XS", size: "Tiny", type: "warpDrive", price: 100, weight: 1, baseValue: 50, description: "A budget stock warp drive" },
         "Drive T2": { name: "Jumpmaster Plus", size: "Tiny", type: "warpDrive", price: 150, weight: 1, baseValue: 60, description: "Popular with couriers and taxis" },
         "Drive T3": { name: "Starhopper T23", size: "Tiny", type: "warpDrive", price: 200, weight: 2, baseValue: 70, description: "Military grade scout drive" },
-	"Drive S1": { name: "Gosystems A52", size: "Small", type: "warpDrive", price: 300, weight: 3, baseValue: 55, description: "A budget stock warp drive" }
+        "Drive S1": { name: "Gosystems A52", size: "Small", type: "warpDrive", price: 300, weight: 3, baseValue: 55, description: "A budget stock warp drive" }
     },
     armour: {
         "Armour T1": { name: "Stock Armour", size: "Tiny", type: "armour", price: 100, weight: 1, baseValue: 10, description: "The legal minimum level of protection." },
         "Armour T2": { name: "Reinforced Plate", size: "Tiny", type: "armour", price: 200, weight: 2, baseValue: 12, description: "Added reflective layers for increased protection." },
         "Armour T3": { name: "Military Spec", size: "Tiny", type: "armour", price: 300, weight: 3, baseValue: 14, description: "Military grade fighter armour" },
-	"Armour S1": { name: "Stock Armour", size: "Small", type: "armour", price: 250, weight: 1, baseValue: 12, description: "The legal minimum level of protection." }
+        "Armour S1": { name: "Stock Armour", size: "Small", type: "armour", price: 250, weight: 1, baseValue: 12, description: "The legal minimum level of protection." }
     },
     cargoBay: {
         "Bay T1": { name: "Weekender XS5", size: "Tiny", type: "cargoBay", price: 100, weight: 1, baseValue: 5, description: "Slightly bigger than the glove compartment" },
         "Bay T2": { name: "Bigpocket DLV10", size: "Tiny", type: "cargoBay", price: 200, weight: 2, baseValue: 10, description: "Standard personal haulage bay" },
         "Bay T3": { name: "BigBag 2000", size: "Tiny", type: "cargoBay", price: 300, weight: 3, baseValue: 15, description: "Light haulage module for small buisnesses" },
-	"Bay S1": { name: "Tokeybay 01", size: "Small", type: "cargoBay", price: 300, weight: 2, baseValue: 12, description: "Standard storage space" }
+        "Bay S1": { name: "Tokeybay 01", size: "Small", type: "cargoBay", price: 300, weight: 2, baseValue: 12, description: "Standard storage space" }
     },
     thrusters: {
         "Thrust T1": { name: "380C Windbreakers", size: "Tiny", type: "thrusters", price: 100, weight: 1, baseValue: 30, description: "Stock fighter class thrusters" },
         "Thrust T2": { name: "Darooky 1220s", size: "Tiny", type: "thrusters", price: 200, weight: 1, baseValue: 40, description: "Aftermarket modded thrusters" },
         "Thrust T3": { name: "ShiftCore Accelerators", size: "Tiny", type: "thrusters", price: 300, weight: 2, baseValue: 50, description: "A common sight in the illegal racing scene" },
-	"Thrust S1": { name: "Thrustcore Shifters", size: "Small", type: "thrusters", price: 400, weight: 2, baseValue: 40, description: "Stock thrusters" }
+        "Thrust S1": { name: "Thrustcore Shifters", size: "Small", type: "thrusters", price: 400, weight: 2, baseValue: 40, description: "Stock thrusters" }
     },
     weapons: {
         "Weap T1": { name: "Commblaster", size: "Tiny", type: "weapons", price: 100, weight: 1, firepower: 10, accuracy: 5, description: "Illegally overclocked communication laser" },
@@ -685,6 +685,11 @@ const stationTypes = {
         defaultImage: "station008.png",
         description: "A sprawling industrial drydock where pilots can purchase, sell, and store ship components.",
         hasOutfitter: true
+    },
+    "Ship Vendor": {
+        defaultImage: "station008.png",
+        description: "A massive orbital showroom selling pristine new spacecraft.",
+        hasShipyard: true
     }
 };
 
@@ -697,7 +702,7 @@ const mapBackgrounds = [
 
 const galaxy = [
     {
-        id: 1, name: "Sol", x: 495, y: 538,
+        id: 1, name: "Sol*", x: 495, y: 538,
         image: "star_system_001.png",
         description: "The home of humanity, an obscure species of mammal. It is a run-down polluted backwater.",
         npcSpawns: [
@@ -715,7 +720,7 @@ const galaxy = [
         ]
     },
     {
-        id: 2, name: "Alpha Centauri", x: 467, y: 524,
+        id: 2, name: "Alpha Centauri*", x: 467, y: 524,
         npcSpawns: [
             { name: "Poovy bird", shipType: "<AVIAN>", shipImage: "ship_bird1.png", chance: 0.5, isHostile: true,
                 stats: { hull: 20, armour: 10, handling: 40, firepower: 6, accuracy: 10, piloting: 10, weapon: 5 } }
@@ -726,7 +731,7 @@ const galaxy = [
         ]
     },
     {
-        id: 3, name: "Betelgeuse", x: 474, y: 567,
+        id: 3, name: "Betelgeuse*", x: 477, y: 568,
         npcSpawns: [
             { name: "Cop", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "Police Patrol", chance: 0.1, isHostile: true }
         ],
@@ -736,7 +741,7 @@ const galaxy = [
         ]
     },
     {
-        id: 4, name: "Obviously", x: 452, y: 550,
+        id: 4, name: "Obviously*", x: 452, y: 550,
         description: "When the famous explorer Dee-rack first saw this star he proclaimed \"Well obviously we have to check that out.\"",
         npcSpawns: [
             { name: "Amateur Pirate", shipType: "Raider Scout", shipImage: "ship_weescow.png", encounter: "Obvious Pirate Ambush", chance: 0.3, isHostile: true,
@@ -774,7 +779,8 @@ const galaxy = [
         pois: [
             { name: "Leonton Spaceport", type: "Trade Hub", image: "port003.png", description: "Smells like starship fuel, cheap narcotics, and desperation." },
             { name: "The Full Burn Bar", type: "Outpost", image: "bar001.png", encounters: ["Uncle Bob"], description: "Leontons go to bar for visiting spacers. Uncle bob has run it as long as anyone can remember. " },
-            { name: "Copper Extractor", type: "Copper Mine", description: "Leontons copper rich moon is the heart of the systems economy." }
+            { name: "Copper Extractor", type: "Copper Mine", description: "Leontons copper rich moon is the heart of the systems economy." },
+            { name: "Big Barlows Starship Emporium", type: "Ship Vendor", description: "Rows of battered old spaceships line a large storage hold. A plastifab shed serves as Barlow Office.", shipInventory: ["Weescow", "Midgeito", "Keiship", "Rooster"] }
         ]
     },
     {
@@ -795,6 +801,8 @@ const galaxy = [
     },
     {
         id: 6, name: "Stollen", x: 582, y: 564,
+        image: "star_system_002.png",
+        description: "A lonely binary system.",
         npcSpawns: [
             { name: "Taxi", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
@@ -817,8 +825,16 @@ const galaxy = [
             { name: "", type: "Iron Mine", description: "" },
             { name: "", type: "Platinum Mine", description: "" }
         ]
+    },
+    {
+        id: 7, name: "Barron Locus", x: 560, y: 628,
+        pois: [
+            { name: "Raider Base", type: "Outpost", description: "" }
+        ]
     }
 ];
+
+
 
 
 

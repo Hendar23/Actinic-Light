@@ -143,7 +143,7 @@
         let fileSuffix = "";
 
         // Constants
-        const typesList = ['Trade Hub', 'Outpost', 'Plant Farm', 'Ice Mine', 'Plant Processing Facility', 'Livestock Farm', 'Meat Processing Plant', 'Copper Mine', 'Iron Mine', 'Platinum Mine', 'Silicon Mine', 'Gold Mine', 'Metal Ore Refinery', 'Silicon Refinery', 'Machine Parts Factory', 'Chip Fab', 'Encounter', 'Repair Station', 'Outfitter'];
+        const typesList = ['Trade Hub', 'Outpost', 'Plant Farm', 'Ice Mine', 'Plant Processing Facility', 'Livestock Farm', 'Meat Processing Plant', 'Copper Mine', 'Iron Mine', 'Platinum Mine', 'Silicon Mine', 'Gold Mine', 'Metal Ore Refinery', 'Silicon Refinery', 'Machine Parts Factory', 'Chip Fab', 'Encounter', 'Repair Station', 'Outfitter', 'Ship Vendor'];
         const sizes = ["Tiny", "Small", "Medium", "Large", "Huge"];
         const moduleStats = ["jumpRange", "armour", "cargo", "handling", "firepower", "accuracy"];
 
@@ -464,6 +464,14 @@
             else selectedSystem.pois[i][k] = v; 
             if (k === 'type') buildMapInspector(); 
         }
+        function updatePoiShipInventory(i, shipId, isChecked) {
+            if (!selectedSystem.pois[i].shipInventory) selectedSystem.pois[i].shipInventory = [];
+            if (isChecked) {
+                if (!selectedSystem.pois[i].shipInventory.includes(shipId)) selectedSystem.pois[i].shipInventory.push(shipId);
+            } else {
+                selectedSystem.pois[i].shipInventory = selectedSystem.pois[i].shipInventory.filter(id => id !== shipId);
+            }
+        }
         function updatePoiInventory(i, eqId, isChecked) {
             if (!selectedSystem.pois[i].inventory) selectedSystem.pois[i].inventory = [];
             if (isChecked) {
@@ -592,6 +600,7 @@
                         <div><label class="block text-[10px] font-bold uppercase mt-1">Description (Optional)</label><textarea class="text-xs h-12 resize-none" oninput="updatePoiData(${index}, 'description', this.value)">${escapeHTML(poi.description || '')}</textarea></div>
                         ${poi.type === 'Repair Station' ? `<div class="border-t border-gray-300 mt-2 pt-2"><label class="block text-[10px] font-bold uppercase mt-1 text-blue-800">Repair Cost per Hull</label><input type="number" class="text-xs p-1 border border-gray-400 w-24" value="${poi.repairCost !== undefined ? poi.repairCost : 10}" oninput="updatePoiData(${index}, 'repairCost', parseInt(this.value) || 0)"></div>` : ''}
                         ${poi.type === 'Outfitter' ? `<div class="border-t border-gray-300 mt-2 pt-2"><label class="block text-[10px] font-bold uppercase mt-1 text-purple-800 flex justify-between"><span>Specific Inventory</span> <span class="text-gray-500 font-normal normal-case">(Leave empty to sell all)</span></label><div class="h-32 overflow-y-auto border border-gray-400 bg-white p-1 text-xs space-y-1">${Object.keys(equipmentData).flatMap(cat => Object.keys(equipmentData[cat]).map(eqId => { const eqName = equipmentData[cat][eqId].name; const isChecked = (poi.inventory || []).includes(eqId) ? 'checked' : ''; return '<div class="flex items-center gap-2 hover:bg-gray-100 cursor-pointer p-0.5"><input type="checkbox" ' + isChecked + ' onchange="updatePoiInventory(' + index + ', \'' + escapeJS(eqId) + '\', this.checked)" id="inv-' + index + '-' + escapeHTML(eqId) + '"><label for="inv-' + index + '-' + escapeHTML(eqId) + '" class="cursor-pointer flex-grow select-none">' + escapeHTML(eqName) + ' <span class="text-[9px] text-gray-500">[' + escapeHTML(eqId) + ']</span></label></div>'; })).join('')}</div></div>` : ''}
+                        ${poi.type === 'Ship Vendor' ? `<div class="border-t border-gray-300 mt-2 pt-2"><label class="block text-[10px] font-bold uppercase mt-1 text-blue-800 flex justify-between"><span>Specific Ships</span> <span class="text-gray-500 font-normal normal-case">(Leave empty to sell all)</span></label><div class="h-32 overflow-y-auto border border-gray-400 bg-white p-1 text-xs space-y-1">${Object.keys(shipHullsData).map(shipId => { const isChecked = (poi.shipInventory || []).includes(shipId) ? 'checked' : ''; return '<div class="flex items-center gap-2 hover:bg-gray-100 cursor-pointer p-0.5"><input type="checkbox" ' + isChecked + ' onchange="updatePoiShipInventory(' + index + ', \'' + escapeJS(shipId) + '\', this.checked)" id="ship-inv-' + index + '-' + escapeHTML(shipId) + '"><label for="ship-inv-' + index + '-' + escapeHTML(shipId) + '" class="cursor-pointer flex-grow select-none">' + escapeHTML(shipId) + '</label></div>'; }).join('')}</div></div>` : ''}
                     </div>`;
             });
             mapInspector.innerHTML = html + `</div></div>`;
@@ -625,6 +634,7 @@
                     if (p.description !== undefined) str += `, description: "${escapeJS(p.description)}"`;
                     if (p.type === 'Repair Station') str += `, repairCost: ${p.repairCost !== undefined ? p.repairCost : 10}`;
                     if (p.inventory && p.inventory.length > 0) str += `, inventory: [${p.inventory.map(e => `"${escapeJS(e)}"`).join(", ")}]`;
+                    if (p.shipInventory && p.shipInventory.length > 0) str += `, shipInventory: [${p.shipInventory.map(e => `"${escapeJS(e)}"`).join(", ")}]`;
                     return str + ` }`;
                 }).join(",\n") + "\n        ]\n    }";
                 out += (i < galaxy.length - 1 ? "," : "") + "\n";

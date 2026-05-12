@@ -1401,6 +1401,8 @@
                      html += renderStationMenu();
                  } else if (localView === 'outfitter') {
                      html += renderOutfitter(); // Route to the new interface!
+                 } else if (localView === 'shipyard') {
+                     html += renderShipyard(totalCargo);
                  } else {
                      html += renderMarket(totalCargo);
                  }
@@ -1554,6 +1556,14 @@
                  html += `<div class="space-y-4 max-w-md mx-auto mt-4">
                      <button class="btn" onclick="setLocalView('outfitter')">
                          SHIP OUTFITTING
+                     </button>
+                 </div>`;
+             }
+             // --- NEW: Shipyard Button ---
+             if (config.hasShipyard || currentPoi.type === "Ship Vendor") {
+                 html += `<div class="space-y-4 max-w-md mx-auto mt-4">
+                     <button class="btn !border-blue-600 !text-blue-800 bg-blue-50" onclick="setLocalView('shipyard')">
+                         SHIP SHOWROOM
                      </button>
                  </div>`;
              }
@@ -2087,6 +2097,110 @@
              updateUI();
          }
          
+         
+         function renderShipyard(totalCargo) {
+             let html = `
+             <div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
+                 <h3 class="text-3xl font-bold uppercase">SHIP SHOWROOM</h3>
+                 <button class="btn !w-auto !mb-0 !py-2 !px-4 !text-xl" onclick="setLocalView('menu')">◀ BACK</button>
+             </div>
+             <div id="shipyard-container" class="overflow-y-auto pb-8 space-y-4">`;
+
+             const currentHullData = shipHulls[player.ship.hull];
+             const tradeInValue = Math.floor((currentHullData.price || 1000) / 2);
+
+             html += `<div class="bg-gray-100 border-2 border-gray-400 p-4 mb-4 text-center">
+                 <p class="text-lg font-bold uppercase">Current Ship Trade-in Value: <span class="text-blue-600">${tradeInValue.toLocaleString()} CR</span></p>
+                 <p class="text-sm italic text-gray-600 mt-1">All installed equipment will be safely moved to your storage.</p>
+             </div>`;
+
+             for (const [shipName, shipData] of Object.entries(shipHulls)) {
+                 if (shipName === player.ship.hull) continue;
+                 
+                 if (currentPoi && currentPoi.shipInventory && currentPoi.shipInventory.length > 0) {
+                     if (!currentPoi.shipInventory.includes(shipName)) continue;
+                 }
+                 
+                 const shipPrice = shipData.price || 1000;
+                 const netCost = shipPrice - tradeInValue;
+                 
+                 const simShip = {
+                     hull: shipName,
+                     core: JSON.parse(JSON.stringify(shipData.standardLoadout.core)),
+                     modules: []
+                 };
+                 const simStats = getShipStats(simShip);
+                 
+                 const canAfford = player.credits >= netCost;
+                 const hasPassenger = player.activeTaxi != null;
+                 const cargoOverflow = totalCargo > simStats.cargoMax;
+                 
+                 let disableReason = "";
+                 if (hasPassenger) disableReason = "Cannot trade-in with passenger aboard";
+                 else if (cargoOverflow) disableReason = `Hold exceeds capacity (${simStats.cargoMax})`;
+                 else if (!canAfford) disableReason = "Insufficient Credits";
+                 
+                 let btnDisabled = disableReason !== "" ? "disabled" : "";
+                 let btnText = netCost > 0 ? `BUY [COST: ${netCost.toLocaleString()} CR]` : `BUY [GAIN: ${Math.abs(netCost).toLocaleString()} CR]`;
+                 
+                 let errorHtml = disableReason ? `<div class="text-red-500 font-bold text-[10px] uppercase text-right w-full mt-1">${disableReason}</div>` : '';
+
+                 html += `<div class="flex justify-between items-center border-2 border-black bg-white p-2">
+                     <div class="flex items-center gap-4">
+                         <div class="w-20 h-20 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
+                             <img src="assets/${shipData.image}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
+                         </div>
+                         <div>
+                             <div class="font-bold text-xl uppercase">${shipData.name}</div>
+                             <div class="text-sm italic text-gray-600 mb-1">Class: ${shipData.size} | Base Price: ${shipPrice.toLocaleString()} CR</div>
+                             <div class="text-xs font-bold text-gray-800">
+                                 Hull: ${simStats.maxHull} | Jump: ${simStats.jumpRange}ly | Cargo: ${simStats.cargoMax}
+                             </div>
+                         </div>
+                     </div>
+                     <div class="flex flex-col items-end">
+                         <button class="btn !w-auto !py-2 !px-4 !mb-0" onclick="buyShip('${shipName.replace(/'/g, "\\'")}', ${netCost})" ${btnDisabled}>
+                             ${btnText}
+                         </button>
+                         ${errorHtml}
+                     </div>
+                 </div>`;
+             }
+
+             html += `</div>`;
+             return html;
+         }
+
+         function buyShip(shipName, netCost) {
+             const shipData = shipHulls[shipName];
+             if (!shipData) return;
+             
+             player.credits -= netCost;
+             
+             if(!player.storage) player.storage = [];
+             Object.values(player.ship.core).forEach(item => {
+                 if (item) player.storage.push(item);
+             });
+             
+             if (player.ship.modules) {
+                 player.ship.modules.forEach(item => {
+                     if (item) player.storage.push(item);
+                 });
+             }
+             
+             player.ship.hull = shipName;
+             player.ship.core = JSON.parse(JSON.stringify(shipData.standardLoadout.core));
+             player.ship.modules = [];
+             
+             const newStats = getShipStats(player.ship);
+             player.ship.currentHull = newStats.maxHull;
+             
+             saveGame();
+             updateUI();
+             
+             showTaskPopup("NEW SHIP ACQUIRED", {title: shipName.toUpperCase(), description: "Old equipment safely stored."});
+         }
+
          function updateShipTabUI(totalCargo) {
             const stats = getShipStats(player.ship);
             const hullData = shipHulls[player.ship.hull];
