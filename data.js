@@ -10,6 +10,7 @@ const newGameDefaults = {
         engineer: 10
     },
     storage: [],
+    startingTasks: ["meet_bob"],
     startingShip: {
         hull: "Weescow",
         core: {
@@ -560,7 +561,7 @@ const interactions = {
                 ]
             },
             "fortune_glory": {
-                text: "Haha of course! \n\nWell, be careful out there. A lotta crazy and desperate people around these days, what with the economy and all. <br><br>I don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                text: "Haha of course! \n\nWell, be careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
                 options: [
                     { text: "I'll be careful Bob, thanks.", nextNode: "bob_final" }
                 ]
@@ -568,17 +569,17 @@ const interactions = {
             "bob_final": {
                 text: "Oh hey, before you go. Without a long range jump drive you will be stuck in our little corner of the galaxy. Decent jump drives are hard to get around here though. \n\nSpeak to my old friend NAME GOES HERE when you are ready, tell him I sent you. He will sort you out with something.",
                 options: [
-                    { text: "You're the best Uncle Bob. Take care.", nextNode: "leave", setFlag: "told_bob_ship" }
+                    { text: "You're the best Uncle Bob. Take care.", nextNode: "leave", setFlag: "told_bob_ship", completeTask: "meet_bob" }
                 ]
             },
             "hauling": {
-                text: "Space trucking ain't glamorous, but it's an honest job and someone has to do it. \n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all. I don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                text: "Space trucking ain't glamorous, but it's an honest job and someone has to do it. \n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
                 options: [
                     { text: "I'll be careful Bob, I promise", nextNode: "bob_final" }
                 ]
             },
             "taxing": {
-                text: "There's some good money to be made running a shuttle service, and you will certainly meet some interesting characters\n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all. I don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                text: "There's some good money to be made running a shuttle service, and you will certainly meet some interesting characters\n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
                 options: [
                     { text: "I'll be careful Bob, I promise", nextNode: "bob_final" }
                 ]
@@ -754,7 +755,7 @@ const galaxy = [
             { name: "Earth Spaceport 01", type: "Trade Hub", image: "port001.png", encounters: ["Bartender Milo", "Brother Moo"], description: "A massive central trading hub for the planet Earth" },
             { name: "Lunar Ice Extractors", type: "Ice Mine", description: "Vast machines evaporate ice into water" },
             { name: "Martian Farm Hub", type: "Plant Farm" },
-            { name: "Sol Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Frank"], requiresFlag: "knows_frank", description: "Cheap but not cheerful." },
+            { name: "Sol Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Frank"], description: "Cheap but not cheerful." },
             { name: "Sol Orbital Mechanics", type: "Repair Station", description: "", repairCost: 10 },
             { name: "Bits 'N Bobs", type: "Outfitter", inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive S1", "Drive T3", "Drive T2", "Drive T1"] }
         ]
@@ -873,6 +874,7 @@ const galaxy = [
         ]
     }
 ];
+
 
 
 

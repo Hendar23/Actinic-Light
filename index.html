@@ -607,6 +607,13 @@
                  skills: JSON.parse(JSON.stringify(newGameDefaults.startingSkills)),
                  ship: startingShipClone
              };
+             
+             // Initialize starting tasks
+             if (newGameDefaults.startingTasks) {
+                 newGameDefaults.startingTasks.forEach(taskId => {
+                     player.tasks[taskId] = 'active';
+                 });
+             }
          
          const initialStats = getShipStats(player.ship);
              player.ship.currentHull = initialStats.maxHull;
@@ -1672,6 +1679,7 @@
             const encImagePath = `assets/${currentEncounterImage}`;
             
             let displayText = node.text.replace(/\b(\d+)(?=\s*(?:credits|cr)\b)/gi, match => parseInt(match).toLocaleString());
+            displayText = displayText.replace(/\n/g, '<br>'); // Enable newline rendering
          
             html += `
                  <div class="flex flex-col h-full min-h-[50vh]">
@@ -1687,7 +1695,7 @@
                          </div>
          
                          <div class="text-2xl font-bold text-gray-800 self-start w-full min-w-0 break-words">
-                             ${node.text}
+                             ${displayText}
                          </div>
          
                      </div>
