@@ -35,9 +35,9 @@
     <div class="w-full bg-gray-900 p-2 flex gap-4 items-center shrink-0 border-b-4 border-black z-50">
         <div class="text-white font-bold text-xl uppercase tracking-widest pl-2">ACTINIC ENGINE</div>
         <div id="connection-status" class="px-4 py-2 bg-red-100 border-2 border-red-500 text-xs font-bold uppercase ml-8 text-black">Not Connected</div>
-        <button class="btn !mb-0 !py-1 !text-xs !bg-blue-100" onclick="connectMasterFile()">1. Connect data.js</button>
-        <button class="btn !mb-0 !py-1 !text-xs !bg-purple-100" id="btn-connect-assets" onclick="connectAssetsFolder()">2. Connect Assets</button>
+        <button class="btn !mb-0 !py-1 !text-xs !bg-blue-100" onclick="connectProjectFolder()">1. Connect Project Folder</button>
         <button class="btn !mb-0 !py-1 !text-xs !bg-green-400 ml-auto" id="btn-save-master" onclick="saveMasterFile()" disabled>SAVE ALL CHANGES</button>
+        <button class="btn !mb-0 !py-1 !text-xs !bg-yellow-400" id="btn-download-txt" onclick="downloadTxtFile()" disabled>DOWNLOAD TXT</button>
     </div>
 
     <div class="w-full bg-black text-white flex shrink-0">
@@ -165,33 +165,28 @@
             }
         }
 
-        async function connectAssetsFolder() {
+
+
+        async function connectProjectFolder() {
             try {
                 const dirHandle = await window.showDirectoryPicker();
-                availableImages = []; 
-                for await (const entry of dirHandle.values()) {
-                    if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.png')) {
-                        availableImages.push(entry.name);
+                
+                // 1. Silently load Assets
+                try {
+                    const assetsHandle = await dirHandle.getDirectoryHandle('assets');
+                    availableImages = [];
+                    for await (const entry of assetsHandle.values()) {
+                        if (entry.kind === 'file' && entry.name.toLowerCase().endsWith('.png')) {
+                            availableImages.push(entry.name);
+                        }
                     }
+                    availableImages.sort();
+                } catch(e) {
+                    console.warn("No assets folder found.");
                 }
-                availableImages.sort();
-                
-                document.getElementById('btn-connect-assets').innerText = `ASSETS LOADED (${availableImages.length})`;
-                document.getElementById('btn-connect-assets').classList.replace('bg-purple-100', 'bg-green-400');
-                
-                // Force UI Refreshes to show the new dropdowns
-                if (selectedSystem) buildMapInspector();
-                if (selEnc) selectEncounter(selEnc);
-                if (selShipItem) renderShipEditor();
-                
-            } catch (err) {
-                if (err.name !== 'AbortError') alert("Could not read folder. Ensure you select the correct 'assets' directory.");
-            }
-        }
 
-        async function connectMasterFile() {
-            try {
-                [fileHandle] = await window.showOpenFilePicker({ types: [{ accept: { 'text/javascript': ['.js'] } }] });
+                // 2. Load data.js
+                fileHandle = await dirHandle.getFileHandle('data.js');
                 const file = await fileHandle.getFile();
                 let text = await file.text();
 
@@ -241,6 +236,7 @@
                 
                 // Enable global buttons
                 document.getElementById('btn-save-master').disabled = false;
+                document.getElementById('btn-download-txt').disabled = false;
                 document.getElementById('btn-add-sys').disabled = false;
                 document.getElementById('btn-edit-bgs').disabled = false;
                 document.getElementById('btn-add-enc').disabled = false;
@@ -255,6 +251,41 @@
                 console.error(err);
                 if (err.name !== 'AbortError') alert("Connection failed. Make sure you are using Chrome/Edge.");
             }
+        }
+
+                function downloadTxtFile() {
+            if (!filePrefix) return;
+            const btn = document.getElementById("btn-download-txt");
+            const orig = btn.innerText;
+            btn.innerText = "DOWNLOADING...";
+
+            try {
+                let out = filePrefix;
+                out += stringifyShipsAndEq();
+                out += "\n" + midChunk1.trim() + "\n\n";
+                out += stringifyInteractions();
+                out += "\n\n" + midChunk2.trim() + "\n\n";
+                out += stringifyMap();
+                out += fileSuffix;
+
+                const blob = new Blob([out], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'data.js.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                btn.innerText = "DOWNLOADED!";
+                btn.classList.add("bg-white", "text-black");
+            } catch (err) {
+                console.error(err);
+                btn.innerText = "FAILED!";
+                btn.classList.add("bg-red-500", "text-white");
+            }
+            setTimeout(() => { btn.innerText = orig; btn.classList.remove("bg-white", "text-black", "bg-red-500"); }, 2000);
         }
 
         async function saveMasterFile() {
@@ -436,8 +467,8 @@
                     ctx.beginPath(); ctx.arc(sys.x, sys.y, 20, 0, Math.PI * 2);
                     ctx.strokeStyle = '#ef4444'; ctx.setLineDash([4, 4]); ctx.stroke(); ctx.setLineDash([]);
                 }
-                ctx.fillStyle = '#000000'; ctx.font = isSel ? "bold 16px Courier New" : "14px Courier New";
-                ctx.fillText(sys.name, sys.x + 15, sys.y + 5);
+                ctx.fillStyle = '#000000'; ctx.font = isSel ? "bold 8px Courier New" : "6px Courier New";
+                ctx.fillText(sys.name, sys.x + 8, sys.y + 2);
             });
             ctx.restore();
         }

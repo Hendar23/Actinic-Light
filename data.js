@@ -829,10 +829,11 @@ const galaxy = [
     {
         id: 7, name: "Barron Locus", x: 562, y: 612,
         pois: [
-            { name: "Raider Base", type: "Outpost", description: "" }
+            { name: "Scary Raider Base", type: "Outpost", description: "" }
         ]
     }
 ];
+
 
 
 
