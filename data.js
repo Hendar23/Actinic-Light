@@ -355,6 +355,13 @@ const quests = {
         targetSystemId: 1, 
         targetPoiName: "Sol Taxis",
         xpReward: 10
+    },
+    "meet_bob": {
+        title: "Speak to Uncle Bob",
+        description: "Find Uncle Bob in the Herbies Star system and speak to him about your plans",
+        targetSystemId: 0, 
+        targetPoiName: "The Full Burn Bar",
+        xpReward: 10
     }
 };
 
@@ -364,7 +371,7 @@ const quests = {
 
 const interactions = {
     "Obvious Pirate Ambush": {
-        image: "portrait002.png",
+        image: "random",
         dialogue: {
             "start": {
                 text: "<i>\"Stand and deliver, spacer!\"</i>",
@@ -534,19 +541,52 @@ const interactions = {
         }
     },
     "Uncle Bob": {
-        image: "portrait003.png",
+        image: "random_alien_006.png",
         dialogue: {
             "start": {
-                text: "Hey kid, how you doin'?",
+                text: "Hey kid, how's it going?",
                 options: [
                     { text: "I did it Bob, I got my first ship.", nextNode: "got_ship", hidesOnFlag: "told_bob_ship" },
                     { text: "Sorry Uncle Bob, I gotta go. [Leave]", nextNode: "leave" }
                 ]
             },
             "got_ship": {
-                text: "Congratulations kiddo. I won't ask how you got the money together for it. What's your plans now?",
+                text: "Wow you really did it. I won't ask how you got the money for it. What's your plans now?",
                 options: [
-                    { text: "TIME TO GO MAKE MY FORTUNE!", nextNode: "leave", setFlag: "told_bob_ship" }
+                    { text: "I'll make a quiet living hauling cargo.", nextNode: "hauling" },
+                    { text: "I think I'll sign up for some taxi work. I like meeting new people.", nextNode: "taxing" },
+                    { text: "I'm going to take bounties and hunt down the scum and villainy of the galaxy!", nextNode: "bounties" },
+                    { text: "Seek fortune and glory Bob. What else?", nextNode: "fortune_glory" }
+                ]
+            },
+            "fortune_glory": {
+                text: "Haha of course! \n\nWell, be careful out there. A lotta crazy and desperate people around these days, what with the economy and all. <br><br>I don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                options: [
+                    { text: "I'll be careful Bob, thanks.", nextNode: "bob_final" }
+                ]
+            },
+            "bob_final": {
+                text: "Oh hey, before you go. Without a long range jump drive you will be stuck in our little corner of the galaxy. Decent jump drives are hard to get around here though. \n\nSpeak to my old friend NAME GOES HERE when you are ready, tell him I sent you. He will sort you out with something.",
+                options: [
+                    { text: "You're the best Uncle Bob. Take care.", nextNode: "leave", setFlag: "told_bob_ship" }
+                ]
+            },
+            "hauling": {
+                text: "Space trucking ain't glamorous, but it's an honest job and someone has to do it. \n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all. I don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                options: [
+                    { text: "I'll be careful Bob, I promise", nextNode: "bob_final" }
+                ]
+            },
+            "taxing": {
+                text: "There's some good money to be made running a shuttle service, and you will certainly meet some interesting characters\n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all. I don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                options: [
+                    { text: "I'll be careful Bob, I promise", nextNode: "bob_final" }
+                ]
+            },
+            "bounties": {
+                text: "Well please make sure you fit your ship out for combat first. Bounty hunting is not as glamorous as the holo-vids make it out to be. It's a dangerous job and I'd hate for you to die before you settle your tab.\n\nSeriously kiddo, it's a dangerous galaxy out there. I don't have to tell you to stay away from Barron Locus. I don't care how badass you think you are, those zealots are dangerous!",
+                options: [
+                    { text: "Don't worry Bob, I'll be careful.", nextNode: "bob_final" }
                 ]
             }
         }
@@ -555,7 +595,7 @@ const interactions = {
         image: "random",
         dialogue: {
             "start": {
-                text: "Hand over the cash!",
+                text: "Hand over your credits!",
                 options: [
                     { text: "Never! [FIGHT]", nextNode: "leave", startCombat: true },
                     { text: "Take my money, just leave me alone!", nextNode: "leave", credits: -10 }
@@ -833,6 +873,9 @@ const galaxy = [
         ]
     }
 ];
+
+
+
 
 
 
