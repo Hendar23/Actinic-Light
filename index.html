@@ -1177,15 +1177,7 @@
              if (!currentEnemy) return;
              const log = document.getElementById('battle-log');
              
-             // 1. Check for Flee
-             if (playerAction === 'flee') {
-                 log.innerHTML = `<div class="text-yellow-400 mt-2">> SPOOLING WARP DRIVE...</div>`;
-                 currentEnemy = null;
-                 switchTab('local');
-                 return;
-             }
-             
-             // 2. Enemy AI Choice (Simple 50/50 split)
+             // 1. Enemy AI Choice (Simple 50/50 split)
              const enemyAction = Math.random() > 0.5 ? 'attack' : 'manoeuvre';
              
              log.innerHTML = `
@@ -1257,6 +1249,8 @@
              let damageToPlayer = 0;
              const successMargin = Math.abs(pSuccesses - eSuccesses);
              
+             let escaped = false;
+
              if (winner === 'player') {
                  enemyAdvantage = 0; // The loser always loses their positional advantage
                  
@@ -1268,11 +1262,19 @@
                      const grossDamage = pStats.firepower + Math.floor(player.skills.weapon / 10) + successMargin;
                      damageToEnemy = Math.max(1, Math.ceil(grossDamage - eStats.armour));
                      log.innerHTML += `<div class="text-blue-400">> DIRECT HIT! Dealt ${damageToEnemy} damage.</div>`;
+                 } else if (playerAction === 'flee' && successMargin >= 6) {
+                     log.innerHTML += `<div class="text-green-400">> YOU WON THE EXCHANGE!</div>`;
+                     log.innerHTML += `<div class="text-yellow-400 mt-2">> ESCAPE VELOCITY REACHED. JUMPING CLEAR!</div>`;
+                     escaped = true;
                  } else {
                      // Winning a Manoeuvre builds your positional advantage (Cap at 3)
                      playerAdvantage = Math.min(3, playerAdvantage + 1);
                      log.innerHTML += `<div class="text-green-400">> YOU WON THE EXCHANGE! (+Advantage)</div>`;
-                     log.innerHTML += `<div class="text-blue-400">> PERFECT MANOEUVRE. Superior positioning secured.</div>`;
+                     if (playerAction === 'flee') {
+                         log.innerHTML += `<div class="text-blue-400">> EVASION PROGRESSING. Creating distance... (Margin: ${successMargin}/6)</div>`;
+                     } else {
+                         log.innerHTML += `<div class="text-blue-400">> PERFECT MANOEUVRE. Superior positioning secured.</div>`;
+                     }
                  }
              } else {
                  playerAdvantage = 0; // The loser always loses their positional advantage
@@ -1284,12 +1286,20 @@
                      // Damage = Firepower + (WeaponSkill / 10) + Margin - Player Armour
                      const grossDamage = eStats.firepower + Math.floor(eStats.weapon / 10) + successMargin;
                      damageToPlayer = Math.max(1, Math.ceil(grossDamage - pStats.armour));
-                     log.innerHTML += `<div class="text-red-500 font-bold bg-red-900 bg-opacity-30">> WARNING: HULL HIT! Took ${damageToPlayer} damage.</div>`;
+                     if (playerAction === 'flee') {
+                         log.innerHTML += `<div class="text-red-500 font-bold bg-red-900 bg-opacity-30">> WARNING: HULL HIT WHILE ATTEMPTING EVASION! Took ${damageToPlayer} damage.</div>`;
+                     } else {
+                         log.innerHTML += `<div class="text-red-500 font-bold bg-red-900 bg-opacity-30">> WARNING: HULL HIT! Took ${damageToPlayer} damage.</div>`;
+                     }
                  } else {
                      // Enemy wins a Manoeuvre (+1 Advantage)
                      enemyAdvantage = Math.min(3, enemyAdvantage + 1);
                      log.innerHTML += `<div class="text-red-400">> ENEMY WON THE EXCHANGE! (Lost Advantage)</div>`;
-                     log.innerHTML += `<div class="text-red-400">> ENEMY OUT-MANOEUVRED YOU.</div>`;
+                     if (playerAction === 'flee') {
+                         log.innerHTML += `<div class="text-red-400">> ENEMY BLOCKED YOUR ESCAPE VECTOR.</div>`;
+                     } else {
+                         log.innerHTML += `<div class="text-red-400">> ENEMY OUT-MANOEUVRED YOU.</div>`;
+                     }
                  }
              }
              
@@ -1319,7 +1329,16 @@
              log.scrollTop = log.scrollHeight;
              
              /// 8. Check for Destruction
-             if (currentEnemy.currentHull <= 0) {
+             if (escaped) {
+                 document.getElementById('battle-commands').classList.add('hidden');
+                 const btnCont = document.getElementById('battle-continue');
+                 btnCont.classList.remove('hidden');
+                 btnCont.innerText = "ESCAPE TO SAFETY";
+                 btnCont.onclick = () => {
+                     currentEnemy = null;
+                     switchTab('local');
+                 };
+             } else if (currentEnemy.currentHull <= 0) {
                  // --- Show Kaboom ---
                  document.getElementById('battle-img-enemy').src = 'assets/kaboom.png';
                  
