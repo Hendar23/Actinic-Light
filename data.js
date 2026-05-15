@@ -7,7 +7,8 @@ const newGameDefaults = {
     startingSkills: {
         piloting: 10,
         weapon: 10,
-        engineer: 10
+        engineer: 10,
+        charm: 10
     },
     storage: [],
     startingTasks: ["meet_bob"],
@@ -845,7 +846,7 @@ const galaxy = [
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Desperate Pirate", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "herb01", chance: 0.1, isHostile: true,
                 stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 10, weapon: 10 } },
-	    { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 0.05, isHostile: true,
+            { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 0.05, isHostile: true,
                 stats: { hull: 20, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
         ],
         pois: [
@@ -853,7 +854,7 @@ const galaxy = [
         ]
     },
     {
-        id: 6, name: "Stollen", x: 578, y: 562,
+        id: 6, name: "Stollen", x: 572, y: 559,
         image: "star_system_002.png",
         description: "A lonely binary system.",
         npcSpawns: [
@@ -912,30 +913,31 @@ const galaxy = [
                 stats: { hull: 12, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "", type: "Metal Ore Refinery", description: "" },
-            { name: "", type: "Plant Processing Facility", description: "" },
+            { name: "Smogus Industries", type: "Metal Ore Refinery", description: "" },
+            { name: "Protein Shakers Union", type: "Plant Processing Facility", description: "" },
             { name: "Stoop's Startship Repairs", type: "Repair Station", description: "", repairCost: 8 },
             { name: "Logus Cabs", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Jools"], description: "Cheap, but not cheerful" }
         ]
     },
     {
         id: 9, name: "Stoolar", x: 588, y: 594,
-	npcSpawns: [
+        npcSpawns: [
             { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.5,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Taxi", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.3,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Desperate Pirate", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "herb01", chance: 0.1, isHostile: true,
                 stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 10, weapon: 10 } },
-	    { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 0.1, isHostile: true,
+            { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 0.1, isHostile: true,
                 stats: { hull: 20, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
         ],
         pois: [
-            { name: "", type: "Silicon Mine", description: "" },
-            { name: "", type: "Ice Mine", description: "" }
+            { name: "Farbabtech Mine 01", type: "Silicon Mine", description: "" },
+            { name: "Farbabtech Mine 02", type: "Ice Mine", description: "" }
         ]
     }
 ];
+
 
 
 

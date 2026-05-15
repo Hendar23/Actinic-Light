@@ -201,7 +201,7 @@
          <div class="tab-btn tab-active" onclick="switchTab('map')" id="btn-map">Map</div>
          <div class="tab-btn" onclick="switchTab('local')" id="btn-local">Local</div>
          <div class="tab-btn" onclick="switchTab('ship')" id="btn-ship">Ship</div>
-         <div class="tab-btn" onclick="switchTab('player')" id="btn-player">Player</div>
+         <div class="tab-btn" onclick="switchTab('player')" id="btn-player">Pilot</div>
          <div class="tab-btn" onclick="switchTab('tasks')" id="btn-tasks">Tasks</div>
       </div>
       <div id="travel-overlay">
@@ -472,7 +472,9 @@
              // Combine both the "deadhead" flight to the pickup and the actual trip distance.
              // Reduced the base fee from 100 to 10, and the distance multiplier from 5 to 0.5 (1/10th the old payout scale).
              const totalDistance = distToPickup + totalTripDist;
-             const reward = Math.round(10 + (totalDistance * 0.5));
+             const baseReward = Math.round(10 + (totalDistance * 0.5));
+             const charmBonus = (player.skills && player.skills.charm !== undefined) ? player.skills.charm : 10;
+             const reward = Math.round(baseReward * (1 + (charmBonus / 100)));
              const xpReward = Math.round(5 + (totalDistance * 0.25)); // XP scales with distance too
              
              const client = generateRandomCharacter();
@@ -658,6 +660,8 @@
                      // Safety checks to ensure core player objects exist
                      player.flags = player.flags || {};
                      player.tasks = player.tasks || {};
+                     player.skills = player.skills || { piloting: 10, weapon: 10, engineer: 10, charm: 10 };
+                     if (player.skills.charm === undefined) player.skills.charm = 10;
          
                      // Reconstruct active taxi mission quest data
                      if (player.activeTaxi) {
@@ -1736,12 +1740,15 @@
                 let disabledAttr = '';
                 let creditTag = '';
                 
+                let actualCredits = opt.credits || 0;
                 if (opt.credits) {
                     if (opt.credits < 0) {
                         creditTag = ` [-${Math.abs(opt.credits).toLocaleString()} CR]`;
                         if (player.credits < Math.abs(opt.credits)) disabledAttr = 'disabled';
                     } else {
-                        creditTag = ` [+${opt.credits.toLocaleString()} CR]`;
+                        const charmBonus = (player.skills && player.skills.charm !== undefined) ? player.skills.charm : 10;
+                        actualCredits = Math.round(opt.credits * (1 + (charmBonus / 100)));
+                        creditTag = ` [+${actualCredits.toLocaleString()} CR]`;
                     }
                 }
                 
@@ -1753,7 +1760,7 @@
                 const pickupAction = opt.completePickup ? "completeTaxiPickup();" : "";
                 const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
          
-                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${opt.credits || 0}, ${opt.xp || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}', ${opt.startCombat ? 'true' : 'false'})" ${disabledAttr}>
+                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${actualCredits}, ${opt.xp || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}', ${opt.startCombat ? 'true' : 'false'})" ${disabledAttr}>
                     <span>${opt.text}${creditTag}${xpTag}</span>
                 </button>`;
             });
@@ -2388,9 +2395,13 @@
              // Calculate costs dynamically based on the 0-10, 11-20, 21-30 tiers
              const getCost = (skill) => Math.pow(2, Math.floor(skill / 10));
              
+             // Failsafe for older saves
+             if (player.skills.charm === undefined) player.skills.charm = 10;
+             
              const pilCost = getCost(player.skills.piloting);
              const wepCost = getCost(player.skills.weapon);
              const engCost = getCost(player.skills.engineer);
+             const chmCost = getCost(player.skills.charm);
              
              // Ensure player.xp is treated as a number to prevent NaN errors, fallback to 0
              const currentXp = player.xp || 0;
@@ -2399,6 +2410,7 @@
              const pilDisabled = currentXp < pilCost ? "disabled" : "";
              const wepDisabled = currentXp < wepCost ? "disabled" : "";
              const engDisabled = currentXp < engCost ? "disabled" : "";
+             const chmDisabled = currentXp < chmCost ? "disabled" : "";
 
              let html = `
                  <div class="mb-8 border-b-4 border-black pb-4 flex flex-col gap-2">
@@ -2432,11 +2444,19 @@
                              </div>
                          </div>
                          
-                         <div class="flex justify-between items-center">
+                         <div class="flex justify-between items-center border-b border-gray-300 pb-2">
                              <span class="text-gray-600">Engineering</span>
                              <div class="flex items-center gap-4">
                                  <span>${player.skills.engineer}</span>
                                  <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('engineer')" ${engDisabled}>[${engCost} XP]</button>
+                             </div>
+                         </div>
+                         
+                         <div class="flex justify-between items-center">
+                             <span class="text-gray-600">Charm</span>
+                             <div class="flex items-center gap-4">
+                                 <span>${player.skills.charm}</span>
+                                 <button class="btn !w-auto !py-1 !px-3 !mb-0 !text-sm" onclick="upgradeSkill('charm')" ${chmDisabled}>[${chmCost} XP]</button>
                              </div>
                          </div>
                          
