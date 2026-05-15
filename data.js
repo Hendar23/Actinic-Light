@@ -26,28 +26,6 @@ const newGameDefaults = {
 };
 
 // ==========================================
-// LORE & FLAVOUR DATA
-// ==========================================
-const bountyCrimes = [
-    "Piracy",
-    "Smuggling",
-    "Grand Theft Spaceship",
-    "Murder",
-    "Unlicensed Cybernetics",
-    "Tax Evasion",
-    "Treason",
-    "Illegal Salvage",
-    "Drug Trafficking",
-    "Assault of an Officer",
-    "Data Slicing",
-	"Arson",
-	"Kidnapping",
-	"Kicking a puppy",
-	"Narping a woodle without a licence",
-    "Unpaid Parking Tickets"
-];
-
-// ==========================================
 // SHIPS & EQUIPMENT DATA
 // ==========================================
 
@@ -231,6 +209,28 @@ const equipment = {
         "T1 ACC": { name: "T1 ACC", size: "Tiny", type: "module", price: 100, weight: 1, stat: "accuracy", flatBonus: 10, description: "Tiny Target Illuminator" }
     }
 };
+
+// ==========================================
+// LORE & FLAVOUR DATA
+// ==========================================
+const bountyCrimes = [
+    "Piracy",
+    "Smuggling",
+    "Grand Theft Spaceship",
+    "Murder",
+    "Unlicensed Cybernetics",
+    "Tax Evasion",
+    "Treason",
+    "Illegal Salvage",
+    "Drug Trafficking",
+    "Assault of an Officer",
+	"Arson",
+	"Kidnapping",
+	"Kicking a puppy",
+	"Narping a woodle without a licence",
+    "Unpaid Parking Tickets"
+];
+
 // PROCEDURAL GENERATION DATA
 // ==========================================
 
@@ -652,7 +652,7 @@ const interactions = {
                 generateBountyJobs: true,
                 bountyJobCount: 3,
                 bountyMaxDistance: 75,
-                bountyShips: "Weescow, Midgeito, Rooster",
+                bountyShips: "Weescow, Midgeito, Keiship",
                 bountyStats: { hull: 10, armour: 10, handling: 25, firepower: 15, accuracy: 10, piloting: 20, weapon: 20 },
                 options: [
                     { text: "Maybe later. [LEAVE]", nextNode: "leave" }
@@ -983,26 +983,3 @@ const galaxy = [
         ]
     }
 ];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
