@@ -315,6 +315,37 @@
                      }
                  });
              }
+
+             // --- INJECT ACTIVE BOUNTY ---
+             if (player.activeBounty && currentSystem.id === player.activeBounty.targetSysId) {
+                 const b = player.activeBounty;
+                 const hullData = shipHulls[b.shipHull] || {};
+                 
+                 spawnedNPCs.push({
+                     name: b.targetName,
+                     shipType: b.shipHull,
+                     shipImage: hullData.image || "default.png",
+                     encounter: "SYSTEM_BOUNTY_TARGET",
+                     isHostile: false, // Wait for player to initiate
+                     image: b.targetImage,
+                     stats: b.stats,
+                     xpValue: b.xpReward,
+                     isBountyTarget: true
+                 });
+
+                 interactions["SYSTEM_BOUNTY_TARGET"] = {
+                     image: b.targetImage,
+                     dialogue: {
+                         "start": {
+                             text: `"What do you want, spacer? I'm busy."`,
+                             options: [
+                                 { text: "I'm here to collect the bounty on your head! [ATTACK]", nextNode: "leave", startCombat: true },
+                                 { text: "My mistake, carry on. [LEAVE]", nextNode: "leave" }
+                             ]
+                         }
+                     }
+                 };
+             }
          }
          
          function getPoiDescription(poi) {
@@ -417,6 +448,65 @@
              };
          }
          
+                  // --- BOUNTY SYSTEM ---
+         function generateBountyJob(maxDist, shipsStr, baseStats) {
+             let targetSys;
+             let distToTarget = 0;
+             let attempts = 0;
+             do {
+                 targetSys = galaxy[Math.floor(Math.random() * galaxy.length)];
+                 distToTarget = Math.sqrt((currentSystem.x - targetSys.x)**2 + (currentSystem.y - targetSys.y)**2);
+                 attempts++;
+             } while ((distToTarget > maxDist || targetSys.id === currentSystem.id) && attempts < 100);
+
+             if (!targetSys) targetSys = galaxy[0];
+
+             const ships = shipsStr ? shipsStr.split(',').map(s=>s.trim()) : Object.keys(shipHulls);
+             const shipHull = ships[Math.floor(Math.random() * ships.length)] || "Weescow";
+             const pilot = generateRandomCharacter();
+
+             // Randomize stats by +/- 20%
+             const randomizeStat = (val) => Math.max(1, Math.floor(val * (0.8 + Math.random() * 0.4)));
+             const finalStats = {
+                 hull: randomizeStat(baseStats.hull || 15),
+                 armour: randomizeStat(baseStats.armour || 15),
+                 handling: randomizeStat(baseStats.handling || 25),
+                 firepower: randomizeStat(baseStats.firepower || 15),
+                 accuracy: randomizeStat(baseStats.accuracy || 10),
+                 piloting: randomizeStat(baseStats.piloting || 25),
+                 weapon: randomizeStat(baseStats.weapon || 25)
+             };
+
+             const statSum = Object.values(finalStats).reduce((a,b)=>a+b, 0);
+             const baseReward = Math.round(statSum * 1 + distToTarget * 0.25); // Scaled down by factor of 10
+             const charmBonus = (player.skills && player.skills.charm !== undefined) ? player.skills.charm : 10;
+             const reward = Math.round(baseReward * (1 + (charmBonus / 100)));
+
+             return {
+                 targetSysId: targetSys.id,
+                 targetSysName: targetSys.name,
+                 targetName: pilot.name,
+                 targetImage: pilot.image,
+                 shipHull: shipHull,
+                 stats: finalStats,
+                 reward: reward,
+                 xpReward: Math.round(statSum / 3)
+             };
+         }
+         
+         function acceptBountyJob(index) {
+             const job = window.currentBountyOffers[index];
+             player.activeBounty = job;
+             player.tasks['bounty_mission'] = 'active';
+             quests['bounty_mission'] = {
+                 title: `Bounty: ${job.targetName}`,
+                 description: `Hunt down and eliminate ${job.targetName} in the ${job.targetSysName} system. Reward: ${job.reward.toLocaleString()} CR`,
+                 targetSystemId: job.targetSysId
+             };
+             showTaskPopup("NEW TARGET ACQUIRED", quests['bounty_mission']);
+             window.currentBountyOffers = null;
+             selectDialogue('leave');
+         }
          function generateTaxiJob(maxDist) {
              let pickupSys, pickupPoi, dropoffSys, dropoffPoi;
              let distToPickup = 0, distToDropoff = 0, totalTripDist = 0;
@@ -664,6 +754,13 @@
                      if (player.skills.charm === undefined) player.skills.charm = 10;
          
                      // Reconstruct active taxi mission quest data
+                                          if (player.activeBounty) {
+                         quests['bounty_mission'] = {
+                             title: `Bounty: ${player.activeBounty.targetName}`,
+                             description: `Hunt down and eliminate ${player.activeBounty.targetName} in the ${player.activeBounty.targetSysName} system. Reward: ${player.activeBounty.reward.toLocaleString()} CR`,
+                             targetSystemId: player.activeBounty.targetSysId
+                         };
+                     }
                      if (player.activeTaxi) {
                          // Failsafe: If it's an old or broken save format, wipe the passenger to prevent crashes
                          if (!player.activeTaxi.client || !player.activeTaxi.client.name || !player.activeTaxi.status) {
@@ -1330,6 +1427,11 @@
              
              /// 8. Check for Destruction
              if (escaped) {
+                 if (currentEnemy.isBountyTarget) {
+                     player.tasks['bounty_mission'] = 'failed';
+                     showTaskPopup("BOUNTY FAILED", {title: "Target Escaped", description: "You fled the engagement."});
+                     player.activeBounty = null;
+                 }
                  document.getElementById('battle-commands').classList.add('hidden');
                  const btnCont = document.getElementById('battle-continue');
                  btnCont.classList.remove('hidden');
@@ -1345,6 +1447,15 @@
                  player.xp += currentEnemy.xpValue; // Award the XP
                  showXpPopup(currentEnemy.xpValue, "Enemy Destroyed");
                  log.innerHTML += `<div class="text-yellow-400 font-bold text-xl mt-2">> TARGET DESTROYED. [+${currentEnemy.xpValue} XP]</div>`;
+                 
+                 // --- BOUNTY REWARD LOGIC ---
+                 if (currentEnemy.isBountyTarget && player.activeBounty) {
+                     player.credits += player.activeBounty.reward;
+                     player.tasks['bounty_mission'] = 'completed';
+                     showTaskPopup("BOUNTY CLAIMED", {title: player.activeBounty.targetName, description: `Collected ${player.activeBounty.reward.toLocaleString()} CR`});
+                     player.activeBounty = null;
+                 }
+
                  const idx = spawnedNPCs.findIndex(n => n === currentEnemy);
                  if (idx > -1) spawnedNPCs.splice(idx, 1);
                  
@@ -1725,8 +1836,38 @@
                      <div class="space-y-4 shrink-0 mt-auto max-w-2xl mx-auto w-full pb-8">
              `;
          
-            if (node.generateTaxiJobs) {
-                if (player.activeTaxi) {
+            if (node.generateBountyJobs) {
+                 if (player.activeBounty) {
+                     html += `<div class="bg-red-50 border-2 border-red-600 p-4 mb-4 font-bold text-center">You already have an active Bounty Contract. Clear it before accepting another.</div>`;
+                 } else {
+                     if (!window.currentBountyOffers) {
+                         window.currentBountyOffers = [];
+                         const numJobs = node.bountyJobCount || 3;
+                         for (let i = 0; i < numJobs; i++) {
+                             window.currentBountyOffers.push(generateBountyJob(node.bountyMaxDistance || 100, node.bountyShips, node.bountyStats));
+                         }
+                     }
+                     html += `<h4 class="text-2xl font-bold uppercase mb-2 border-b-2 border-black pb-2 text-red-800">Available Bounties</h4><div class="space-y-2 mb-6">`;
+                     window.currentBountyOffers.forEach((job, idx) => {
+                         const hullData = shipHulls[job.shipHull] || {};
+                         html += `<div class="border-2 border-black bg-white p-3 flex justify-between items-center hover:bg-red-50">
+                             <div class="flex items-center gap-4">
+                                 <div class="w-16 h-16 border border-black bg-gray-100 shrink-0"><img src="assets/${job.targetImage}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';"></div>
+                                 <div>
+                                     <div class="font-bold text-lg text-red-700">${job.targetName}</div>
+                                     <div class="text-sm">Location: <span class="font-bold">${job.targetSysName}</span> System</div>
+                                     <div class="text-xs text-gray-600 italic">Vessel: ${hullData.name} class</div>
+                                 </div>
+                             </div>
+                             <button class="btn !w-auto !py-2 !px-4 !mb-0 !bg-red-100 !border-red-600" onclick="acceptBountyJob(${idx})">ACCEPT [${job.reward.toLocaleString()} CR]</button>
+                         </div>`;
+                     });
+                     html += `</div>`;
+                 }
+             }
+
+             if (node.generateTaxiJobs) {
+                 if (player.activeTaxi) {
                     html += `<div class="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 font-bold text-yellow-800 text-xl text-center">
                         "You already have a passenger, spacer! Drop them off before taking more fares."
                     </div>`;
@@ -2606,14 +2747,18 @@
                      disabledState = "disabled";
                  }
          
+                 const isTarget = player.activeBounty && npc.name === player.activeBounty.targetName && currentSystem.id === player.activeBounty.targetSysId;
+                 const targetClasses = isTarget ? "!border-blue-600 !bg-blue-50 shadow-[0_0_15px_rgba(37,99,235,0.3)]" : "";
+                 const textHighlight = isTarget ? "text-blue-700" : "";
+         
                  html += `
-                 <button class="btn !p-2" ${onClickAction} ${disabledState}>
+                 <button class="btn !p-2 ${targetClasses}" ${onClickAction} ${disabledState}>
                      <div class="flex items-center gap-4 text-left">
                          <div class="w-16 h-16 shrink-0 border-2 border-black bg-gray-100 flex items-center justify-center overflow-hidden">
                              <img src="${imagePath}" alt="${npc.shipType}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';">
                          </div>
                          <div>
-                             <div class="text-2xl leading-none mb-1">${npc.name.toUpperCase()}</div>
+                             <div class="text-2xl leading-none mb-1 ${textHighlight}">${npc.name.toUpperCase()}</div>
                              <div class="text-lg text-gray-600">${npc.shipType.toUpperCase()}</div>
                          </div>
                      </div>

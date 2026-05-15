@@ -746,9 +746,43 @@
             let html = `<h2 class="font-bold text-2xl uppercase border-b-2 border-black pb-2 mb-4">Node: ${selNode}</h2>
                 <div class="flex items-center gap-2 mb-2 bg-gray-200 p-2 border border-gray-400">
                     <input type="checkbox" id="node-taxi" ${node.generateTaxiJobs ? 'checked' : ''} onchange="toggleTaxiJobs(this.checked)">
-                    <label for="node-taxi" class="text-xs font-bold uppercase text-blue-800">Generate Taxi Job Board</label>
+                    <label for="node-taxi" class="text-xs font-bold uppercase text-blue-800 flex-grow">Generate Taxi Job Board</label>
+                    <input type="checkbox" id="node-bounty" ${node.generateBountyJobs ? 'checked' : ''} onchange="toggleBountyJobs(this.checked)">
+                    <label for="node-bounty" class="text-xs font-bold uppercase text-red-800">Generate Bounty Board</label>
                 </div>
                 ${node.generateTaxiJobs ? `<div class="flex gap-4 mb-4 p-3 bg-blue-50 border-2 border-blue-200"><div><label class="block text-[10px] font-bold uppercase">Max Dist (LY)</label><input type="number" value="${node.taxiMaxDistance||150}" oninput="updateNodeProp('taxiMaxDistance', parseInt(this.value)||0)"></div><div><label class="block text-[10px] font-bold uppercase">Number of Jobs</label><input type="number" value="${node.taxiJobCount||3}" oninput="updateNodeProp('taxiJobCount', parseInt(this.value)||0)"></div></div>` : ''}
+                ${node.generateBountyJobs ? `<div class="mb-4 p-3 bg-red-50 border-2 border-red-200 space-y-2">
+                    <div class="flex gap-4">
+                        <div><label class="block text-[10px] font-bold uppercase">Max Dist (LY)</label><input type="number" value="${node.bountyMaxDistance||100}" oninput="updateNodeProp('bountyMaxDistance', parseInt(this.value)||0)"></div>
+                        <div><label class="block text-[10px] font-bold uppercase">Number of Jobs</label><input type="number" value="${node.bountyJobCount||3}" oninput="updateNodeProp('bountyJobCount', parseInt(this.value)||0)"></div>
+                        <div class="flex-grow flex flex-col">
+                        <label class="block text-[10px] font-bold uppercase mb-1">Target Ship Hulls</label>
+                        <div class="h-20 overflow-y-auto border border-red-300 bg-white p-1 text-xs space-y-1">
+                            ${Object.keys(shipHullsData).map(shipId => {
+                                const currentShips = (node.bountyShips || '').split(',').map(s=>s.trim());
+                                const isChecked = currentShips.includes(shipId) ? 'checked' : '';
+                                const safeId = escapeHTML(shipId).replace(/\s+/g, '-');
+                                return `<div class="flex items-center gap-2 hover:bg-red-50 cursor-pointer p-0.5">
+                                    <input type="checkbox" ${isChecked} onchange="updateBountyShip('${escapeJS(shipId)}', this.checked)" id="bty-ship-${safeId}">
+                                    <label for="bty-ship-${safeId}" class="cursor-pointer flex-grow select-none">${escapeHTML(shipId)}</label>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    </div>
+                    <div class="pt-2 border-t border-red-200">
+                        <label class="block text-[10px] font-bold uppercase text-red-800 mb-1">Baseline Enemy Stats</label>
+                        <div class="grid grid-cols-7 gap-1">
+                            <div><label class="text-[9px] uppercase">Hull</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.hull||15}" oninput="updateBountyStat('hull', this.value)"></div>
+                            <div><label class="text-[9px] uppercase">Arm</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.armour||15}" oninput="updateBountyStat('armour', this.value)"></div>
+                            <div><label class="text-[9px] uppercase">Hndl</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.handling||25}" oninput="updateBountyStat('handling', this.value)"></div>
+                            <div><label class="text-[9px] uppercase">Fire</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.firepower||15}" oninput="updateBountyStat('firepower', this.value)"></div>
+                            <div><label class="text-[9px] uppercase">Acc</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.accuracy||10}" oninput="updateBountyStat('accuracy', this.value)"></div>
+                            <div><label class="text-[9px] uppercase">Pilot</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.piloting||25}" oninput="updateBountyStat('piloting', this.value)"></div>
+                            <div><label class="text-[9px] uppercase">Weap</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.weapon||25}" oninput="updateBountyStat('weapon', this.value)"></div>
+                        </div>
+                    </div>
+                </div>` : ''}
                 <label class="block text-xs font-bold uppercase mb-1">NPC Dialogue (HTML allowed)</label>
                 <textarea class="w-full h-32 mb-6 shrink-0" oninput="updateNodeProp('text', this.value)">${escapeHTML(node.text || '')}</textarea>
                 <div class="flex justify-between items-center border-b-2 border-black pb-2 mb-4 shrink-0"><h3 class="font-bold text-xl uppercase">Player Options</h3><button class="btn !p-1 text-xs bg-green-100" onclick="addOption()">+ ADD OPTION</button></div>
@@ -782,6 +816,18 @@
         function deleteNode(k, e) { e.stopPropagation(); if(confirm("Delete node?")) { delete interactions[selEnc].dialogue[k]; if(selNode===k) selNode=null; renderNodes(); } }
         function updateNodeProp(k, v) { if (v===false||v==='') delete interactions[selEnc].dialogue[selNode][k]; else interactions[selEnc].dialogue[selNode][k] = v; }
         function toggleTaxiJobs(checked) { if(checked){ interactions[selEnc].dialogue[selNode].generateTaxiJobs=true; interactions[selEnc].dialogue[selNode].taxiJobCount=3; interactions[selEnc].dialogue[selNode].taxiMaxDistance=150;}else{ delete interactions[selEnc].dialogue[selNode].generateTaxiJobs; delete interactions[selEnc].dialogue[selNode].taxiJobCount; delete interactions[selEnc].dialogue[selNode].taxiMaxDistance;} renderEncEditor(); }
+        function toggleBountyJobs(checked) { if(checked){ interactions[selEnc].dialogue[selNode].generateBountyJobs=true; interactions[selEnc].dialogue[selNode].bountyJobCount=3; interactions[selEnc].dialogue[selNode].bountyMaxDistance=100; interactions[selEnc].dialogue[selNode].bountyShips="Weescow, Midgeito, Rooster"; interactions[selEnc].dialogue[selNode].bountyStats={hull:15, armour:15, handling:25, firepower:15, accuracy:10, piloting:25, weapon:25};}else{ delete interactions[selEnc].dialogue[selNode].generateBountyJobs; delete interactions[selEnc].dialogue[selNode].bountyJobCount; delete interactions[selEnc].dialogue[selNode].bountyMaxDistance; delete interactions[selEnc].dialogue[selNode].bountyShips; delete interactions[selEnc].dialogue[selNode].bountyStats; } renderEncEditor(); }
+        function updateBountyStat(k, v) { interactions[selEnc].dialogue[selNode].bountyStats[k] = parseInt(v)||0; }
+        function updateBountyShip(shipId, isChecked) {
+            let current = interactions[selEnc].dialogue[selNode].bountyShips || '';
+            let arr = current ? current.split(',').map(s => s.trim()).filter(s => s) : [];
+            if (isChecked) {
+                if (!arr.includes(shipId)) arr.push(shipId);
+            } else {
+                arr = arr.filter(id => id !== shipId);
+            }
+            interactions[selEnc].dialogue[selNode].bountyShips = arr.join(', ');
+        }
         function addOption() { interactions[selEnc].dialogue[selNode].options.push({text:"New Option",nextNode:"leave"}); renderEncEditor(); }
         function deleteOption(i) { interactions[selEnc].dialogue[selNode].options.splice(i,1); renderEncEditor(); }
         function updateOpt(i, k, v) { if(k==='credits' || k==='xp') v=parseInt(v)||0; if(v===''||v===0||v===false) delete interactions[selEnc].dialogue[selNode].options[i][k]; else interactions[selEnc].dialogue[selNode].options[i][k]=v; }        function moveOptionUp(i) { if (i <= 0) return; const opts = interactions[selEnc].dialogue[selNode].options; [opts[i - 1], opts[i]] = [opts[i], opts[i - 1]]; renderEncEditor(); }
@@ -803,6 +849,7 @@
                     const n = e.dialogue[dk];
                     out += `            "${escapeJS(dk)}": {\n                text: "${escapeJS(n.text)}",\n`;
                     if(n.generateTaxiJobs) out += `                generateTaxiJobs: true,\n                taxiJobCount: ${n.taxiJobCount||3},\n                taxiMaxDistance: ${n.taxiMaxDistance||150},\n`;
+                    if(n.generateBountyJobs) out += `                generateBountyJobs: true,\n                bountyJobCount: ${n.bountyJobCount||3},\n                bountyMaxDistance: ${n.bountyMaxDistance||100},\n                bountyShips: "${escapeJS(n.bountyShips)}",\n                bountyStats: { hull: ${n.bountyStats?.hull||15}, armour: ${n.bountyStats?.armour||15}, handling: ${n.bountyStats?.handling||25}, firepower: ${n.bountyStats?.firepower||15}, accuracy: ${n.bountyStats?.accuracy||10}, piloting: ${n.bountyStats?.piloting||25}, weapon: ${n.bountyStats?.weapon||25} },\n`;
                     out += `                options: [\n`;
                     (n.options||[]).forEach((opt, oIdx) => {
                         let os = `                    { text: "${escapeJS(opt.text)}", nextNode: "${escapeJS(opt.nextNode)||'leave'}"`;

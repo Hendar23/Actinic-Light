@@ -614,6 +614,29 @@ const interactions = {
                 ]
             }
         }
+    },
+    "Officer Vangteel": {
+        image: "portrait005.png",
+        dialogue: {
+            "start": {
+                text: "\"What do you want citizen?\"",
+                options: [
+                    { text: "Any outstanding bounties?", nextNode: "bounties" },
+                    { text: "Nothing, just passing through. [LEAVE]", nextNode: "leave" }
+                ]
+            },
+            "bounties": {
+                text: "\"Always. Here is our current most wanted list.\"",
+                generateBountyJobs: true,
+                bountyJobCount: 3,
+                bountyMaxDistance: 75,
+                bountyShips: "Weescow, Midgeito, Keiship",
+                bountyStats: { hull: 10, armour: 10, handling: 25, firepower: 15, accuracy: 10, piloting: 20, weapon: 20 },
+                options: [
+                    { text: "Maybe later. [LEAVE]", nextNode: "leave" }
+                ]
+            }
+        }
     }
 };
 
@@ -833,7 +856,8 @@ const galaxy = [
             { name: "The Full Burn Bar", type: "Outpost", image: "bar001.png", encounters: ["Uncle Bob"], description: "Leontons go to bar for visiting spacers. Uncle bob has run it as long as anyone can remember. " },
             { name: "Copper Extractor", type: "Copper Mine", description: "Leontons copper rich moon is the heart of the systems economy." },
             { name: "Barlows Starship Emporium", type: "Ship Vendor", description: "Rows of battered old spaceships line a large storage hold. A plastifab shed serves as Barlow Office.", shipInventory: ["Weescow", "Midgeito", "Keiship"] },
-            { name: "Herbies Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Varlo"], description: "Herbies Taxis HQ is a cheaply refurbished outpost." }
+            { name: "Herbies Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Varlo"], description: "Herbies Taxis HQ is a cheaply refurbished outpost." },
+            { name: "System Security HQ", type: "Outpost", image: "station005.png", encounters: ["Officer Vangteel"], description: "Police headquarters for the Herbie system. " }
         ]
     },
     {
@@ -937,6 +961,11 @@ const galaxy = [
         ]
     }
 ];
+
+
+
+
+
 
 
 
