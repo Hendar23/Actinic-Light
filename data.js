@@ -353,7 +353,7 @@ const interactions = {
         image: "random",
         dialogue: {
             "start": {
-                text: "<i>\"Stand and deliver, spacer!\"</i>",
+                text: "\"Stand and deliver, spacer!\"",
                 options: [
                     { text: "Never! [FIGHT]", nextNode: "leave", startCombat: true },
                     { text: "Take my money!", nextNode: "leave", credits: -100 }
@@ -365,7 +365,7 @@ const interactions = {
         image: "portrait005.png",
         dialogue: {
             "start": {
-                text: "<i>\"We have our eye on you citizen. You had better behave.\"</i>",
+                text: "\"We have our eye on you citizen. You had better behave.\"",
                 options: [
                     { text: "You have a lovely day now officer. [Leave]", nextNode: "leave" }
                 ]
@@ -376,9 +376,9 @@ const interactions = {
         image: "random",
         dialogue: {
             "start": {
-                text: "<i>\"Fly safe friend!\"</i>",
+                text: "\"Fly safe friend!\"",
                 options: [
-                    { text: "You too. [Leave]", nextNode: "leave" }
+                    { text: "You too buddy. [LEAVE]", nextNode: "leave" }
                 ]
             }
         }
@@ -387,9 +387,9 @@ const interactions = {
         image: "random",
         dialogue: {
             "start": {
-                text: "<i>\"Fly safe friend!\"</i>",
+                text: "\"Fly safe friend!\"",
                 options: [
-                    { text: "You too. [Leave]", nextNode: "leave" }
+                    { text: "You too buddy. [Leave]", nextNode: "leave" }
                 ]
             }
         }
@@ -398,7 +398,7 @@ const interactions = {
         image: "portrait001.png",
         dialogue: {
             "start": {
-                text: "\"What're you drinking, spacer?\"</i>",
+                text: "\"What're you drinking, spacer?\"",
                 options: [
                     { text: "Got any work?", nextNode: "work", hidesOnFlag: "knows_frank" },
                     { text: "About that job...", nextNode: "work2", requiresFlag: "knows_frank" },
@@ -409,19 +409,19 @@ const interactions = {
             "cash": {
                 text: "He rolls his eyes and tosses a cred-chip onto the bar.<br><br><i>\"I guess you are just testing the game, so why not? Here you go.\"</i>",
                 options: [
-                    { text: "Thanks! [Leave]", nextNode: "leave", credits: 1000 }
+                    { text: "Thanks! [LEAVE]", nextNode: "leave", credits: 1000 }
                 ]
             },
             "drink": {
-                text: "He pours you a glowing blue liquid. It tastes like battery acid and regret.",
+                text: "<i>He pours you a glowing blue liquid. It tastes like battery acid and regret.</i>",
                 options: [
                     { text: "Ugh. Thanks. [Leave]", nextNode: "leave" }
                 ]
             },
             "work": {
-                text: "\"Speak to Frank at Sol taxis, they are always looking for pilots.\"</i>",
+                text: "\"Speak to Frank at Sol taxis, they are always looking for pilots.\"",
                 options: [
-                    { text: "Thanks. [Leave]", nextNode: "leave", setFlag: "knows_frank", startTask: "meet_frank" }
+                    { text: "Thanks. [LEAVE]", nextNode: "leave", setFlag: "knows_frank", startTask: "meet_frank" }
                 ]
             },
             "work2": {
@@ -436,7 +436,7 @@ const interactions = {
         image: "portrait003.png",
         dialogue: {
             "start": {
-                text: "<i>\"Yeah what?\"</i>",
+                text: "\"Yeah what?\"",
                 options: [
                     { text: "I heard you got work?", nextNode: "jobs", setFlag: "met_frank", hidesOnFlag: "met_frank", completeTask: "meet_frank" },
                     { text: "Got any taxi fares?", nextNode: "jobs", requiresFlag: "met_frank" },
@@ -449,7 +449,7 @@ const interactions = {
                 taxiJobCount: 3,
                 taxiMaxDistance: 50,
                 options: [
-                    { text: "Maybe later. [Leave]", nextNode: "leave" }
+                    { text: "Maybe later. [LEAVE]", nextNode: "leave" }
                 ]
             }
         }
@@ -491,30 +491,30 @@ const interactions = {
         image: "random_alien_002.png",
         dialogue: {
             "start": {
-                text: "Greetings. May I be of assistance?",
+                text: "\"Greetings. May I be of assistance?\"",
                 options: [
-                    { text: "Any fares?", nextNode: "work" },
-                    { text: "No thanks. [Leave]", nextNode: "leave" }
+                    { text: "Got any fares?", nextNode: "work" },
+                    { text: "No thanks. [LEAVE]", nextNode: "leave" }
                 ]
             },
             "work": {
-                text: "Of course.",
+                text: "\"Of course.\"",
                 generateTaxiJobs: true,
                 taxiJobCount: 4,
                 taxiMaxDistance: 75,
                 options: [
-                    { text: "Maybe another time. [Leave]", nextNode: "leave" }
+                    { text: "Maybe another time. [LEAVE]", nextNode: "leave" }
                 ]
             }
         }
     },
     "Rusty Hank": {
-        image: "random",
+        image: "random_alien_009.png",
         dialogue: {
             "start": {
-                text: "<i> Don't worry, we can patch 'er up for ya.</i>",
+                text: "\"Don't worry, we can patch 'er up for ya.\"",
                 options: [
-                    { text: "Thanks [Leave]", nextNode: "leave" }
+                    { text: "Thanks. [LEAVE]", nextNode: "leave" }
                 ]
             }
         }
@@ -523,14 +523,14 @@ const interactions = {
         image: "random_alien_006.png",
         dialogue: {
             "start": {
-                text: "Hey kid, how's it going?",
+                text: "\"Hey kid, how's it going?\"",
                 options: [
                     { text: "I did it Bob, I got my first ship.", nextNode: "got_ship", hidesOnFlag: "told_bob_ship" },
-                    { text: "Sorry Uncle Bob, I gotta go. [Leave]", nextNode: "leave" }
+                    { text: "Sorry Uncle Bob, I gotta go. [LEAVE]", nextNode: "leave" }
                 ]
             },
             "got_ship": {
-                text: "Wow you really did it. I won't ask how you got the money for it. What's your plans now?",
+                text: "\"Wow you really did it. I won't ask how you got the money for it. What's your plans now?\"",
                 options: [
                     { text: "I'll make a quiet living hauling cargo.", nextNode: "hauling" },
                     { text: "I think I'll sign up for some taxi work. I like meeting new people.", nextNode: "taxing" },
@@ -539,31 +539,31 @@ const interactions = {
                 ]
             },
             "fortune_glory": {
-                text: "Haha of course! \n\nWell, be careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                text: "\"Haha of course! \n\nWell, be careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\"\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
                 options: [
                     { text: "I'll be careful Bob, thanks.", nextNode: "bob_final" }
                 ]
             },
             "bob_final": {
-                text: "Oh hey, before you go. Without a long range jump drive you will be stuck in our little corner of the galaxy. Decent jump drives are hard to get around here though. \n\nSpeak to my old friend NAME GOES HERE when you are ready, tell him I sent you. He will sort you out with something.",
+                text: "\"Oh hey, before you go. Without a long range jump drive you will be stuck in our little corner of the galaxy. Decent jump drives are hard to get around here though. \n\nSpeak to my old friend NAME GOES HERE when you are ready, tell him I sent you. He will sort you out with something.\"",
                 options: [
-                    { text: "You're the best Uncle Bob. Take care.", nextNode: "leave", setFlag: "told_bob_ship", completeTask: "meet_bob" }
+                    { text: "You're the best Uncle Bob. Take care. [LEAVE]", nextNode: "leave", setFlag: "told_bob_ship", completeTask: "meet_bob" }
                 ]
             },
             "hauling": {
-                text: "Space trucking ain't glamorous, but it's an honest job and someone has to do it. \n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                text: "\"Space trucking ain't glamorous, but it's an honest job and someone has to do it. \n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\"\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
                 options: [
-                    { text: "I'll be careful Bob, I promise", nextNode: "bob_final" }
+                    { text: "I'll be careful Bob, I promise.", nextNode: "bob_final" }
                 ]
             },
             "taxing": {
-                text: "There's some good money to be made running a shuttle service, and you will certainly meet some interesting characters\n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
+                text: "\"There's some good money to be made running a shuttle service, and you will certainly meet some interesting characters\n\nBut careful out there. A lotta crazy and desperate people around these days, what with the economy and all.\"\n\nI don't have to tell you to stay away from Barron Locus. Someone aught to do something about those crazy killers. ",
                 options: [
-                    { text: "I'll be careful Bob, I promise", nextNode: "bob_final" }
+                    { text: "I'll be careful Bob, I promise.", nextNode: "bob_final" }
                 ]
             },
             "bounties": {
-                text: "Well please make sure you fit your ship out for combat first. Bounty hunting is not as glamorous as the holo-vids make it out to be. It's a dangerous job and I'd hate for you to die before you settle your tab.\n\nSeriously kiddo, it's a dangerous galaxy out there. I don't have to tell you to stay away from Barron Locus. I don't care how badass you think you are, those zealots are dangerous!",
+                text: "\"Well please make sure you fit your ship out for combat first. Bounty hunting is not as glamorous as the holo-vids make it out to be. It's a dangerous job and I'd hate for you to die before you settle your tab.\n\nSeriously kiddo, it's a dangerous galaxy out there. I don't have to tell you to stay away from Barron Locus. I don't care how badass you think you are, those zealots are dangerous!\"",
                 options: [
                     { text: "Don't worry Bob, I'll be careful.", nextNode: "bob_final" }
                 ]
@@ -574,7 +574,7 @@ const interactions = {
         image: "random",
         dialogue: {
             "start": {
-                text: "Hand over your credits!",
+                text: "\"Hand over your credits!\"",
                 options: [
                     { text: "Never! [FIGHT]", nextNode: "leave", startCombat: true },
                     { text: "Take my money, just leave me alone!", nextNode: "leave", credits: -10 }
@@ -586,19 +586,30 @@ const interactions = {
         image: "random_alien_012.png",
         dialogue: {
             "start": {
-                text: "Yeah, what?",
+                text: "\"Yeah, what?\"",
                 options: [
                     { text: "Got any taxi fares?", nextNode: "work" },
                     { text: "Nothing. [Leave]", nextNode: "leave" }
                 ]
             },
             "work": {
-                text: "Sure, take a look.",
+                text: "\"Here's what's on the board.\"",
                 generateTaxiJobs: true,
                 taxiJobCount: 4,
                 taxiMaxDistance: 75,
                 options: [
                     { text: "Maybe later. [Leave]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
+    "locus_raider": {
+        image: "portrait006.png",
+        dialogue: {
+            "start": {
+                text: "Interloper. Infection. Remove/Purify/Destroy.",
+                options: [
+                    { text: "I guess we can't talk about this? [FIGHT]", nextNode: "leave", startCombat: true }
                 ]
             }
         }
@@ -825,7 +836,7 @@ const galaxy = [
         ]
     },
     {
-        id: 5, name: "Britel", x: 553, y: 578,
+        id: 5, name: "Britel", x: 555, y: 576,
         description: "A sleepy backwater.",
         npcSpawns: [
             { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.5,
@@ -833,10 +844,11 @@ const galaxy = [
             { name: "Taxi", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.3,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Desperate Pirate", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "herb01", chance: 0.1, isHostile: true,
-                stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 10, weapon: 10 } }
+                stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 10, weapon: 10 } },
+	    { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 0.05, isHostile: true,
+                stats: { hull: 20, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
         ],
         pois: [
-            { name: "Roovy Farms", type: "Plant Farm", description: "" },
             { name: "Salty's Hydroponics Inc", type: "Plant Farm", description: "" }
         ]
     },
@@ -868,15 +880,20 @@ const galaxy = [
         ]
     },
     {
-        id: 7, name: "Barron Locus", x: 562, y: 612,
+        id: 7, name: "Barron Locus", x: 564, y: 611,
+        description: "Home system of the mysterious 'Locust' raiders",
+        npcSpawns: [
+            { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 1, isHostile: true,
+                stats: { hull: 20, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
+        ],
         pois: [
-            { name: "Scary Raider Base", type: "Outpost", description: "" }
+            { name: "Scary Raider Base", type: "Outpost", image: "station001.png", description: "" }
         ]
     },
     {
         id: 8, name: "Logus", x: 607, y: 545,
         description: "The industrial heart of the sector.",
-	npcSpawns: [
+        npcSpawns: [
             { name: "Taxi", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.1,
                 stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
             { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.1,
@@ -900,8 +917,26 @@ const galaxy = [
             { name: "Stoop's Startship Repairs", type: "Repair Station", description: "", repairCost: 8 },
             { name: "Logus Cabs", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Jools"], description: "Cheap, but not cheerful" }
         ]
+    },
+    {
+        id: 9, name: "Stoolar", x: 588, y: 594,
+	npcSpawns: [
+            { name: "Trader", shipType: "Keiship", shipImage: "ship_keiship.png", encounter: "civilian001", chance: 0.5,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Taxi", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "civilian001", chance: 0.3,
+                stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } },
+            { name: "Desperate Pirate", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "herb01", chance: 0.1, isHostile: true,
+                stats: { hull: 10, armour: 8, handling: 20, firepower: 10, accuracy: 5, piloting: 10, weapon: 10 } },
+	    { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 0.1, isHostile: true,
+                stats: { hull: 20, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
+        ],
+        pois: [
+            { name: "", type: "Silicon Mine", description: "" },
+            { name: "", type: "Ice Mine", description: "" }
+        ]
     }
 ];
+
 
 
 
