@@ -481,9 +481,12 @@
              const baseReward = Math.round(statSum * 1 + distToTarget * 0.25); // Scaled down by factor of 10
              const charmBonus = (player.skills && player.skills.charm !== undefined) ? player.skills.charm : 10;
              const reward = Math.round(baseReward * (1 + (charmBonus / 100)));
+             const crimeList = typeof bountyCrimes !== 'undefined' ? bountyCrimes : ["Piracy", "Smuggling"];
+             const crime = crimeList[Math.floor(Math.random() * crimeList.length)];
 
              return {
                  targetSysId: targetSys.id,
+                 crime: crime,
                  targetSysName: targetSys.name,
                  targetName: pilot.name,
                  targetImage: pilot.image,
@@ -1838,7 +1841,7 @@
          
             if (node.generateBountyJobs) {
                  if (player.activeBounty) {
-                     html += `<div class="bg-red-50 border-2 border-red-600 p-4 mb-4 font-bold text-center">You already have an active Bounty Contract. Clear it before accepting another.</div>`;
+                     html += `<div class="bg-gray-100 border-2 border-black p-4 mb-4 font-bold text-center">You already have an active Bounty Contract. Clear it before accepting another.</div>`;
                  } else {
                      if (!window.currentBountyOffers) {
                          window.currentBountyOffers = [];
@@ -1847,19 +1850,20 @@
                              window.currentBountyOffers.push(generateBountyJob(node.bountyMaxDistance || 100, node.bountyShips, node.bountyStats));
                          }
                      }
-                     html += `<h4 class="text-2xl font-bold uppercase mb-2 border-b-2 border-black pb-2 text-red-800">Available Bounties</h4><div class="space-y-2 mb-6">`;
+                     html += `<h4 class="text-2xl font-bold uppercase mb-2 border-b-2 border-black pb-2">Available Bounties</h4><div class="space-y-2 mb-6">`;
                      window.currentBountyOffers.forEach((job, idx) => {
                          const hullData = shipHulls[job.shipHull] || {};
-                         html += `<div class="border-2 border-black bg-white p-3 flex justify-between items-center hover:bg-red-50">
+                         html += `<div class="border-2 border-black bg-white p-3 flex justify-between items-center">
                              <div class="flex items-center gap-4">
                                  <div class="w-16 h-16 border border-black bg-gray-100 shrink-0"><img src="assets/${job.targetImage}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='assets/default.png';"></div>
                                  <div>
-                                     <div class="font-bold text-lg text-red-700">${job.targetName}</div>
-                                     <div class="text-sm">Location: <span class="font-bold">${job.targetSysName}</span> System</div>
-                                     <div class="text-xs text-gray-600 italic">Vessel: ${hullData.name} class</div>
+                                     <div class="font-bold text-lg">${job.targetName}</div>
+                                     <div class="text-sm text-gray-700 italic mb-1">Wanted for: ${job.crime}</div>
+                                     <div class="text-sm text-gray-600 uppercase">Location: <span class="font-bold text-black">${job.targetSysName}</span></div>
+                                     <div class="text-sm text-gray-600 uppercase">Bounty: <span class="font-black text-black text-base">${job.reward.toLocaleString()} CR</span></div>
                                  </div>
                              </div>
-                             <button class="btn !w-auto !py-2 !px-4 !mb-0 !bg-red-100 !border-red-600" onclick="acceptBountyJob(${idx})">ACCEPT [${job.reward.toLocaleString()} CR]</button>
+                             <button class="btn !w-auto !py-2 !px-4 !mb-0 !bg-gray-100" onclick="acceptBountyJob(${idx})">ACCEPT</button>
                          </div>`;
                      });
                      html += `</div>`;

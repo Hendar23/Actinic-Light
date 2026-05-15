@@ -26,6 +26,28 @@ const newGameDefaults = {
 };
 
 // ==========================================
+// LORE & FLAVOUR DATA
+// ==========================================
+const bountyCrimes = [
+    "Piracy",
+    "Smuggling",
+    "Grand Theft Spaceship",
+    "Murder",
+    "Unlicensed Cybernetics",
+    "Tax Evasion",
+    "Treason",
+    "Illegal Salvage",
+    "Drug Trafficking",
+    "Assault of an Officer",
+    "Data Slicing",
+	"Arson",
+	"Kidnapping",
+	"Kicking a puppy",
+	"Narping a woodle without a licence",
+    "Unpaid Parking Tickets"
+];
+
+// ==========================================
 // SHIPS & EQUIPMENT DATA
 // ==========================================
 
@@ -630,7 +652,7 @@ const interactions = {
                 generateBountyJobs: true,
                 bountyJobCount: 3,
                 bountyMaxDistance: 75,
-                bountyShips: "Weescow, Midgeito, Keiship",
+                bountyShips: "Weescow, Midgeito, Rooster",
                 bountyStats: { hull: 10, armour: 10, handling: 25, firepower: 15, accuracy: 10, piloting: 20, weapon: 20 },
                 options: [
                     { text: "Maybe later. [LEAVE]", nextNode: "leave" }
@@ -961,8 +983,6 @@ const galaxy = [
         ]
     }
 ];
-
-
 
 
 
