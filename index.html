@@ -296,7 +296,7 @@
                          }
                          
                          // --- Fallback stats just in case you forget to add them in data.js ---
-                         const defaultStats = { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 };
+                         const defaultStats = { hull: 20, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 };
                          
                          let finalStats = spawn.stats ? JSON.parse(JSON.stringify(spawn.stats)) : defaultStats;
                          // Calculate an XP bounty based on their combat stats
@@ -438,7 +438,7 @@
                  handling: Math.round((base.handling + engBonus - (chassis.weight || 0) - base.weight) * chassis.multipliers.handling),
                  firepower: Math.round((base.firepower + engBonus) * (chassis.multipliers.firepower || 1)),
                  accuracy: Math.round((base.accuracy + engBonus) * (chassis.multipliers.accuracy || 1)),
-                 maxHull: (chassis.baseHull || 10) + engBonus,
+                 maxHull: (chassis.baseHull || 20) + engBonus,
                  chassisWeight: chassis.weight || 5, 
                  equipmentWeight: base.weight,
 
@@ -448,7 +448,7 @@
                  baseHandling: base.handling, multHandling: chassis.multipliers.handling,
                  baseFirepower: base.firepower, multFirepower: chassis.multipliers.firepower || 1,
                  baseAccuracy: base.accuracy, multAccuracy: chassis.multipliers.accuracy || 1,
-                 baseHull: chassis.baseHull || 10, bonusHull: engBonus,
+                 baseHull: chassis.baseHull || 20, bonusHull: engBonus,
                  bonusEng: engBonus
              };
          }
@@ -2410,21 +2410,51 @@
              if (!shipData) return;
              
              player.credits -= netCost;
-             
              if(!player.storage) player.storage = [];
-             Object.values(player.ship.core).forEach(item => {
-                 if (item) player.storage.push(item);
-             });
              
-             if (player.ship.modules) {
-                 player.ship.modules.forEach(item => {
+             const oldHullData = shipHulls[player.ship.hull];
+             const isSameSize = oldHullData.size === shipData.size;
+             let descriptionText = "All equipment moved to storage.";
+
+             if (isSameSize) {
+                 // Transfer Core: Keep old core, put new ship's standard core in storage
+                 Object.values(shipData.standardLoadout.core).forEach(item => {
                      if (item) player.storage.push(item);
                  });
+                 // Keep player.ship.core as is
+
+                 // Transfer Modules: Keep up to max slots, store the rest
+                 const maxModules = shipData.modularSlots;
+                 const oldModules = [...(player.ship.modules || [])];
+                 player.ship.modules = [];
+                 
+                 oldModules.forEach(mod => {
+                     if (mod) {
+                         if (player.ship.modules.length < maxModules) {
+                             player.ship.modules.push(mod);
+                         } else {
+                             player.storage.push(mod);
+                         }
+                     }
+                 });
+                 descriptionText = "Compatible equipment transferred. Surplus moved to storage.";
+             } else {
+                 // Different size: Old equipment goes to storage, get standard loadout
+                 Object.values(player.ship.core).forEach(item => {
+                     if (item) player.storage.push(item);
+                 });
+                 
+                 if (player.ship.modules) {
+                     player.ship.modules.forEach(item => {
+                         if (item) player.storage.push(item);
+                     });
+                 }
+                 
+                 player.ship.core = JSON.parse(JSON.stringify(shipData.standardLoadout.core));
+                 player.ship.modules = [];
              }
              
              player.ship.hull = shipName;
-             player.ship.core = JSON.parse(JSON.stringify(shipData.standardLoadout.core));
-             player.ship.modules = [];
              
              const newStats = getShipStats(player.ship);
              player.ship.currentHull = newStats.maxHull;
@@ -2432,7 +2462,7 @@
              saveGame();
              updateUI();
              
-             showTaskPopup("NEW SHIP ACQUIRED", {title: "NEW SHIP ACQUIRED!", description: "All equipment moved to storage."});
+             showTaskPopup("NEW SHIP ACQUIRED", {title: "NEW SHIP ACQUIRED!", description: descriptionText});
          }
 
          function updateShipTabUI(totalCargo) {

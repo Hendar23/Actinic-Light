@@ -327,6 +327,8 @@
         let lastMouse = { x: 0, y: 0 };
         let jumpRange = 100;
         let isEditingBackgrounds = false;
+        let sysInspectorTab = 'pois';
+        function switchSysTab(tab) { sysInspectorTab = tab; buildMapInspector(); }
         const imageCache = {};
         let mapCanvas, ctx, mapInspector;
 
@@ -490,6 +492,8 @@
 
         function addPoi() { if(!selectedSystem.pois) selectedSystem.pois = []; selectedSystem.pois.push({ name: "New POI", type: "Trade Hub", description: "", encounters: [] }); buildMapInspector(); }
         function deletePoi(i) { selectedSystem.pois.splice(i, 1); buildMapInspector(); }
+        function movePoiUp(i) { if (i <= 0) return; const p = selectedSystem.pois; [p[i - 1], p[i]] = [p[i], p[i - 1]]; buildMapInspector(); renderMap(); }
+        function movePoiDown(i) { const p = selectedSystem.pois; if (i >= p.length - 1) return; [p[i + 1], p[i]] = [p[i], p[i + 1]]; buildMapInspector(); renderMap(); }
         function updatePoiData(i, k, v) { 
             if (k === 'encounters') selectedSystem.pois[i][k] = v.split(',').map(s => s.trim()).filter(s => s !== ''); 
             else selectedSystem.pois[i][k] = v; 
@@ -514,7 +518,7 @@
 
         function addSpawn() {
             if(!selectedSystem.npcSpawns) selectedSystem.npcSpawns = [];
-            selectedSystem.npcSpawns.push({ name: "Unknown Pilot", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "", chance: 0.5, isHostile: false, stats: { hull: 10, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } });
+            selectedSystem.npcSpawns.push({ name: "Unknown Pilot", shipType: "Weescow", shipImage: "ship_weescow.png", encounter: "", chance: 0.5, isHostile: false, stats: { hull: 20, armour: 10, handling: 20, firepower: 10, accuracy: 0, piloting: 20, weapon: 20 } });
             buildMapInspector();
         }
         function deleteSpawn(i) { selectedSystem.npcSpawns.splice(i, 1); buildMapInspector(); }
@@ -561,7 +565,14 @@
                     <textarea class="text-sm h-16 resize-y" oninput="updateSystemData('description', this.value)">${escapeHTML(selectedSystem.description || '')}</textarea>
                 </div>
                 
-                <div class="mt-4 border-t-2 border-black pt-4">
+                <div class="flex gap-2 mt-4 mb-2">
+                    <button class="btn flex-1 !p-2 !mb-0 !text-xs ${sysInspectorTab === 'pois' ? 'bg-black !text-white hover:bg-black' : 'bg-gray-100 text-black'}" onclick="switchSysTab('pois')">POIs (${(selectedSystem.pois || []).length})</button>
+                    <button class="btn flex-1 !p-2 !mb-0 !text-xs ${sysInspectorTab === 'npcs' ? 'bg-black !text-white hover:bg-black' : 'bg-gray-100 text-black'}" onclick="switchSysTab('npcs')">NPCs (${(selectedSystem.npcSpawns || []).length})</button>
+                </div>`;
+                
+            if (sysInspectorTab === 'npcs') {
+                html += `
+                <div class="mt-2 border-t-2 border-black pt-4">
                     <div class="flex justify-between items-center mb-2"><h3 class="font-bold text-lg uppercase text-blue-800">Traffic</h3><button class="btn text-xs !p-1 bg-blue-100" onclick="addSpawn()">+ Add Ship</button></div>
                     <div class="space-y-2">`;
             
@@ -594,7 +605,7 @@
                         <div class="mt-2 pt-2 border-t border-blue-200">
                             <label class="block text-[10px] font-bold uppercase text-blue-800 mb-1">Combat Stats</label>
                             <div class="grid grid-cols-4 gap-1">
-                                <div><label class="text-[9px] uppercase">Hull</label><input type="number" class="text-xs p-1" value="${spawn.stats?.hull||10}" oninput="updateSpawnStat(${index}, 'hull', this.value)"></div>
+                                <div><label class="text-[9px] uppercase">Hull</label><input type="number" class="text-xs p-1" value="${spawn.stats?.hull||20}" oninput="updateSpawnStat(${index}, 'hull', this.value)"></div>
                                 <div><label class="text-[9px] uppercase">Arm</label><input type="number" class="text-xs p-1" value="${spawn.stats?.armour||10}" oninput="updateSpawnStat(${index}, 'armour', this.value)"></div>
                                 <div><label class="text-[9px] uppercase">Hndl</label><input type="number" class="text-xs p-1" value="${spawn.stats?.handling||20}" oninput="updateSpawnStat(${index}, 'handling', this.value)"></div>
                                 <div><label class="text-[9px] uppercase">Fire</label><input type="number" class="text-xs p-1" value="${spawn.stats?.firepower||10}" oninput="updateSpawnStat(${index}, 'firepower', this.value)"></div>
@@ -605,13 +616,19 @@
                         </div>
                     </div>`;
             });
+            html += `</div></div>`;
+            } else {
 
-            html += `</div></div><div class="mt-4 border-t-2 border-black pt-4"><div class="flex justify-between items-center mb-2"><h3 class="font-bold text-lg uppercase">POIs</h3><button class="btn text-xs !p-1 bg-green-100" onclick="addPoi()">+ Add POI</button></div><div class="space-y-4">`;
+            html += `<div class="mt-2 border-t-2 border-black pt-4"><div class="flex justify-between items-center mb-2"><h3 class="font-bold text-lg uppercase">POIs</h3><button class="btn text-xs !p-1 bg-green-100" onclick="addPoi()">+ Add POI</button></div><div class="space-y-4">`;
             
             (selectedSystem.pois || []).forEach((poi, index) => {
                 html += `
                     <div class="border border-gray-400 p-2 bg-gray-50 relative flex flex-col gap-1">
-                        <button class="absolute top-1 right-2 text-red-500 font-bold text-xs" onclick="deletePoi(${index})">X</button>
+                        <div class="absolute top-1 right-2 flex gap-3 text-[10px] bg-gray-50 px-1 z-10">
+                            ${index > 0 ? '<button class="text-blue-500 font-bold hover:underline" onclick="movePoiUp(' + index + ')">UP</button>' : ''}
+                            ${index < selectedSystem.pois.length - 1 ? '<button class="text-blue-500 font-bold hover:underline" onclick="movePoiDown(' + index + ')">DOWN</button>' : ''}
+                            <button class="text-red-500 font-bold hover:underline text-xs" onclick="deletePoi(${index})">X</button>
+                        </div>
                         <div><label class="block text-[10px] font-bold uppercase mt-1">Name</label><input type="text" class="text-sm" value="${escapeHTML(poi.name || '')}" oninput="updatePoiData(${index}, 'name', this.value)"></div>
                         <div><label class="block text-[10px] font-bold uppercase mt-1">Station Type</label><select class="text-xs" oninput="updatePoiData(${index}, 'type', this.value)">${typesList.map(t => `<option value="${t}" ${poi.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
                         <div class="flex gap-2">
@@ -634,7 +651,9 @@
                         ${poi.type === 'Ship Vendor' ? `<div class="border-t border-gray-300 mt-2 pt-2"><label class="block text-[10px] font-bold uppercase mt-1 text-blue-800 flex justify-between"><span>Specific Ships</span> <span class="text-gray-500 font-normal normal-case">(Leave empty to sell all)</span></label><div class="h-32 overflow-y-auto border border-gray-400 bg-white p-1 text-xs space-y-1">${Object.keys(shipHullsData).map(shipId => { const isChecked = (poi.shipInventory || []).includes(shipId) ? 'checked' : ''; return '<div class="flex items-center gap-2 hover:bg-gray-100 cursor-pointer p-0.5"><input type="checkbox" ' + isChecked + ' onchange="updatePoiShipInventory(' + index + ', \'' + escapeJS(shipId) + '\', this.checked)" id="ship-inv-' + index + '-' + escapeHTML(shipId) + '"><label for="ship-inv-' + index + '-' + escapeHTML(shipId) + '" class="cursor-pointer flex-grow select-none">' + escapeHTML(shipId) + '</label></div>'; }).join('')}</div></div>` : ''}
                     </div>`;
             });
-            mapInspector.innerHTML = html + `</div></div>`;
+            html += `</div></div>`;
+            }
+            mapInspector.innerHTML = html;
         }
 
         function stringifyMap() {
@@ -773,7 +792,7 @@
                     <div class="pt-2 border-t border-red-200">
                         <label class="block text-[10px] font-bold uppercase text-red-800 mb-1">Baseline Enemy Stats</label>
                         <div class="grid grid-cols-7 gap-1">
-                            <div><label class="text-[9px] uppercase">Hull</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.hull||15}" oninput="updateBountyStat('hull', this.value)"></div>
+                            <div><label class="text-[9px] uppercase">Hull</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.hull||30}" oninput="updateBountyStat('hull', this.value)"></div>
                             <div><label class="text-[9px] uppercase">Arm</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.armour||15}" oninput="updateBountyStat('armour', this.value)"></div>
                             <div><label class="text-[9px] uppercase">Hndl</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.handling||25}" oninput="updateBountyStat('handling', this.value)"></div>
                             <div><label class="text-[9px] uppercase">Fire</label><input type="number" class="text-xs p-1 w-full" value="${node.bountyStats?.firepower||15}" oninput="updateBountyStat('firepower', this.value)"></div>
@@ -849,7 +868,7 @@
                     const n = e.dialogue[dk];
                     out += `            "${escapeJS(dk)}": {\n                text: "${escapeJS(n.text)}",\n`;
                     if(n.generateTaxiJobs) out += `                generateTaxiJobs: true,\n                taxiJobCount: ${n.taxiJobCount||3},\n                taxiMaxDistance: ${n.taxiMaxDistance||150},\n`;
-                    if(n.generateBountyJobs) out += `                generateBountyJobs: true,\n                bountyJobCount: ${n.bountyJobCount||3},\n                bountyMaxDistance: ${n.bountyMaxDistance||100},\n                bountyShips: "${escapeJS(n.bountyShips)}",\n                bountyStats: { hull: ${n.bountyStats?.hull||15}, armour: ${n.bountyStats?.armour||15}, handling: ${n.bountyStats?.handling||25}, firepower: ${n.bountyStats?.firepower||15}, accuracy: ${n.bountyStats?.accuracy||10}, piloting: ${n.bountyStats?.piloting||25}, weapon: ${n.bountyStats?.weapon||25} },\n`;
+                    if(n.generateBountyJobs) out += `                generateBountyJobs: true,\n                bountyJobCount: ${n.bountyJobCount||3},\n                bountyMaxDistance: ${n.bountyMaxDistance||100},\n                bountyShips: "${escapeJS(n.bountyShips)}",\n                bountyStats: { hull: ${n.bountyStats?.hull||30}, armour: ${n.bountyStats?.armour||15}, handling: ${n.bountyStats?.handling||25}, firepower: ${n.bountyStats?.firepower||15}, accuracy: ${n.bountyStats?.accuracy||10}, piloting: ${n.bountyStats?.piloting||25}, weapon: ${n.bountyStats?.weapon||25} },\n`;
                     out += `                options: [\n`;
                     (n.options||[]).forEach((opt, oIdx) => {
                         let os = `                    { text: "${escapeJS(opt.text)}", nextNode: "${escapeJS(opt.nextNode)||'leave'}"`;
@@ -916,7 +935,7 @@
                     <div class="mb-4"><label class="block text-xs font-bold uppercase mb-1">Ship Image</label><div class="flex"><input type="text" id="hull-img" class="text-xs flex-grow" value="${escapeHTML(h.image||'')}" oninput="setHull('image', this.value)">${dropHtml}</div></div>
                     <label class="block text-xs font-bold uppercase mb-1">Description</label><textarea class="h-16 mb-4" oninput="setHull('description', this.value)">${escapeHTML(h.description)}</textarea>
                     <div class="grid grid-cols-3 gap-4 mb-4">
-                        <div class="bg-red-50 p-2 border border-red-300"><label class="block text-[10px] font-bold uppercase text-red-800">Base Hull</label><input type="number" value="${h.baseHull||10}" oninput="setHull('baseHull', parseInt(this.value)||0)"></div>
+                        <div class="bg-red-50 p-2 border border-red-300"><label class="block text-[10px] font-bold uppercase text-red-800">Base Hull</label><input type="number" value="${h.baseHull || 20}" oninput="setHull('baseHull', parseInt(this.value)||0)"></div>
                         <div class="bg-gray-200 p-2 border border-gray-400"><label class="block text-[10px] font-bold uppercase">Chassis Weight</label><input type="number" value="${h.weight||5}" oninput="setHull('weight', parseInt(this.value)||0)"></div>
                         <div class="bg-green-50 p-2 border border-green-300"><label class="block text-[10px] font-bold uppercase text-green-800">Base Price (CR)</label><input type="number" value="${h.price||1000}" oninput="setHull('price', parseInt(this.value)||0)"></div>
                     </div>
@@ -957,7 +976,7 @@
             const n = prompt("Item ID:"); if(!n) return;
             if(selCat === 'shipHulls'){
                 if(shipHullsData[n]) return alert("Exists");
-                shipHullsData[n] = {name:n,size:"Tiny",description:"",baseHull:10,weight:5,price:1000,multipliers:{jumpRange:1,armour:1,cargo:1,handling:1,firepower:1,accuracy:1},coreSlots:{warpDrive:1,armour:1,cargoBay:1,thrusters:1,weapons:1},modularSlots:1,standardLoadout:{core:{warpDrive:"Drive T1",armour:"Armour T1",cargoBay:"Bay T1",thrusters:"Thrust T1",weapons:"Weap T1"},modules:[]}};
+                shipHullsData[n] = {name:n,size:"Tiny",description:"",baseHull: 20,weight:5,price:1000,multipliers:{jumpRange:1,armour:1,cargo:1,handling:1,firepower:1,accuracy:1},coreSlots:{warpDrive:1,armour:1,cargoBay:1,thrusters:1,weapons:1},modularSlots:1,standardLoadout:{core:{warpDrive:"Drive T1",armour:"Armour T1",cargoBay:"Bay T1",thrusters:"Thrust T1",weapons:"Weap T1"},modules:[]}};
             } else if(selCat==='modules'){
                 if(equipmentData.modules[n]) return alert("Exists");
                 equipmentData.modules[n] = {name:n,size:"Tiny",type:"module",price:100,weight:1,stat:"cargo",flatBonus:5,description:""};
@@ -981,7 +1000,7 @@
                 const s = shipHullsData[k];
                 out += `    "${escapeJS(k)}": {\n        name: "${escapeJS(s.name)}",\n`;
                 if(s.image) out += `        image: "${escapeJS(s.image)}",\n`;
-                out += `        size: "${escapeJS(s.size)}",\n        description: "${escapeJS(s.description)}",\n        baseHull: ${s.baseHull||10},\n        weight: ${s.weight||5},\n        price: ${s.price||1000},\n        multipliers: {\n            jumpRange: ${s.multipliers.jumpRange},\n            armour: ${s.multipliers.armour},\n            cargo: ${s.multipliers.cargo},\n            handling: ${s.multipliers.handling},\n            firepower: ${s.multipliers.firepower||1},\n            accuracy: ${s.multipliers.accuracy||1}\n        },\n        coreSlots: {\n            warpDrive: ${s.coreSlots.warpDrive},\n            armour: ${s.coreSlots.armour},\n            cargoBay: ${s.coreSlots.cargoBay},\n            thrusters: ${s.coreSlots.thrusters},\n            weapons: ${s.coreSlots.weapons}\n        },\n        modularSlots: ${s.modularSlots},\n        standardLoadout: {\n            core: {\n                warpDrive: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.warpDrive) || 'Drive T1')}",\n                armour: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.armour) || 'Armour T1')}",\n                cargoBay: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.cargoBay) || 'Bay T1')}",\n                thrusters: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.thrusters) || 'Thrust T1')}",\n                weapons: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.weapons) || 'Weap T1')}"\n            },\n            modules: []\n        }\n    }` + (i<hk.length-1 ? ',' : '') + `\n`;
+                out += `        size: "${escapeJS(s.size)}",\n        description: "${escapeJS(s.description)}",\n        baseHull: ${s.baseHull || 20},\n        weight: ${s.weight||5},\n        price: ${s.price||1000},\n        multipliers: {\n            jumpRange: ${s.multipliers.jumpRange},\n            armour: ${s.multipliers.armour},\n            cargo: ${s.multipliers.cargo},\n            handling: ${s.multipliers.handling},\n            firepower: ${s.multipliers.firepower||1},\n            accuracy: ${s.multipliers.accuracy||1}\n        },\n        coreSlots: {\n            warpDrive: ${s.coreSlots.warpDrive},\n            armour: ${s.coreSlots.armour},\n            cargoBay: ${s.coreSlots.cargoBay},\n            thrusters: ${s.coreSlots.thrusters},\n            weapons: ${s.coreSlots.weapons}\n        },\n        modularSlots: ${s.modularSlots},\n        standardLoadout: {\n            core: {\n                warpDrive: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.warpDrive) || 'Drive T1')}",\n                armour: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.armour) || 'Armour T1')}",\n                cargoBay: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.cargoBay) || 'Bay T1')}",\n                thrusters: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.thrusters) || 'Thrust T1')}",\n                weapons: "${escapeJS((s.standardLoadout && s.standardLoadout.core && s.standardLoadout.core.weapons) || 'Weap T1')}"\n            },\n            modules: []\n        }\n    }` + (i<hk.length-1 ? ',' : '') + `\n`;
             });
             out += "};\n\nconst equipment = {\n";
             const cats = ["warpDrive", "armour", "cargoBay", "thrusters", "weapons", "modules"];
