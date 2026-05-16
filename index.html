@@ -333,13 +333,18 @@
                      isBountyTarget: true
                  });
 
+                 const tLines = (typeof bountyTargetLines !== 'undefined') ? bountyTargetLines : ["What do you want, spacer? I'm busy."];
+                 const pLines = (typeof bountyPlayerLines !== 'undefined') ? bountyPlayerLines : ["I'm here to collect the bounty on your head! [ATTACK]"];
+                 const tLine = tLines[Math.floor(Math.random() * tLines.length)];
+                 const pLine = pLines[Math.floor(Math.random() * pLines.length)];
+
                  interactions["SYSTEM_BOUNTY_TARGET"] = {
                      image: b.targetImage,
                      dialogue: {
                          "start": {
-                             text: `"What do you want, spacer? I'm busy."`,
+                             text: `"${tLine}"`,
                              options: [
-                                 { text: "I'm here to collect the bounty on your head! [ATTACK]", nextNode: "leave", startCombat: true },
+                                 { text: pLine, nextNode: "leave", startCombat: true },
                                  { text: "My mistake, carry on. [LEAVE]", nextNode: "leave" }
                              ]
                          }
@@ -612,7 +617,7 @@
                 image: player.activeTaxi.client.image,
                 dialogue: {
                     "start": {
-                        text: `<i>"${player.activeTaxi.pickupText}"</i><br><br><span class="text-blue-600 font-bold">${player.activeTaxi.client.name} boards your ship.</span>`,
+                        text: `"${player.activeTaxi.pickupText}"<br><br><span class="text-blue-600 font-bold">${player.activeTaxi.client.name} boards your ship.</span>`,
                         options: [{ text: "Strap in. [Leave]", nextNode: "leave" }] // Removed completePickup flag
                     }
                 }
@@ -646,7 +651,7 @@
                 image: player.activeTaxi.client.image,
                 dialogue: {
                     "start": {
-                        text: `<i>"${player.activeTaxi.dropoffText}"</i><br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward.toLocaleString()} credits to your account.</span>`,
+                        text: `"${player.activeTaxi.dropoffText}"<br><br><span class="text-green-600 font-bold">They transfer ${player.activeTaxi.reward.toLocaleString()} credits to your account.</span>`,
                         options: [{ text: "Safe travels. [Leave]", nextNode: "leave" }] 
                     }
                 }

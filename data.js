@@ -212,7 +212,7 @@ const equipment = {
 // PROCEDURAL GENERATION DATA
 // ==========================================
 
-const TOTAL_ALIEN_PORTRAITS = 21; // Total number of random_alien_XXX.png images
+const TOTAL_ALIEN_PORTRAITS = 24; // Total number of random_alien_XXX.png images
 
 const firstNames = [
     "Frank", "Bobby", "Aaron", "Jason", "Aria", "Jaxon", "Kael", "Lyra", "Zane", "Nova", 
@@ -251,6 +251,28 @@ const lastNames = [
     "Shadowen", "Ignis", "Cryos", "Volanis", "Maris", "Terran", "Lithos", "Pulver", "Ashen", "Ossis", 
     "Haem", "Ferrum", "Aurum", "Plumb", "Hydrar", "Zinca", "Stann", "Nicko", "Chromis", "Orich", 
     "Vitrum", "Argil", "Arenis", "Seric", "Lana", "Cannabis", "Linum", "Jutan", "Cocos", "Rhex"
+];
+
+const bountyTargetLines = [
+    "What do you want, spacer? I'm busy.",
+    "You're making a mistake getting this close to me.",
+    "I don't know you, and I don't want to. Back off.",
+    "State your business or power down your weapons.",
+    "Whatever they're paying you, it ain't worth your life.",
+    "I'm not going back to the clink!",
+    "You got three seconds to jump out of this system.",
+    "Stop following me or I'll vent your atmosphere.",
+    "I smell a bounty hunter. Turn back now."
+];
+
+const bountyPlayerLines = [
+    "I'm here to collect the bounty on your head! [ATTACK]",
+    "Your running days are over. [ATTACK]",
+    "Nothing personal, just business. [ATTACK]",
+    "I'm bringing you in. Dead or alive. [ATTACK]",
+    "Time to cash in your bounty! [ATTACK]",
+    "Surrender... actually, don't. [ATTACK]",
+    "I'm here for the reward. Let's go. [ATTACK]"
 ];
 
 const taxiPickupLines = [
@@ -545,7 +567,7 @@ const interactions = {
                 ]
             },
             "work2": {
-                text: "\"Like I said, speak to Frank at Sol taxis.\"</i>",
+                text: "\"Like I said, speak to Frank at Sol taxis.\"",
                 options: [
                     { text: "Thanks. [Leave]", nextNode: "leave" }
                 ]
@@ -579,7 +601,7 @@ const interactions = {
         image: "portrait004.png",
         dialogue: {
             "start": {
-                text: "<i>\"Greetings.\"</i>",
+                text: "\"Greetings.\"",
                 options: [
                     { text: "Nothing. [Leave]", nextNode: "leave" },
                     { text: "Teach me The Way", nextNode: "teach_me_the_way" }
@@ -594,7 +616,7 @@ const interactions = {
                 ]
             },
             "give_money": {
-                text: "Here you go! <br><br><span class=\"text-green-600 font-bold\">They transfer 1,000,000 credits to your account.</i></span>\n",
+                text: "Here you go! <br><br><span class=\"text-green-600 font-bold\">They transfer 1,000,000 credits to your account.</span>\n",
                 options: [
                     { text: "Oh wow! Thanks!", nextNode: "leave" }
                 ]
