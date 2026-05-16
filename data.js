@@ -26,6 +26,24 @@ const newGameDefaults = {
 };
 
 // ==========================================
+// LORE & FLAVOUR DATA
+// ==========================================
+const bountyCrimes = [
+    "Piracy",
+    "Smuggling",
+    "Grand Theft Spaceship",
+    "Murder",
+    "Kicking a puppy",
+    "Tax Evasion",
+    "Treason",
+    "Illegal Salvage",
+    "Drug Trafficking",
+    "Assault of an Officer",
+    "Data Slicing",
+    "Unpaid Parking Tickets"
+];
+
+// ==========================================
 // SHIPS & EQUIPMENT DATA
 // ==========================================
 
