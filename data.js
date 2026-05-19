@@ -503,6 +503,13 @@ const quests = {
         targetPoiName: "The Full Burn Bar",
         xpReward: 10
     }
+    "meet_bitz": {
+        title: "Speak to Bitz",
+        description: "Speak to Bitz and ask him about a long range warp drive.",
+        targetSystemId: 0, 
+        targetPoiName: "The Full Burn Bar",
+        xpReward: 10
+    }
 };
 
 // ==========================================
@@ -673,9 +680,9 @@ const interactions = {
                 ]
             },
             "bob_final": {
-                text: "\"Oh hey, before you go. Without a long range jump drive you will be stuck in our little corner of the galaxy. Decent jump drives are hard to get around here though. \n\nSpeak to my old friend NAME GOES HERE when you are ready, tell him I sent you. He will sort you out with something.\"",
+                text: "\"Oh hey, before you go. Without a long range jump drive you will be stuck in our little corner of the galaxy. Decent jump drives are hard to get around here though. \n\nSpeak to my old friend Bitz over in the Logus system when you are ready, tell him I sent you. He will sort you out with something.\"",
                 options: [
-                    { text: "You're the best Uncle Bob. Take care. [LEAVE]", nextNode: "leave", setFlag: "told_bob_ship", completeTask: "meet_bob" }
+                    { text: "You're the best Uncle Bob. Take care. [LEAVE]", nextNode: "leave", setFlag: "told_bob_ship, meet_bitz", startTask: "meet_bitz", completeTask: "meet_bob" }
                 ]
             },
             "hauling": {
@@ -761,6 +768,29 @@ const interactions = {
                 bountyStats: { hull: 20, armour: 10, handling: 25, firepower: 15, accuracy: 10, piloting: 20, weapon: 20 },
                 options: [
                     { text: "Maybe later. [LEAVE]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
+    "Bitz": {
+        image: "random_alien_023.png",
+        dialogue: {
+            "start": {
+                text: "Welcome to Bitzs 'N Bobs Outfitters pilot! What can we you do for you today? Need bigger cargo hold? Maybe a weapon upgrade to see off those pesky pirates? At Bitz and Bob's we have everything you need!",
+                options: [
+                    { text: "Actually Uncle Bob sent me. Said you might be able to help me find a long range warp drive. Something strong enough to get me out of this sector?", nextNode: "leave", requiresFlag: "meet_bitz" },
+                    { text: "Sounds great Bitz, I'll go check your catalogue! [Leave]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
+    "Bob": {
+        image: "random_alien_003.png",
+        dialogue: {
+            "start": {
+                text: "Speak to Bitz. He deals with all the business stuff.",
+                options: [
+                    { text: "Okay will do.[LEAVE]", nextNode: "leave" }
                 ]
             }
         }
@@ -1015,7 +1045,7 @@ const galaxy = [
         pois: [
             { name: "Logus Cabs", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Jools"], description: "Cheap, but not cheerful" },
             { name: "Stoop's Startship Repairs", type: "Repair Station", description: "", repairCost: 8 },
-            { name: "Bits 'N Bobs", type: "Outfitter", inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive T3", "Drive T2", "Drive T1"] },
+            { name: "Bitzs 'N Bobs Outfitters", type: "Outfitter", encounters: ["Bitz", "Bob"], inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive T3", "Drive T2", "Drive T1"] },
             { name: "Smogus Industries", type: "Metal Ore Refinery", description: "" },
             { name: "Protein Shakers Union", type: "Plant Processing Facility", description: "" }
         ]
@@ -1151,6 +1181,8 @@ const galaxy = [
         ]
     }
 ];
+
+
 
 
 
