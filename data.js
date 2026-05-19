@@ -194,8 +194,8 @@ const shipHulls = {
 const equipment = {
     warpDrive: {
         "Drive T1": { name: "Jumpmaster XS", size: "Tiny", type: "warpDrive", price: 100, weight: 1, baseValue: 50, description: "A budget stock warp drive" },
-        "Drive T2": { name: "Jumpmaster Plus", size: "Tiny", type: "warpDrive", price: 150, weight: 1, baseValue: 60, description: "Popular with couriers and taxis" },
-        "Drive T3": { name: "Starhopper T23", size: "Tiny", type: "warpDrive", price: 200, weight: 2, baseValue: 70, description: "Military grade scout drive" },
+        "Drive T2": { name: "Jumpmaster Plus", size: "Tiny", type: "warpDrive", price: 150, weight: 1, baseValue: 70, description: "Popular with couriers and taxis" },
+        "Drive T3": { name: "Starhopper T23", size: "Tiny", type: "warpDrive", price: 200, weight: 2, baseValue: 90, description: "Military grade scout drive" },
         "Drive S1": { name: "Gosystems A52", size: "Small", type: "warpDrive", price: 300, weight: 3, baseValue: 55, description: "A budget stock warp drive" }
     },
     armour: {
@@ -506,8 +506,8 @@ const quests = {
     "meet_bitz": {
         title: "Speak to Bitz",
         description: "Speak to Bitz and ask him about a long range warp drive.",
-        targetSystemId: 0, 
-        targetPoiName: "The Full Burn Bar",
+        targetSystemId: 8, 
+        targetPoiName: "Bitz and Bobs Outfitters",
         xpReward: 20
     }
 };
@@ -601,34 +601,33 @@ const interactions = {
         }
     },
     "Brother Moo": {
-        requiresFlag: "knows_frank",
         image: "portrait004.png",
         dialogue: {
             "start": {
-                text: "\"Greetings.\"",
+                text: "Greetings. I exists only to assist the Dev by allowing them to , well, cheat quite frankly. Are you the Dev?",
                 options: [
-                    { text: "Nothing. [Leave]", nextNode: "leave" },
-                    { text: "Teach me The Way", nextNode: "teach_me_the_way" }
+                    { text: "I am indeed Brother Moos", nextNode: "teach_me_the_way" },
+                    { text: "I am not Brother Moo [Leave]", nextNode: "leave" }
                 ]
             },
             "teach_me_the_way": {
-                text: "Oh I am sorry. There has been a misunderstanding. I exist only to test dialogue triggers. Would you like some money instead?",
+                text: "Excellent. Would you like money or experience points?",
                 options: [
-                    { text: "Yes please, that would be delightful.", nextNode: "give_money", credits: 1000000 },
-                    { text: "Actually, can you give me some XP instead?", nextNode: "give_xp" },
-                    { text: "No, thank you. [LEAVE]", nextNode: "leave" }
+                    { text: "I would like some money please Brother Moo", nextNode: "give_money", credits: 1000000 },
+                    { text: "Some XP would be delightful Brother Moo", nextNode: "give_xp" },
+                    { text: "Neither, thank you. [LEAVE]", nextNode: "leave" }
                 ]
             },
             "give_money": {
                 text: "Here you go! <br><br><span class=\"text-green-600 font-bold\">They transfer 1,000,000 credits to your account.</span>\n",
                 options: [
-                    { text: "Oh wow! Thanks!", nextNode: "leave" }
+                    { text: "May the Code be with you, Brother Moo.", nextNode: "leave" }
                 ]
             },
             "give_xp": {
                 text: "Certainly. ",
                 options: [
-                    { text: "Thank you Brother Moo ", nextNode: "leave", xp: 100000 }
+                    { text: "May the Code be with you, Brother Moo.", nextNode: "leave", xp: 100000 }
                 ]
             }
         }
@@ -660,7 +659,7 @@ const interactions = {
             "start": {
                 text: "\"Hey kid, how's it going?\"",
                 options: [
-                    { text: "I did it Bob, I got my first ship.", nextNode: "got_ship", hidesOnFlag: "told_bob_ship" },
+                    { text: "I did it Bob, I got my first ship.", nextNode: "got_ship", hidesOnFlag: "meet_bitz" },
                     { text: "Sorry Uncle Bob, I gotta go. [LEAVE]", nextNode: "leave" }
                 ]
             },
@@ -682,7 +681,7 @@ const interactions = {
             "bob_final": {
                 text: "\"Oh hey, before you go. Without a long range jump drive you will be stuck in our little corner of the galaxy. Decent jump drives are hard to get around here though. \n\nSpeak to my old friend Bitz over in the Logus system when you are ready, tell him I sent you. He will sort you out with something.\"",
                 options: [
-                    { text: "You're the best Uncle Bob. Take care. [LEAVE]", nextNode: "leave", setFlag: "told_bob_ship, meet_bitz", startTask: "meet_bitz", completeTask: "meet_bob" }
+                    { text: "You're the best Uncle Bob. Take care. [LEAVE]", nextNode: "leave", setFlag: "meet_bitz", startTask: "meet_bitz", completeTask: "meet_bob" }
                 ]
             },
             "hauling": {
@@ -776,10 +775,17 @@ const interactions = {
         image: "random_alien_023.png",
         dialogue: {
             "start": {
-                text: "Welcome to Bitzs 'N Bobs Outfitters pilot! What can we you do for you today? Need bigger cargo hold? Maybe a weapon upgrade to see off those pesky pirates? At Bitz and Bob's we have everything you need!",
+                text: "Welcome to Bitz and Bobs Outfitters pilot! What can we you do for you today? Need bigger cargo hold? Maybe a weapon upgrade to see off those pesky pirates? At Bitz and Bob's we have everything you need!",
                 options: [
-                    { text: "Actually Uncle Bob sent me. Said you might be able to help me find a long range warp drive. Something strong enough to get me out of this sector?", nextNode: "leave", requiresFlag: "meet_bitz" },
+                    { text: "Actually Uncle Bob sent me. Said you might be able to help me find a long range warp drive. Something strong enough to get me out of this sector?", nextNode: "bitz1", requiresFlag: "meet_bitz" },
                     { text: "Sounds great Bitz, I'll go check your catalogue! [Leave]", nextNode: "leave" }
+                ]
+            },
+            "bitz1": {
+                text: "Bob? hah! How is the old fella? Still running that dive bar of his? \n\nYeah I have some special drives in stock, but they are rare in these parts. It'll cost you 5000 credits.\n\nOr maybe you do a little job for me and I'll fit you one for free. How does that sound?",
+                options: [
+                    { text: "That's a lotta clams Bitz, this drive better work. [PAY]", nextNode: "leave", credits: -5000, clearFlag: "meet_bitz", completeTask: "meet_bitz" },
+                    { text: "What's the job?", nextNode: "leave" }
                 ]
             }
         }
@@ -958,7 +964,7 @@ const galaxy = [
         ],
         pois: [
             { name: "Leonton Spaceport", type: "Trade Hub", image: "port003.png", description: "Smells like starship fuel, cheap narcotics, and desperation." },
-            { name: "The Full Burn Bar", type: "Outpost", image: "bar001.png", encounters: ["Uncle Bob"], description: "Leontons go to bar for visiting spacers. Uncle bob has run it as long as anyone can remember. " },
+            { name: "The Full Burn Bar", type: "Outpost", image: "bar001.png", encounters: ["Uncle Bob", "Brother Moo"], description: "Leontons go to bar for visiting spacers. Uncle bob has run it as long as anyone can remember. " },
             { name: "Herbies Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Varlo"], description: "Herbies Taxis HQ is a cheaply refurbished outpost." },
             { name: "System Security HQ", type: "Outpost", image: "station005.png", encounters: ["Officer Vangteel"], description: "Police headquarters for the Herbie system. " },
             { name: "Barlows Starship Emporium", type: "Ship Vendor", description: "Rows of battered old spaceships line a large storage hold. A plastifab shed serves as Barlow Office.", shipInventory: ["Weescow", "Midgeito", "Keiship"] },
@@ -1045,7 +1051,7 @@ const galaxy = [
         pois: [
             { name: "Logus Cabs", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Jools"], description: "Cheap, but not cheerful" },
             { name: "Stoop's Startship Repairs", type: "Repair Station", description: "", repairCost: 8 },
-            { name: "Bitzs 'N Bobs Outfitters", type: "Outfitter", encounters: ["Bitz", "Bob"], inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive T3", "Drive T2", "Drive T1"] },
+            { name: "Bitz and Bobs Outfitters", type: "Outfitter", encounters: ["Bitz", "Bob"], inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive T2", "Drive T1"] },
             { name: "Smogus Industries", type: "Metal Ore Refinery", description: "" },
             { name: "Protein Shakers Union", type: "Plant Processing Facility", description: "" }
         ]
@@ -1143,7 +1149,7 @@ const galaxy = [
         ]
     },
     {
-        id: 13, name: "Depratz", x: 683, y: 579,
+        id: 13, name: "Depratz", x: 693, y: 581,
         pois: [
             { name: "Abandoned outpost", type: "Outpost", image: "station006.png", description: "" }
         ]
@@ -1181,6 +1187,8 @@ const galaxy = [
         ]
     }
 ];
+
+
 
 
 
