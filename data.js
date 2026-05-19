@@ -798,7 +798,7 @@ const interactions = {
             "bitz2": {
                 text: "So glad you asked! Those Locus raiders are a blight on the sector. Loopy fanatics attacking everyone on sight, including my customers! They are starting to spread to other systems now and the authorities around here won't do anything about it. What do I even pay taxes for I ask you?\n\nAnyway, take care of those scumbags and I'll give the the drive you need. Take out their leader and the rest will scatter for sure.",
                 options: [
-                    { text: "I'll do it. Prepare to witness heroics! [LEAVE]", nextNode: "leave", startTask: "locus_attack", completeTask: "meet_bitz" },
+                    { text: "I'll do it. Prepare to witness heroics! [LEAVE]", nextNode: "leave", clearFlag: "meet_bitz", startTask: "locus_attack", completeTask: "meet_bitz" },
                     { text: "Oooh no thanks. That's sounds a bit dangerous. I'll come back with the cash.", nextNode: "bitz3" }
                 ]
             },
@@ -1224,6 +1224,7 @@ const galaxy = [
         ]
     }
 ];
+
 
 
 
