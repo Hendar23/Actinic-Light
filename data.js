@@ -31,7 +31,7 @@ const newGameDefaults = {
 const bountyCrimes = [
     "Piracy",
     "Smuggling",
-    "Grand Theft Spaceship",
+    "Grand Theft Starship",
     "Murder",
     "Kicking a puppy",
     "Tax Evasion",
@@ -39,7 +39,8 @@ const bountyCrimes = [
     "Illegal Salvage",
     "Drug Trafficking",
     "Assault of an Officer",
-    "Data Slicing",
+    "Data Hacking",
+    "Narbling tarrs without a licence",
     "Unpaid Parking Tickets"
 ];
 
@@ -289,7 +290,7 @@ const bountyPlayerLines = [
     "Nothing personal, just business. [ATTACK]",
     "I'm bringing you in. Dead or alive. [ATTACK]",
     "Time to cash in your bounty! [ATTACK]",
-    "Surrender... actually, don't. [ATTACK]",
+    "Surrender... actually, don't bother. [ATTACK]",
     "I'm here for the reward. Let's go. [ATTACK]"
 ];
 
@@ -734,7 +735,7 @@ const interactions = {
         image: "portrait006.png",
         dialogue: {
             "start": {
-                text: "Interloper. Infection. Remove/Purify/Destroy.",
+                text: "Infection. The stars will be scrubbed of your stain.",
                 options: [
                     { text: "I guess we can't talk about this? [FIGHT]", nextNode: "leave", startCombat: true }
                 ]
@@ -819,6 +820,7 @@ const stationTypes = {
         consumes: { "Plants": "High", "Machine Parts": "Low" }
     },
     "Livestock Farm": {
+	defaultImage: "station009.png",
         description: "Large biological containment bays. Smells terrible.",
         produces: ["Meat"],
         consumes: { "Packaged Food": "Low", "Water": "High", "Plants": "High", "Machine Parts": "Low" }
@@ -979,9 +981,9 @@ const galaxy = [
     },
     {
         id: 7, name: "Barron Locus", x: 564, y: 611,
-        description: "Home system of the mysterious 'Locust' raiders",
+        description: "Home system of the mysterious Locus cult. Everyone calls them brainwashed fanatics. They <i>hate</i> that.",
         npcSpawns: [
-            { name: "Locust Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 1, isHostile: true,
+            { name: "Locus Raider", shipType: "Locus Raider", shipImage: "ship_raider001.png", encounter: "locus_raider", chance: 1, isHostile: true,
                 stats: { hull: 40, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
         ],
         pois: [
@@ -1056,7 +1058,7 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Princeton Ranch", type: "Livestock Farm", description: "Hairy rumptars graze the purple grasses as far as the eye can see. The stench in eyewatering." }
+            { name: "Princeton Ranch", type: "Livestock Farm", image: "farm001.png", description: "Hairy rumptars graze the purple grasses as far as the eye can see. The stench is eyewatering." }
         ]
     },
     {
@@ -1149,6 +1151,8 @@ const galaxy = [
         ]
     }
 ];
+
+
 
 
 
