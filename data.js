@@ -502,13 +502,13 @@ const quests = {
         targetSystemId: 0, 
         targetPoiName: "The Full Burn Bar",
         xpReward: 10
-    }
+    },
     "meet_bitz": {
         title: "Speak to Bitz",
         description: "Speak to Bitz and ask him about a long range warp drive.",
         targetSystemId: 0, 
         targetPoiName: "The Full Burn Bar",
-        xpReward: 10
+        xpReward: 20
     }
 };
 
