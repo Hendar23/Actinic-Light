@@ -1167,7 +1167,7 @@
              setLocalView('encounter');
          }
          
-         function selectDialogue(nextNode, creditChange = 0, xpChange = 0, setFlag = '', clearFlag = '', startTask = '', completeTask = '', initiateCombat = false) {
+         function selectDialogue(nextNode, creditChange = 0, xpChange = 0, setFlag = '', clearFlag = '', startTask = '', completeTask = '', initiateCombat = false, rewardItem = '') {
              player.credits += creditChange;
              
              if (xpChange > 0) {
@@ -1195,6 +1195,10 @@
                  }
                  
                  showTaskPopup("TASK COMPLETE", q);
+             }
+         
+             if (rewardItem) {
+                 showRewardModal(rewardItem);
              }
          
              // --- NEW: If the dialogue option triggers a fight, go to the arena! ---
@@ -1925,12 +1929,17 @@
                 if (opt.xp) {
                     xpTag = opt.xp > 0 ? ` [+${opt.xp.toLocaleString()} XP]` : ` [${opt.xp.toLocaleString()} XP]`;
                 }
+                
+                let itemTag = '';
+                if (opt.rewardItem) {
+                    itemTag = ` [+${opt.rewardItem}]`;
+                }
          
                 const pickupAction = opt.completePickup ? "completeTaxiPickup();" : "";
                 const taxiAction = opt.completeTaxi ? "completeTaxiDropoff();" : "";
          
-                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${actualCredits}, ${opt.xp || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}', ${opt.startCombat ? 'true' : 'false'})" ${disabledAttr}>
-                    <span>${opt.text}${creditTag}${xpTag}</span>
+                html += `<button class="btn" onclick="${pickupAction} ${taxiAction} selectDialogue('${opt.nextNode}', ${actualCredits}, ${opt.xp || 0}, '${opt.setFlag || ''}', '${opt.clearFlag || ''}', '${opt.startTask || ''}', '${opt.completeTask || ''}', ${opt.startCombat ? 'true' : 'false'}, '${opt.rewardItem || ''}')" ${disabledAttr}>
+                    <span>${opt.text}${creditTag}${xpTag}${itemTag}</span>
                 </button>`;
             });
          
@@ -2292,6 +2301,59 @@
          }
          
          
+         function showRewardModal(itemName) {
+            pendingRewardItem = itemName;
+            const category = getEquipmentCategory(itemName);
+            const eqGroup = category === 'module' ? 'modules' : category;
+            const itemData = equipment[eqGroup] ? equipment[eqGroup][itemName] : null;
+            
+            if (!itemData) {
+                console.error("Invalid reward item:", itemName);
+                return;
+            }
+
+            const currentShipSize = shipHulls[player.ship.hull].size;
+            const isWrongClass = itemData.size !== currentShipSize;
+
+            document.getElementById('reward-desc').innerHTML = `You received: <strong>${itemData.name}</strong> <span class="text-sm">(${itemData.size})</span>`;
+            
+            const btnEquip = document.getElementById('btn-reward-equip');
+            if (isWrongClass) {
+                btnEquip.disabled = true;
+                btnEquip.innerText = "EQUIP (WRONG CLASS)";
+            } else {
+                btnEquip.disabled = false;
+                btnEquip.innerText = "EQUIP NOW";
+            }
+
+            document.getElementById('reward-modal').classList.remove('hidden');
+            document.getElementById('reward-modal').classList.add('flex');
+        }
+
+        function closeRewardModal() {
+            document.getElementById('reward-modal').classList.add('hidden');
+            document.getElementById('reward-modal').classList.remove('flex');
+            pendingRewardItem = null;
+        }
+
+        function claimRewardItem(action) {
+            const itemName = pendingRewardItem;
+            const category = getEquipmentCategory(itemName);
+            const itemData = equipment[category === 'module' ? 'modules' : category][itemName];
+            
+            closeRewardModal(); 
+            
+            if (action === 'store') {
+                if (!player.storage) player.storage = [];
+                player.storage.push(itemName);
+                updateUI();
+                saveGame();
+                showTaskPopup("ITEM STORED", {title: "STORAGE UPDATED", description: `${itemData.name} was sent to your storage.`});
+            } else if (action === 'equip') {
+                startEquipProcess(category === 'module' ? 'module' : category, itemName, 0, false);
+            }
+        }
+
          function renderShipyard(totalCargo) {
              let html = `
              <div class="flex justify-between items-center mb-6 border-b-2 border-black pb-2">
@@ -3022,6 +3084,16 @@
                <button class="btn !bg-green-100 !border-green-600" id="btn-trade-in" onclick="finalizeEquipmentChange('trade')">TRADE IN [+0 CR]</button>
                <button id="btn-store" class="btn !bg-blue-100 !border-blue-600" onclick="finalizeEquipmentChange('store')">SEND TO STORAGE</button>
                <button class="btn !bg-gray-300" onclick="closeTradeIn()">CANCEL</button>
+            </div>
+         </div>
+      </div>
+      <div id="reward-modal" class="fixed inset-0 bg-white/90 z-[170] hidden flex-col justify-center items-center p-4">
+         <div class="bg-gray-50 border-4 border-black p-6 max-w-sm w-full shadow-2xl">
+            <h3 class="text-2xl font-bold uppercase mb-2 text-center border-b-4 border-black pb-2">ITEM RECEIVED</h3>
+            <p id="reward-desc" class="text-lg text-center mb-6 mt-4">You got a [ITEM].</p>
+            <div class="space-y-4">
+               <button class="btn !bg-green-100 !border-green-600" id="btn-reward-equip" onclick="claimRewardItem('equip')">EQUIP NOW</button>
+               <button class="btn !bg-blue-100 !border-blue-600" onclick="claimRewardItem('store')">SEND TO STORAGE</button>
             </div>
          </div>
       </div>

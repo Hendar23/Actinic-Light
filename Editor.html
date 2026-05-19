@@ -822,6 +822,7 @@
                         <div><label class="block text-[10px] font-bold uppercase mb-1">Hide on Flag</label><input type="text" class="text-xs" value="${escapeHTML(opt.hidesOnFlag)}" oninput="updateOpt(${i}, 'hidesOnFlag', this.value)"></div>
                     </div>
                     <div class="grid grid-cols-2 gap-3 bg-yellow-50 p-2 border border-yellow-300"><div><label class="block text-[10px] font-bold uppercase">Start Task ID</label><input type="text" class="text-xs" value="${escapeHTML(opt.startTask)}" oninput="updateOpt(${i}, 'startTask', this.value)"></div><div><label class="block text-[10px] font-bold uppercase">Complete Task ID</label><input type="text" class="text-xs" value="${escapeHTML(opt.completeTask)}" oninput="updateOpt(${i}, 'completeTask', this.value)"></div></div>
+                    <div class="grid grid-cols-1 gap-3 bg-green-50 p-2 border border-green-300 mt-3"><div><label class="block text-[10px] font-bold uppercase">Reward Item ID</label><input type="text" class="text-xs" placeholder="e.g. Drive T3" value="${escapeHTML(opt.rewardItem)}" oninput="updateOpt(${i}, 'rewardItem', this.value)"></div></div>
                     <div class="grid grid-cols-3 gap-3 bg-blue-50 p-2 border border-blue-300 mt-3"><div class="flex items-center gap-2"><input type="checkbox" ${opt.completePickup?'checked':''} onchange="updateOpt(${i}, 'completePickup', this.checked)"><label class="text-[10px] font-bold uppercase mb-0">Completes Taxi Pickup</label></div><div class="flex items-center gap-2"><input type="checkbox" ${opt.completeTaxi?'checked':''} onchange="updateOpt(${i}, 'completeTaxi', this.checked)"><label class="text-[10px] font-bold uppercase mb-0">Completes Dropoff</label></div><div class="flex items-center gap-2"><input type="checkbox" ${opt.startCombat?'checked':''} onchange="updateOpt(${i}, 'startCombat', this.checked)"><label class="text-[10px] font-bold uppercase text-red-600 mb-0">Starts Combat</label></div></div></div>`;
             });
             panel.innerHTML = html + `</div>`;
@@ -883,6 +884,7 @@
                         if(opt.completePickup) os += `, completePickup: true`;
                         if(opt.completeTaxi) os += `, completeTaxi: true`;
                         if(opt.startCombat) os += `, startCombat: true`;
+                        if(opt.rewardItem) os += `, rewardItem: "${escapeJS(opt.rewardItem).trim()}"`;
                         out += os + ` }` + (oIdx < n.options.length-1 ? ',' : '') + `\n`;
                     });
                     out += `                ]\n            }` + (j < dArr.length-1 ? ',' : '') + `\n`;

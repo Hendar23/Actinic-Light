@@ -784,7 +784,7 @@ const interactions = {
             "bitz1": {
                 text: "Bob? hah! How is the old fella? Still running that dive bar of his? \n\nYeah I have some special drives in stock, but they are rare in these parts. It'll cost you 5000 credits.\n\nOr maybe you do a little job for me and I'll fit you one for free. How does that sound?",
                 options: [
-                    { text: "That's a lotta clams Bitz, this drive better work. [PAY]", nextNode: "leave", credits: -5000, clearFlag: "meet_bitz", completeTask: "meet_bitz" },
+                    { text: "That's a lotta clams Bitz, this drive better work. [PAY]", nextNode: "leave", credits: -5000, clearFlag: "meet_bitz", completeTask: "meet_bitz", rewardItem: "Drive T3" },
                     { text: "What's the job?", nextNode: "leave" }
                 ]
             }
@@ -797,6 +797,23 @@ const interactions = {
                 text: "Speak to Bitz. He deals with all the business stuff.",
                 options: [
                     { text: "Okay will do.[LEAVE]", nextNode: "leave" }
+                ]
+            }
+        }
+    },
+    "Mysterious Janitor": {
+        image: "portrait002.png",
+        dialogue: {
+            "start": {
+                text: "Oh hi. Didn't see you there. We don't get many visitors here.",
+                options: [
+                    { text: "What is this place?", nextNode: "myst1" }
+                ]
+            },
+            "myst1": {
+                text: "It's the end. You reached the edge of the map. You have completed the starting area.\n\nIf this was on Steam, an achievement would pop up right now. \n\nPat yourself on the back gamer. You did good.\n\nCome back when Hendar23 has added more stuff.",
+                options: [
+                    { text: "Okay. See you around I guess [LEAVE]", nextNode: "leave" }
                 ]
             }
         }
@@ -1151,7 +1168,7 @@ const galaxy = [
     {
         id: 13, name: "Depratz", x: 693, y: 581,
         pois: [
-            { name: "Abandoned outpost", type: "Outpost", image: "station006.png", description: "" }
+            { name: "Abandoned outpost", type: "Outpost", image: "station006.png", encounters: ["Mysterious Janitor"], description: "" }
         ]
     },
     {
@@ -1187,6 +1204,8 @@ const galaxy = [
         ]
     }
 ];
+
+
 
 
 
