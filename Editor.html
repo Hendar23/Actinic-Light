@@ -828,7 +828,7 @@
         }
 
         // Enc Mutations
-        function addEncounter() { const n = prompt("Encounter Name:"); if(n && !interactions[n]){ interactions[n] = {image:"default.png",dialogue:{"start":{text:"Hello",options:[{text:"[Leave]",nextNode:"leave"}]}}}; selectEncounter(n); } }
+        function addEncounter() { const n = prompt("Encounter Name:"); if(n && !interactions[n]){ interactions[n] = {image:"default.png",dialogue:{"start":{text:"Hello",options:[{text:"[LEAVE]",nextNode:"leave"}]}}}; selectEncounter(n); } }
         function deleteEncounter() { if(confirm(`Delete ${selEnc}?`)){ delete interactions[selEnc]; selEnc = null; renderEncounters(); } }
         function updateEncProp(k, v) { if (v==='') delete interactions[selEnc][k]; else interactions[selEnc][k] = v; }
         function addNode() { const n = prompt("Node Name:"); if(n && !interactions[selEnc].dialogue[n]) { interactions[selEnc].dialogue[n]={text:"New node.",options:[]}; selectNode(n); } }
