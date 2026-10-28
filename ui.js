@@ -292,7 +292,7 @@ function renderPoiList() {
     Object.keys(player.tasks).forEach(taskId => {
       if (player.tasks[taskId] === "active") {
         const q = quests[taskId];
-        if (q && q.targetSystemId === currentSystem.id && q.targetPoiName === p.name) {
+        if (q && q.targetSystemId === currentSystem.id && (q.targetPoiId != null ? q.targetPoiId === p.id : q.targetPoiName === p.name)) {
           isTarget = true;
         }
       }
@@ -375,7 +375,7 @@ function renderStationMenu() {
   if (currentPoi.encounters && currentPoi.encounters.length > 0) {
     let encounterHtml = '';
     currentPoi.encounters.forEach(encName => {
-      const encData = interactions[encName] || {};
+      const encData = getEncounter(encName) || {};
       if (encData.requiresFlag && !player.flags[encData.requiresFlag]) return;
       if (encData.hidesOnFlag && player.flags[encData.hidesOnFlag]) return;
       let encImageFile = encData.image || 'default.png';
@@ -409,7 +409,7 @@ function renderStationMenu() {
   }
   if (player.activeTaxi) {
     const passenger = player.activeTaxi.client;
-    if (player.activeTaxi.status === 'pickup' && currentSystem.id === player.activeTaxi.pickupSysId && currentPoi.name === player.activeTaxi.pickupPoiName) {
+    if (player.activeTaxi.status === 'pickup' && isTaxiLocation('pickup')) {
       html += `
                      <div class="space-y-4 max-w-md mx-auto mt-4">
                          <button class="btn bg-blue-100 !p-2 border-blue-600" onclick="startTaxiPickup()">
@@ -425,7 +425,7 @@ function renderStationMenu() {
                          </button>
                      </div>`;
     }
-    if (player.activeTaxi.status === 'dropoff' && currentSystem.id === player.activeTaxi.dropoffSysId && currentPoi.name === player.activeTaxi.dropoffPoiName) {
+    if (player.activeTaxi.status === 'dropoff' && isTaxiLocation('dropoff')) {
       html += `
                      <div class="space-y-4 max-w-md mx-auto mt-4">
                          <button class="btn bg-green-100 !p-2 border-green-600" onclick="startTaxiDropoff()">
@@ -450,7 +450,7 @@ function renderEncounter() {
   if (currentPoi && currentPoi.type === 'Encounter') {
     html += `<p class="text-xl mb-8 italic border-l-4 border-black pl-4 py-2 bg-gray-50">${getPoiDescription(currentPoi)}</p>`;
   }
-  const encData = interactions[currentEncounterName];
+  const encData = getCurrentEncounter();
   const node = encData.dialogue[currentDialogueNode];
   const encImagePath = `assets/${currentEncounterImage}`;
   let displayText = node.text.replace(/\b(\d+)(?=\s*(?:credits|cr)\b)/gi, match => parseInt(match).toLocaleString());
@@ -480,6 +480,7 @@ function renderEncounter() {
       html += `<div class="bg-gray-100 border-2 border-black p-4 mb-4 font-bold text-center">You already have an active Bounty Contract. Clear it before accepting another.</div>`;
     } else {
       html += `<h4 class="text-2xl font-bold uppercase mb-2 border-b-2 border-black pb-2">Available Bounties</h4><div class="space-y-2 mb-6">`;
+      if (!window.currentBountyOffers?.length) html += '<p>No eligible bounty destinations nearby.</p>';
       (window.currentBountyOffers || []).forEach((job, idx) => {
         const hullData = shipHulls[job.shipHull] || {};
         html += `<div class="border-2 border-black bg-white p-3 flex justify-between items-center">
@@ -505,6 +506,7 @@ function renderEncounter() {
                     </div>`;
     } else {
       html += `<div class="space-y-3 mb-6">`;
+      if (!window.currentTaxiOffers?.length) html += '<p>No eligible taxi routes nearby.</p>';
       (window.currentTaxiOffers || []).forEach((job, idx) => {
         html += `<button class="btn !bg-blue-50 text-left !p-3" onclick="acceptTaxiJob(${idx})">
                             <div class="text-lg text-gray-500 font-bold mb-1 uppercase">FROM: ${job.pickupPoiName} (${job.pickupSysName})</div>
@@ -871,7 +873,7 @@ function renderShipyard(totalCargo) {
                          </div>
                          <div>
                              <div class="font-bold text-xl uppercase">${shipData.name}</div>
-                             <div class="text-sm italic text-gray-600 mb-1">Class: ${shipData.size} | Base Price: ${shipPrice.toLocaleString()} CR</div>
+                             <div class="text-sm italic text-gray-600 mb-1">Class: ${shipData.size} | Base Price: ${(shipData.price ?? 1000).toLocaleString()} CR</div>
                              <div class="text-xs text-gray-800 mt-1">
                                  <span class="font-bold">${statString}</span> <br> ${diffHtml}
                              </div>

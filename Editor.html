@@ -291,7 +291,7 @@
         }
 
         function validateMasterData(source) {
-            const data = new Function(source + '\nreturn { galaxy, interactions, quests, shipHulls, equipment, newGameDefaults };')();
+            const data = new Function(source + '\nreturn { galaxy, interactions, quests, shipHulls, equipment, commodities, newGameDefaults };')();
             const result = DataValidator.validate(data);
             result.warnings.forEach(warning => console.warn(warning));
             if (result.errors.length) {
@@ -504,7 +504,7 @@
         function deleteSystem() { if(confirm("Delete system?")) { galaxy = galaxy.filter(s => s.id !== selectedSystem.id); selectedSystem = null; buildMapInspector(); renderMap(); } }
         function updateSystemData(k, v) { if(k === 'x' || k === 'y') v = parseInt(v) || 0; selectedSystem[k] = v; renderMap(); }
 
-        function addPoi() { if(!selectedSystem.pois) selectedSystem.pois = []; selectedSystem.pois.push({ name: "New POI", type: "Trade Hub", description: "", encounters: [] }); buildMapInspector(); }
+        function addPoi() { if(!selectedSystem.pois) selectedSystem.pois = []; selectedSystem.pois.push({ id: crypto.randomUUID(), name: "New POI", type: "Trade Hub", description: "", encounters: [] }); buildMapInspector(); }
         function deletePoi(i) { selectedSystem.pois.splice(i, 1); buildMapInspector(); }
         function movePoiUp(i) { if (i <= 0) return; const p = selectedSystem.pois; [p[i - 1], p[i]] = [p[i], p[i - 1]]; buildMapInspector(); renderMap(); }
         function movePoiDown(i) { const p = selectedSystem.pois; if (i >= p.length - 1) return; [p[i + 1], p[i]] = [p[i], p[i + 1]]; buildMapInspector(); renderMap(); }

@@ -256,3 +256,166 @@ test('render failure after a committed purchase cannot discard the purchase', ()
   assert.equal(other.run('player.cargo.Water'), 1);
   assert.deepEqual(other.alerts, []);
 });
+
+test('shipyard opens through the UI and displays catalog prices before purchase', () => {
+  const h = setup();
+  h.run("player.credits=5000;currentPoi=currentSystem.pois.find(p=>p.type==='Ship Vendor');setLocalView('shipyard')");
+  assert.match(h.elements.get('tab-local').innerHTML, /Base Price: 1,200 CR/);
+  assert.match(h.elements.get('tab-local').innerHTML, /buyShip/);
+  h.run("buyShip('Midgeito')");
+  assert.equal(h.run('player.ship.hull'), 'Midgeito');
+  const reload = harness(h.saved);
+  reload.run('loadGame()');
+  assert.equal(reload.run('player.ship.hull'), 'Midgeito');
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('zero multipliers and weight survive into actual ship statistics', () => {
+  const h = setup();
+  h.run('shipHulls.Weescow.multipliers.firepower=0;shipHulls.Weescow.multipliers.accuracy=0;shipHulls.Weescow.weight=0');
+  const stats = h.run('getShipStats(player.ship)');
+  assert.equal(stats.firepower, 0);
+  assert.equal(stats.accuracy, 0);
+  assert.equal(stats.multFirepower, 0);
+  assert.equal(stats.multAccuracy, 0);
+  assert.equal(stats.chassisWeight, 0);
+});
+
+test('renaming and reordering stations preserves the saved location by ID', () => {
+  const h = setup();
+  h.run('currentPoi=currentSystem.pois[0];saveGame()');
+  const stationId = h.run('currentPoi.id');
+  const reload = harness(h.saved);
+  reload.run("galaxy[0].pois[0].name='Renamed station';galaxy[0].pois.reverse();loadGame()");
+  assert.equal(reload.run('currentPoi.id'), stationId);
+  assert.equal(reload.run('currentPoi.name'), 'Renamed station');
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('V5 station names migrate in memory even after renaming, without rewriting the save', () => {
+  const h = setup();
+  h.run('currentPoi=currentSystem.pois[0];saveGame()');
+  const saved = JSON.parse(h.saved.get(SaveStore.KEY));
+  saved.version = 5;
+  delete saved.poiId;
+  const text = JSON.stringify(saved);
+  h.saved.set(SaveStore.KEY, text);
+  const reload = harness(h.saved);
+  reload.run("galaxy[0].pois[0].name='Renamed station';loadGame()");
+  assert.equal(reload.run('currentPoi.name'), 'Renamed station');
+  assert.equal(reload.saved.get(SaveStore.KEY), text);
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('removing a saved station returns to orbit and preserves player progress', () => {
+  const h = setup();
+  h.run('currentPoi=currentSystem.pois[0];player.credits=123;saveGame()');
+  const reload = harness(h.saved);
+  reload.run('galaxy[0].pois.shift();loadGame()');
+  assert.equal(reload.run('currentPoi'), null);
+  assert.equal(reload.run('player.credits'), 123);
+  assert.equal(reload.run('localView'), 'menu');
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('explicit legacy equipment, ship and commodity IDs migrate without losing ownership', () => {
+  const h = setup();
+  h.run("player.cargo.Water=2;player.storage=['Drive T1'];saveGame()");
+  const reload = harness(h.saved);
+  reload.run(`shipHulls.NewHull={...shipHulls.Weescow,legacyIds:['Weescow']};delete shipHulls.Weescow;
+    equipment.warpDrive.NewDrive={...equipment.warpDrive['Drive T1'],legacyIds:['Drive T1']};delete equipment.warpDrive['Drive T1'];
+    commodities.NewWater={...commodities.Water,legacyIds:['Water']};delete commodities.Water;loadGame()`);
+  assert.equal(reload.run('player.ship.hull'), 'NewHull');
+  assert.equal(reload.run('player.ship.core.warpDrive'), 'NewDrive');
+  assert.equal(reload.run('player.storage[0]'), 'NewDrive');
+  assert.equal(reload.run('player.cargo.NewWater'), 2);
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('taxi destinations survive rename and reload, and pickup uses IDs', () => {
+  const h = setup();
+  h.run(`currentPoi=currentSystem.pois[0];player.activeTaxi={status:'pickup',client:{name:'Passenger'},pickupSysId:0,pickupPoiId:currentPoi.id,pickupPoiName:currentPoi.name,dropoffSysId:0,dropoffPoiId:currentPoi.id,dropoffPoiName:currentPoi.name,reward:60,xpReward:15};player.tasks.taxi_mission='active';saveGame()`);
+  const reload = harness(h.saved);
+  reload.run("galaxy[0].pois[0].name='Renamed terminal';loadGame()");
+  assert.equal(reload.run("isTaxiLocation('pickup')"), true);
+  assert.equal(reload.run('player.activeTaxi.pickupPoiName'), 'Renamed terminal');
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('a removed taxi destination cancels the contract without blocking load', () => {
+  const h = setup();
+  h.run(`player.activeTaxi={status:'pickup',client:{name:'Passenger'},pickupSysId:0,pickupPoiId:currentSystem.pois[0].id,pickupPoiName:currentSystem.pois[0].name,dropoffSysId:0,dropoffPoiId:currentSystem.pois[1].id,dropoffPoiName:currentSystem.pois[1].name,reward:60,xpReward:15};player.tasks.taxi_mission='active';saveGame()`);
+  const reload = harness(h.saved);
+  reload.run('galaxy[0].pois.shift();loadGame()');
+  assert.equal(reload.run('player.activeTaxi'), null);
+  assert.equal(reload.run('player.tasks.taxi_mission'), 'failed');
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('mission generators return no offers when there are no valid destinations', () => {
+  const h = setup();
+  h.run("galaxy.splice(0,galaxy.length,{id:0,name:'Empty',x:0,y:0,pois:[]});currentSystem=galaxy[0]");
+  assert.equal(h.run('generateTaxiJob(100)'), null);
+  assert.equal(h.run('generateBountyJob(100)'), null);
+  h.run("runtimeEncounters.Board={dialogue:{start:{text:'Jobs',generateTaxiJobs:true,generateBountyJobs:true,options:[]}}};startEncounter('Board')");
+  assert.equal(h.run('window.currentTaxiOffers.length'), 0);
+  assert.equal(h.run('window.currentBountyOffers.length'), 0);
+  assert.match(h.run('renderEncounter()'), /No eligible taxi routes/);
+  assert.match(h.run('renderEncounter()'), /No eligible bounty destinations/);
+});
+
+test('taxi generation excludes locked stations and never selects identical endpoints', () => {
+  const h = setup();
+  h.run(`galaxy.splice(0,galaxy.length,{id:0,name:'Test',x:0,y:0,pois:[{id:'a',name:'A',type:'Trade Hub'},{id:'b',name:'B',type:'Trade Hub',requiresFlag:'locked'}]});currentSystem=galaxy[0];Math.random=()=>0`);
+  assert.equal(h.run('generateTaxiJob(0)'), null);
+  h.run('player.flags.locked=true');
+  const job = h.run('generateTaxiJob(0)');
+  assert.equal(job.pickupPoiId, 'a');
+  assert.equal(job.dropoffPoiId, 'b');
+  assert.equal(job.reward, 11);
+});
+
+test('bounty generation enforces distance, hull availability and zero-valued stats', () => {
+  const h = setup();
+  assert.equal(h.run("generateBountyJob(0,'Weescow',{})"), null);
+  assert.equal(h.run("generateBountyJob(1000,'Missing Hull',{})"), null);
+  h.run('Math.random=()=>0');
+  const job = h.run("generateBountyJob(1000,'Weescow',{armour:0,accuracy:0,firepower:0})");
+  assert.notEqual(job.targetSysId, h.run('currentSystem.id'));
+  assert.equal(job.stats.armour, 0);
+  assert.equal(job.stats.accuracy, 0);
+  assert.equal(job.stats.firepower, 0);
+  assert.ok(h.run(`Math.hypot(galaxy.find(s=>s.id===${job.targetSysId}).x-currentSystem.x,galaxy.find(s=>s.id===${job.targetSysId}).y-currentSystem.y)`) <= 1000);
+});
+
+test('generated taxi dialogue cannot overwrite an authored encounter, including after reload', () => {
+  const h = setup();
+  const authored = h.run('JSON.stringify(interactions.Bob)');
+  h.run(`currentPoi=currentSystem.pois[0];spawnedNPCs=[];player.activeTaxi={status:'pickup',client:{name:'Bob',image:'default.png'},pickupSysId:0,pickupPoiName:currentPoi.name,dropoffSysId:0,dropoffPoiName:currentPoi.name,reward:20,xpReward:5,pickupText:'Taxi hello'};quests.taxi_mission={};startTaxiPickup()`);
+  assert.equal(h.run('JSON.stringify(interactions.Bob)'), authored);
+  assert.equal(h.run('currentEncounterDisplayName'), 'Bob');
+  assert.match(h.run('renderEncounter()'), /Taxi hello/);
+  const reload = harness(h.saved);
+  reload.run('loadGame()');
+  assert.equal(reload.run('JSON.stringify(interactions.Bob)'), authored);
+  assert.match(reload.run('renderEncounter()'), /Taxi hello/);
+  reload.run("selectDialogue('leave');startEncounter('Bob')");
+  assert.equal(reload.run('JSON.stringify(getEncounter(currentEncounterName))'), authored);
+  assert.deepEqual(reload.alerts, []);
+});
+
+test('legacy dialogue snapshots never shadow authored encounters after leaving', () => {
+  const h = setup();
+  h.run("spawnedNPCs=[];startEncounter('Bob')");
+  const authored = h.run('JSON.stringify(interactions.Bob)');
+  const saved = JSON.parse(h.saved.get(SaveStore.KEY));
+  saved.version = 5;
+  saved.runtime.encounter.data.dialogue.start.text = 'Legacy generated taxi dialogue';
+  h.saved.set(SaveStore.KEY, JSON.stringify(saved));
+  const reload = harness(h.saved);
+  reload.run('loadGame()');
+  assert.match(reload.run('renderEncounter()'), /Legacy generated taxi dialogue/);
+  reload.run("selectDialogue('leave');startEncounter('Bob')");
+  assert.equal(reload.run('JSON.stringify(getCurrentEncounter())'), authored);
+  assert.deepEqual(reload.alerts, []);
+});

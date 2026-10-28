@@ -525,6 +525,7 @@ const quests = {
         title: "Speak to Uncle Bob",
         description: "Find Uncle Bob in the Herbies Star system and speak to him about your plans",
         targetSystemId: 0, 
+        targetPoiId: "poi-0-1",
         targetPoiName: "The Full Burn Bar",
         xpReward: 10
     },
@@ -532,6 +533,7 @@ const quests = {
         title: "Speak to Bitz",
         description: "Speak to Bitz and ask him about a long range warp drive.",
         targetSystemId: 8, 
+        targetPoiId: "poi-8-2",
         targetPoiName: "Bitz and Bobs Outfitters",
         xpReward: 20
     },
@@ -539,6 +541,7 @@ const quests = {
         title: "Kill the Locus Leader",
         description: "Fly to Barron Locus and destroy the cult leader  ",
         targetSystemId: 7, 
+        targetPoiId: "poi-7-0",
         targetPoiName: "Scary Raider Base",
         xpReward: 100
     },
@@ -546,6 +549,7 @@ const quests = {
         title: "Report back to Bitz",
         description: "Report your success to Bitz and claim your reward.",
         targetSystemId: 8, 
+        targetPoiId: "poi-8-2",
         targetPoiName: "Bitz and Bobs Outfitters",
         xpReward: 100
     },
@@ -553,6 +557,7 @@ const quests = {
         title: "Warp to Depratz",
         description: "Fly to Depratz and explore the wider galaxy.",
         targetSystemId: 13, 
+        targetPoiId: "poi-13-0",
         targetPoiName: "Abandoned outpost",
         xpReward: 50
     }
@@ -1091,12 +1096,12 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Leonton Spaceport", type: "Trade Hub", image: "port003.png", description: "Smells like starship fuel, cheap narcotics, and desperation." },
-            { name: "The Full Burn Bar", type: "Outpost", image: "bar001.png", encounters: ["Uncle Bob"], description: "Leonton's go-to bar for visiting spacers. Uncle Bob has run it as long as anyone can remember. " },
-            { name: "Herbies Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Varlo"], description: "Herbies Taxis HQ is a cheaply refurbished outpost." },
-            { name: "System Security HQ", type: "Outpost", image: "station005.png", encounters: ["Officer Vangteel"], description: "Police headquarters for the Herbie system. " },
-            { name: "Barlow's Starship Emporium", type: "Ship Vendor", description: "Rows of battered old spaceships line a large storage hold. A plastifab shed serves as Barlow's Office.", shipInventory: ["Weescow", "Midgeito", "Keiship"] },
-            { name: "Copper Extractor", type: "Copper Mine", description: "Leonton's copper-rich moon is the heart of the system's economy." }
+            { id: "poi-0-0", legacyNames: ["Leonton Spaceport"], name: "Leonton Spaceport", type: "Trade Hub", image: "port003.png", description: "Smells like starship fuel, cheap narcotics, and desperation." },
+            { id: "poi-0-1", legacyNames: ["The Full Burn Bar"], name: "The Full Burn Bar", type: "Outpost", image: "bar001.png", encounters: ["Uncle Bob"], description: "Leonton's go-to bar for visiting spacers. Uncle Bob has run it as long as anyone can remember. " },
+            { id: "poi-0-2", legacyNames: ["Herbies Taxis"], name: "Herbies Taxis", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Varlo"], description: "Herbies Taxis HQ is a cheaply refurbished outpost." },
+            { id: "poi-0-3", legacyNames: ["System Security HQ"], name: "System Security HQ", type: "Outpost", image: "station005.png", encounters: ["Officer Vangteel"], description: "Police headquarters for the Herbie system. " },
+            { id: "poi-0-4", legacyNames: ["Barlow's Starship Emporium"], name: "Barlow's Starship Emporium", type: "Ship Vendor", description: "Rows of battered old spaceships line a large storage hold. A plastifab shed serves as Barlow's Office.", shipInventory: ["Weescow", "Midgeito", "Keiship"] },
+            { id: "poi-0-5", legacyNames: ["Copper Extractor"], name: "Copper Extractor", type: "Copper Mine", description: "Leonton's copper-rich moon is the heart of the system's economy." }
         ]
     },
     {
@@ -1113,7 +1118,7 @@ const galaxy = [
                 stats: { hull: 40, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
         ],
         pois: [
-            { name: "Salty's Hydroponics Inc", type: "Plant Farm", description: "" }
+            { id: "poi-5-0", legacyNames: ["Salty's Hydroponics Inc"], name: "Salty's Hydroponics Inc", type: "Plant Farm", description: "" }
         ]
     },
     {
@@ -1139,8 +1144,8 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Metprong Extractions Inc", type: "Iron Mine", description: "" },
-            { name: "Platinum Acquisition Plant 023", type: "Platinum Mine", description: "" }
+            { id: "poi-6-0", legacyNames: ["Metprong Extractions Inc"], name: "Metprong Extractions Inc", type: "Iron Mine", description: "" },
+            { id: "poi-6-1", legacyNames: ["Platinum Acquisition Plant 023"], name: "Platinum Acquisition Plant 023", type: "Platinum Mine", description: "" }
         ]
     },
     {
@@ -1151,7 +1156,7 @@ const galaxy = [
                 stats: { hull: 40, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
         ],
         pois: [
-            { name: "Scary Raider Base", type: "Encounter", image: "station001.png", requiresFlag: "show_locus_base", hidesOnFlag: "killed_locus", description: "Hard to tell what the station was for before the raiders took over." }
+            { id: "poi-7-0", legacyNames: ["Scary Raider Base"], name: "Scary Raider Base", type: "Encounter", encounter: "Scary Raider Base", image: "station001.png", requiresFlag: "show_locus_base", hidesOnFlag: "killed_locus", description: "Hard to tell what the station was for before the raiders took over." }
         ]
     },
     {
@@ -1177,11 +1182,11 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Logus Cabs", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Jools"], description: "Cheap, but not cheerful" },
-            { name: "Stoop's Startship Repairs", type: "Repair Station", description: "", repairCost: 8 },
-            { name: "Bitz and Bobs Outfitters", type: "Outfitter", encounters: ["Bitz", "Bob"], inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive T2", "Drive T1"] },
-            { name: "Smogus Industries", type: "Metal Ore Refinery", description: "" },
-            { name: "Protein Shakers Union", type: "Plant Processing Facility", description: "" }
+            { id: "poi-8-0", legacyNames: ["Logus Cabs"], name: "Logus Cabs", type: "Outpost", image: "station001.png", encounters: ["Dispatcher Jools"], description: "Cheap, but not cheerful" },
+            { id: "poi-8-1", legacyNames: ["Stoop's Startship Repairs"], name: "Stoop's Startship Repairs", type: "Repair Station", description: "", repairCost: 8 },
+            { id: "poi-8-2", legacyNames: ["Bitz and Bobs Outfitters"], name: "Bitz and Bobs Outfitters", type: "Outfitter", encounters: ["Bitz", "Bob"], inventory: ["Armour T1", "Armour T2", "Bay T1", "Bay T2", "Bay T3", "Thrust T1", "Thrust T2", "Thrust T3", "Weap T1", "Weap T2", "Cargo Exp T1", "T1 FP", "T2 FP", "T1 ACC", "Weap S1", "Thrust S1", "Armour S1", "Armour T3", "Drive T2", "Drive T1"] },
+            { id: "poi-8-3", legacyNames: ["Smogus Industries"], name: "Smogus Industries", type: "Metal Ore Refinery", description: "" },
+            { id: "poi-8-4", legacyNames: ["Protein Shakers Union"], name: "Protein Shakers Union", type: "Plant Processing Facility", description: "" }
         ]
     },
     {
@@ -1197,8 +1202,8 @@ const galaxy = [
                 stats: { hull: 40, armour: 15, handling: 30, firepower: 30, accuracy: 15, piloting: 20, weapon: 20 } }
         ],
         pois: [
-            { name: "Farbabtech Mine 01", type: "Silicon Mine", description: "" },
-            { name: "Farbabtech Mine 02", type: "Ice Mine", description: "" }
+            { id: "poi-9-0", legacyNames: ["Farbabtech Mine 01"], name: "Farbabtech Mine 01", type: "Silicon Mine", description: "" },
+            { id: "poi-9-1", legacyNames: ["Farbabtech Mine 02"], name: "Farbabtech Mine 02", type: "Ice Mine", description: "" }
         ]
     },
     {
@@ -1222,7 +1227,7 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Princeton Ranch", type: "Livestock Farm", image: "farm001.png", description: "Hairy rumptars graze the purple grasses as far as the eye can see. The stench is eyewatering." }
+            { id: "poi-10-0", legacyNames: ["Princeton Ranch"], name: "Princeton Ranch", type: "Livestock Farm", image: "farm001.png", description: "Hairy rumptars graze the purple grasses as far as the eye can see. The stench is eyewatering." }
         ]
     },
     {
@@ -1248,8 +1253,8 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Lonnar Commercial Park", type: "Trade Hub", description: "" },
-            { name: "RoachFab Inc.", type: "Machine Parts Factory", description: "" }
+            { id: "poi-11-0", legacyNames: ["Lonnar Commercial Park"], name: "Lonnar Commercial Park", type: "Trade Hub", description: "" },
+            { id: "poi-11-1", legacyNames: ["RoachFab Inc."], name: "RoachFab Inc.", type: "Machine Parts Factory", description: "" }
         ]
     },
     {
@@ -1273,13 +1278,13 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Rockchewer 052", type: "Ice Mine", description: "" }
+            { id: "poi-12-0", legacyNames: ["Rockchewer 052"], name: "Rockchewer 052", type: "Ice Mine", description: "" }
         ]
     },
     {
         id: 13, name: "Depratz", x: 693, y: 581,
         pois: [
-            { name: "Abandoned outpost", type: "Outpost", image: "station006.png", encounters: ["Mysterious Janitor"], description: "" }
+            { id: "poi-13-0", legacyNames: ["Abandoned outpost"], name: "Abandoned outpost", type: "Outpost", image: "station006.png", encounters: ["Mysterious Janitor"], description: "" }
         ]
     },
     {
@@ -1303,7 +1308,7 @@ const galaxy = [
                 stats: { hull: 24, armour: 10, handling: 25, firepower: 12, accuracy: 8, piloting: 10, weapon: 10 } }
         ],
         pois: [
-            { name: "Prospectors Rock", type: "Gold Mine", image: "mine002.png", description: "" }
+            { id: "poi-14-0", legacyNames: ["Prospectors Rock"], name: "Prospectors Rock", type: "Gold Mine", image: "mine002.png", description: "" }
         ]
     },
     {
@@ -1311,7 +1316,7 @@ const galaxy = [
         image: "star_system_002.png",
         description: "A lonely binary system, devoid of planets.",
         pois: [
-            { name: "Abandoned outpost", type: "Outpost", image: "station006.png", description: "" }
+            { id: "poi-15-0", legacyNames: ["Abandoned outpost"], name: "Abandoned outpost", type: "Outpost", image: "station006.png", description: "" }
         ]
     }
 ];

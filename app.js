@@ -18,6 +18,15 @@ const saveStore = SaveStore.create({
 let combatStatus = null;
 let pendingRewardItem = null;
 let saveWarningShown = false;
+// Generated and restored encounter instances never modify authored definitions.
+let runtimeEncounters = Object.create(null);
+let restoredEncounter = null;
+function getEncounter(id) {
+  return runtimeEncounters[id] || interactions[id];
+}
+function getCurrentEncounter() {
+  return restoredEncounter || getEncounter(currentEncounterName);
+}
 function refreshDerivedStats() {
   const stats = getShipStats(player.ship);
   player.cargoMax = stats.cargoMax;
@@ -38,6 +47,8 @@ function applyPlayerAction(action) {
   return true;
 }
 function resetSession() {
+  restoredEncounter = null;
+  runtimeEncounters = Object.create(null);
   currentPoi = null;
   currentEnemy = null;
   combatStatus = null;
@@ -58,7 +69,7 @@ function restoreSession(runtime) {
   window.currentBountyOffers = runtime.bountyOffers;
   if (runtime.encounter) {
     const e = runtime.encounter;
-    interactions[e.name] = e.data;
+    restoredEncounter = e.data;
     currentEncounterName = e.name;
     currentEncounterDisplayName = e.displayName;
     currentEncounterImage = e.image;
@@ -78,17 +89,17 @@ function restoreSession(runtime) {
   }
 }
 function prepareDialogueOffers() {
-  const node = interactions[currentEncounterName]?.dialogue[currentDialogueNode];
+  const node = getCurrentEncounter()?.dialogue[currentDialogueNode];
   if (!node) return;
   if (node.generateBountyJobs && !player.activeBounty && !window.currentBountyOffers) {
     window.currentBountyOffers = Array.from({
-      length: node.bountyJobCount || 3
-    }, () => generateBountyJob(node.bountyMaxDistance || 100, node.bountyShips, node.bountyStats || {}));
+      length: node.bountyJobCount ?? 3
+    }, () => generateBountyJob(node.bountyMaxDistance ?? 100, node.bountyShips, node.bountyStats || {})).filter(Boolean);
   }
   if (node.generateTaxiJobs && !player.activeTaxi && !window.currentTaxiOffers) {
     window.currentTaxiOffers = Array.from({
-      length: node.taxiJobCount || 3
-    }, () => generateTaxiJob(node.taxiMaxDistance || 150));
+      length: node.taxiJobCount ?? 3
+    }, () => generateTaxiJob(node.taxiMaxDistance ?? 150)).filter(Boolean);
   }
 }
 function continueCombat() {
@@ -164,7 +175,7 @@ function generateNPCs() {
           finalImage = randomChar.image;
         }
         if (!finalImage && spawn.encounter) {
-          const encData = interactions[spawn.encounter] || {};
+          const encData = getEncounter(spawn.encounter) || {};
           let baseImg = encData.image || 'default.png';
           if (Array.isArray(baseImg)) {
             finalImage = baseImg[Math.floor(Math.random() * baseImg.length)];
@@ -247,28 +258,25 @@ function generateRandomCharacter() {
 function getShipStats(shipData) {
   return rules.getShipStats(shipData, player.skills);
 }
-function generateBountyJob(maxDist, shipsStr, baseStats) {
-  let targetSys;
-  let distToTarget = 0;
-  let attempts = 0;
-  do {
-    targetSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-    distToTarget = Math.sqrt((currentSystem.x - targetSys.x) ** 2 + (currentSystem.y - targetSys.y) ** 2);
-    attempts++;
-  } while ((distToTarget > maxDist || targetSys.id === currentSystem.id) && attempts < 100);
-  if (!targetSys) targetSys = galaxy[0];
-  const ships = shipsStr ? shipsStr.split(',').map(s => s.trim()) : Object.keys(shipHulls);
-  const shipHull = ships[Math.floor(Math.random() * ships.length)] || "Weescow";
+function generateBountyJob(maxDist, shipsStr, baseStats = {}) {
+  const candidates = galaxy.filter(system => system.id !== currentSystem.id &&
+    Math.hypot(currentSystem.x - system.x, currentSystem.y - system.y) <= maxDist);
+  const ships = (shipsStr ? shipsStr.split(',').map(s => s.trim()) : Object.keys(shipHulls))
+    .filter(name => Object.hasOwn(shipHulls, name));
+  if (!candidates.length || !ships.length) return null;
+  const targetSys = candidates[Math.floor(Math.random() * candidates.length)];
+  const distToTarget = Math.hypot(currentSystem.x - targetSys.x, currentSystem.y - targetSys.y);
+  const shipHull = ships[Math.floor(Math.random() * ships.length)];
   const pilot = generateRandomCharacter();
-  const randomizeStat = val => Math.max(1, Math.floor(val * (0.8 + Math.random() * 0.4)));
+  const randomizeStat = (val, min = 0) => Math.max(min, Math.floor(val * (0.8 + Math.random() * 0.4)));
   const finalStats = {
-    hull: randomizeStat(baseStats.hull || 15),
-    armour: randomizeStat(baseStats.armour || 15),
-    handling: randomizeStat(baseStats.handling || 25),
-    firepower: randomizeStat(baseStats.firepower || 15),
-    accuracy: randomizeStat(baseStats.accuracy || 10),
-    piloting: randomizeStat(baseStats.piloting || 25),
-    weapon: randomizeStat(baseStats.weapon || 25)
+    hull: randomizeStat(baseStats.hull ?? 15, 1),
+    armour: randomizeStat(baseStats.armour ?? 15),
+    handling: randomizeStat(baseStats.handling ?? 25),
+    firepower: randomizeStat(baseStats.firepower ?? 15),
+    accuracy: randomizeStat(baseStats.accuracy ?? 10),
+    piloting: randomizeStat(baseStats.piloting ?? 25),
+    weapon: randomizeStat(baseStats.weapon ?? 25)
   };
   const statSum = Object.values(finalStats).reduce((a, b) => a + b, 0);
   const baseReward = Math.round(statSum * 1 + distToTarget * 0.25);
@@ -289,7 +297,8 @@ function generateBountyJob(maxDist, shipsStr, baseStats) {
   };
 }
 function acceptBountyJob(index) {
-  const job = window.currentBountyOffers[index];
+  const job = window.currentBountyOffers?.[index];
+  if (!job || player.activeBounty) return;
   player.activeBounty = job;
   player.tasks['bounty_mission'] = 'active';
   quests['bounty_mission'] = {
@@ -302,44 +311,21 @@ function acceptBountyJob(index) {
   selectDialogue('leave');
 }
 function generateTaxiJob(maxDist) {
-  let pickupSys, pickupPoi, dropoffSys, dropoffPoi;
-  let distToPickup = 0,
-    distToDropoff = 0,
-    totalTripDist = 0;
-  let attempts = 0;
-  do {
-    pickupSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-    const validPois = pickupSys.pois.filter(p => p.type !== 'Outpost' && p.type !== 'Encounter');
-    if (validPois.length > 0) {
-      pickupPoi = validPois[Math.floor(Math.random() * validPois.length)];
-    } else {
-      pickupPoi = null;
-    }
-    distToPickup = Math.sqrt((currentSystem.x - pickupSys.x) ** 2 + (currentSystem.y - pickupSys.y) ** 2);
-    attempts++;
-  } while ((!pickupPoi || distToPickup > maxDist) && attempts < 100);
-  attempts = 0;
-  do {
-    dropoffSys = galaxy[Math.floor(Math.random() * galaxy.length)];
-    const validPois = dropoffSys.pois.filter(p => p.type !== 'Outpost' && p.type !== 'Encounter');
-    if (validPois.length > 0) {
-      dropoffPoi = validPois[Math.floor(Math.random() * validPois.length)];
-    } else {
-      dropoffPoi = null;
-    }
-    distToDropoff = Math.sqrt((currentSystem.x - dropoffSys.x) ** 2 + (currentSystem.y - dropoffSys.y) ** 2);
-    totalTripDist = Math.sqrt((pickupSys.x - dropoffSys.x) ** 2 + (pickupSys.y - dropoffSys.y) ** 2);
-    attempts++;
-  } while ((!dropoffPoi || dropoffSys.id === pickupSys.id && dropoffPoi.name === pickupPoi.name || distToDropoff > maxDist) && attempts < 100);
-  if (!pickupPoi) {
-    pickupSys = currentSystem;
-    pickupPoi = currentSystem.pois.find(p => p.type !== 'Outpost' && p.type !== 'Encounter') || galaxy[0].pois[0];
-  }
-  if (!dropoffPoi) {
-    dropoffSys = currentSystem;
-    dropoffPoi = currentSystem.pois.find(p => p.type !== 'Outpost' && p.type !== 'Encounter') || galaxy[0].pois[0];
-  }
-  const totalDistance = distToPickup + totalTripDist;
+  const destinations = galaxy.flatMap(system => {
+    if (Math.hypot(currentSystem.x - system.x, currentSystem.y - system.y) > maxDist) return [];
+    return (system.pois || []).filter(poi => poi.type !== 'Outpost' && poi.type !== 'Encounter' &&
+      (!poi.requiresFlag || player.flags[poi.requiresFlag]) &&
+      (!poi.hidesOnFlag || !player.flags[poi.hidesOnFlag]))
+      .map(poi => ({ system, poi }));
+  });
+  if (destinations.length < 2) return null;
+  const pickup = destinations[Math.floor(Math.random() * destinations.length)];
+  const dropoffs = destinations.filter(destination => destination !== pickup);
+  const dropoff = dropoffs[Math.floor(Math.random() * dropoffs.length)];
+  const { system: pickupSys, poi: pickupPoi } = pickup;
+  const { system: dropoffSys, poi: dropoffPoi } = dropoff;
+  const totalDistance = Math.hypot(currentSystem.x - pickupSys.x, currentSystem.y - pickupSys.y) +
+    Math.hypot(pickupSys.x - dropoffSys.x, pickupSys.y - dropoffSys.y);
   const baseReward = Math.round(10 + totalDistance * 0.5);
   const charmBonus = player.skills && player.skills.charm !== undefined ? player.skills.charm : 10;
   const reward = Math.round(baseReward * (1 + charmBonus / 100));
@@ -351,9 +337,11 @@ function generateTaxiJob(maxDist) {
     status: 'pickup',
     pickupSysId: pickupSys.id,
     pickupSysName: pickupSys.name,
+    pickupPoiId: pickupPoi.id,
     pickupPoiName: pickupPoi.name,
     dropoffSysId: dropoffSys.id,
     dropoffSysName: dropoffSys.name,
+    dropoffPoiId: dropoffPoi.id,
     dropoffPoiName: dropoffPoi.name,
     client: client,
     reward: reward,
@@ -363,26 +351,29 @@ function generateTaxiJob(maxDist) {
   };
 }
 function acceptTaxiJob(index) {
-  const job = window.currentTaxiOffers[index];
+  const job = window.currentTaxiOffers?.[index];
+  if (!job || player.activeTaxi) return;
   player.activeTaxi = job;
   player.tasks['taxi_mission'] = 'active';
   quests['taxi_mission'] = {
     title: `Taxi: Pick up ${job.client.name}`,
     description: `Pick up ${job.client.name} from ${job.pickupPoiName} in the ${job.pickupSysName} system.`,
     targetSystemId: job.pickupSysId,
+    targetPoiId: job.pickupPoiId,
     targetPoiName: job.pickupPoiName
   };
   window.currentTaxiOffers = null;
   selectDialogue('leave');
 }
 function startTaxiPickup() {
+  restoredEncounter = null;
   if (!isTaxiLocation('pickup')) return;
-  currentEncounterName = player.activeTaxi.client.name;
+  currentEncounterName = '@taxi/' + player.activeTaxi.status;
   currentEncounterDisplayName = player.activeTaxi.client.name;
   currentEncounterImage = player.activeTaxi.client.image;
   baselineEncounterDisplayName = currentEncounterDisplayName;
   baselineEncounterImage = currentEncounterImage;
-  interactions[currentEncounterName] = {
+  runtimeEncounters[currentEncounterName] = {
     image: player.activeTaxi.client.image,
     dialogue: {
       "start": {
@@ -408,16 +399,18 @@ function completeTaxiPickup() {
   quests['taxi_mission'].description = `Deliver ${player.activeTaxi.client.name} to ${player.activeTaxi.dropoffPoiName} in the ${player.activeTaxi.dropoffSysName} system.`;
   quests['taxi_mission'].targetSystemId = player.activeTaxi.dropoffSysId;
   quests['taxi_mission'].targetPoiName = player.activeTaxi.dropoffPoiName;
+  quests['taxi_mission'].targetPoiId = player.activeTaxi.dropoffPoiId;
 }
 function startTaxiDropoff() {
+  restoredEncounter = null;
   if (!isTaxiLocation('dropoff')) return;
   const fareXp = player.activeTaxi.xpReward;
-  currentEncounterName = player.activeTaxi.client.name;
+  currentEncounterName = '@taxi/' + player.activeTaxi.status;
   currentEncounterDisplayName = player.activeTaxi.client.name;
   currentEncounterImage = player.activeTaxi.client.image;
   baselineEncounterDisplayName = currentEncounterDisplayName;
   baselineEncounterImage = currentEncounterImage;
-  interactions[currentEncounterName] = {
+  runtimeEncounters[currentEncounterName] = {
     image: player.activeTaxi.client.image,
     dialogue: {
       "start": {
@@ -496,6 +489,7 @@ function saveGame() {
     saveStore.write({
       player,
       systemId: currentSystem.id,
+      poiId: currentPoi?.id,
       poiName: currentPoi?.name,
       currentMarketPrices,
       spawnedNPCs,
@@ -509,7 +503,7 @@ function saveGame() {
           baselineName: baselineEncounterDisplayName,
           baselineImage: baselineEncounterImage,
           node: currentDialogueNode,
-          data: interactions[currentEncounterName]
+          data: getCurrentEncounter()
         } : null,
         combat: currentEnemy ? {
           enemy: currentEnemy,
@@ -562,6 +556,7 @@ function loadGame(useBackup = false) {
           title: `Taxi: Pick up ${player.activeTaxi.client.name}`,
           description: `Pick up ${player.activeTaxi.client.name} from ${player.activeTaxi.pickupPoiName} in the ${player.activeTaxi.pickupSysName} system.`,
           targetSystemId: player.activeTaxi.pickupSysId,
+          targetPoiId: player.activeTaxi.pickupPoiId,
           targetPoiName: player.activeTaxi.pickupPoiName
         };
       } else {
@@ -569,12 +564,13 @@ function loadGame(useBackup = false) {
           title: `Taxi: Deliver ${player.activeTaxi.client.name}`,
           description: `Deliver ${player.activeTaxi.client.name} to ${player.activeTaxi.dropoffPoiName} in the ${player.activeTaxi.dropoffSysName} system.`,
           targetSystemId: player.activeTaxi.dropoffSysId,
+          targetPoiId: player.activeTaxi.dropoffPoiId,
           targetPoiName: player.activeTaxi.dropoffPoiName
         };
       }
     }
     currentSystem = galaxy.find(s => s.id === data.systemId);
-    currentPoi = currentSystem.pois.find(p => p.name === data.poiName) || null;
+    currentPoi = currentSystem.pois.find(p => data.poiId != null ? p.id === data.poiId : p.name === data.poiName) || null;
     currentMarketPrices = data.currentMarketPrices;
     spawnedNPCs = data.spawnedNPCs;
     localEncounterMemory = data.localEncounterMemory;
@@ -658,8 +654,9 @@ function repairShip() {
   if (applyPlayerAction(() => rules.repair(player, currentPoi.repairCost ?? 10))) updateUI();
 }
 function startEncounter(name, displayName = null, displayImage = null) {
-  if (!interactions[name]) {
-    interactions[name] = {
+  restoredEncounter = null;
+  if (!getEncounter(name)) {
+    runtimeEncounters[name] = {
       image: "default.png",
       dialogue: {
         "start": {
@@ -679,7 +676,7 @@ function startEncounter(name, displayName = null, displayImage = null) {
   } else if (localEncounterMemory[name]) {
     currentEncounterImage = localEncounterMemory[name];
   } else {
-    const encData = interactions[name] || {};
+    const encData = getEncounter(name) || {};
     let encImageFile = encData.image || 'default.png';
     if (Array.isArray(encImageFile)) {
       encImageFile = encImageFile[Math.floor(Math.random() * encImageFile.length)];
@@ -695,7 +692,7 @@ function startEncounter(name, displayName = null, displayImage = null) {
   baselineEncounterImage = currentEncounterImage;
 
   // Check for overrides on the starting node
-  const startNode = interactions[currentEncounterName].dialogue['start'];
+  const startNode = getCurrentEncounter().dialogue['start'];
   if (startNode) {
     if (startNode.nodeName) currentEncounterDisplayName = startNode.nodeName;
     if (startNode.nodeImage) currentEncounterImage = startNode.nodeImage;
@@ -730,6 +727,7 @@ function selectDialogue(nextNode, creditChange = 0, xpChange = 0, setFlag = '', 
     return;
   }
   if (nextNode === 'leave') {
+    restoredEncounter = null;
     window.currentTaxiOffers = null;
     window.currentBountyOffers = null;
     currentEncounterName = null;
@@ -755,7 +753,7 @@ function selectDialogue(nextNode, creditChange = 0, xpChange = 0, setFlag = '', 
     currentDialogueNode = nextNode;
 
     // Apply node overrides or restore to baseline
-    const nextNodeData = interactions[currentEncounterName].dialogue[nextNode];
+    const nextNodeData = getCurrentEncounter().dialogue[nextNode];
     if (nextNodeData) {
       currentEncounterDisplayName = nextNodeData.nodeName || baselineEncounterDisplayName;
       currentEncounterImage = nextNodeData.nodeImage || baselineEncounterImage;
@@ -771,7 +769,8 @@ function selectDialogue(nextNode, creditChange = 0, xpChange = 0, setFlag = '', 
   if (result.rewarded) showRewardModal(rewardItem);
 }
 function endCombatAndResume() {
-  const wasPoiEncounter = currentPoi && currentPoi.type === 'Encounter' && currentEncounterName === currentPoi.name;
+  restoredEncounter = null;
+  const wasPoiEncounter = currentPoi && currentPoi.type === 'Encounter' && currentEncounterName === (currentPoi.encounter || currentPoi.name);
   currentEnemy = null;
   combatStatus = null;
   combatWinEncounter = null;
@@ -794,7 +793,7 @@ function endCombatAndResume() {
     startEncounter(nextHostile.encounter, nextHostile.name, nextHostile.image);
     switchTab('local', true);
   } else if (currentPoi && currentPoi.type === 'Encounter') {
-    startEncounter(currentPoi.name);
+    startEncounter(currentPoi.encounter || currentPoi.name);
     switchTab('local', true);
   } else {
     setLocalView('menu');
@@ -876,7 +875,7 @@ function doCombatRound(playerAction) {
       player.tasks.bounty_mission = 'failed';
       player.activeBounty = null;
     }
-    if (currentPoi?.type === 'Encounter' && currentEncounterName !== currentPoi.name) currentPoi = null;
+    if (currentPoi?.type === 'Encounter' && currentEncounterName !== (currentPoi.encounter || currentPoi.name)) currentPoi = null;
   } else if (enemy.currentHull <= 0) {
     combatStatus = 'won';
     player.xp += enemy.xpValue || 0;
@@ -1073,7 +1072,7 @@ function triggerTravel(dest, msg, dur, isLeavingPOI = false) {
         }
       } else if (dest && dest.type === 'Encounter') {
         currentPoi = dest;
-        startEncounter(currentPoi.name);
+        startEncounter(currentPoi.encounter || currentPoi.name);
         switchTab('local', true);
       } else {
         currentPoi = dest;
@@ -1198,7 +1197,7 @@ window.addEventListener('resize', () => renderMap());
 // The DOM passes an option index. Prices, requirements and effects come from content.
 function chooseDialogueOption(index) {
   if (currentEnemy) return;
-  const option = interactions[currentEncounterName]?.dialogue[currentDialogueNode]?.options[index];
+  const option = getCurrentEncounter()?.dialogue[currentDialogueNode]?.options[index];
   if (!option || option.requiresFlag && !player.flags[option.requiresFlag] || option.hidesOnFlag && player.flags[option.hidesOnFlag]) return;
   if (option.completePickup) completeTaxiPickup();
   if (option.completeTaxi) completeTaxiDropoff();
@@ -1212,7 +1211,7 @@ function ensureBountyEncounter() {
   const pLines = typeof bountyPlayerLines !== 'undefined' ? bountyPlayerLines : ["I'm here to collect the bounty on your head! [ATTACK]"];
   const tLine = tLines[Math.floor(Math.random() * tLines.length)];
   const pLine = pLines[Math.floor(Math.random() * pLines.length)];
-  interactions["SYSTEM_BOUNTY_TARGET"] = {
+  runtimeEncounters["SYSTEM_BOUNTY_TARGET"] = {
     image: b.targetImage,
     dialogue: {
       "start": {
@@ -1231,5 +1230,5 @@ function ensureBountyEncounter() {
 }
 function isTaxiLocation(status) {
   const job = player.activeTaxi;
-  return job && job.status === status && currentPoi && currentSystem.id === job[status + 'SysId'] && currentPoi.name === job[status + 'PoiName'];
+  return job && job.status === status && currentPoi && currentSystem.id === job[status + 'SysId'] && (job[status + 'PoiId'] != null ? currentPoi.id === job[status + 'PoiId'] : currentPoi.name === job[status + 'PoiName']);
 }
